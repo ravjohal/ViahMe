@@ -653,26 +653,30 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  const validCategories = ['makeup_artist', 'dj', 'dhol_player', 'turban_tier', 'mehndi_artist', 'photographer', 'videographer', 'caterer', 'banquet_hall', 'gurdwara', 'temple', 'decorator', 'florist', 'wedding_planner', 'invitation_designer', 'jeweler', 'bridal_wear', 'groom_wear', 'hair_stylist', 'henna_artist', 'lighting', 'transportation', 'officiant', 'priest', 'pandit', 'imam', 'mosque', 'church', 'event_venue', 'bartender', 'cake_baker', 'sangeet_choreographer', 'granthi', 'travel_agent', 'hotel', 'kolam_artist'] as const;
+  const validPriceRanges = ['$', '$$', '$$$', '$$$$'] as const;
+  const validTraditions = ['sikh', 'hindu', 'muslim', 'gujarati', 'south_indian', 'mixed', 'general'] as const;
+
   const bulkVendorSchema = z.object({
     name: z.string().min(1),
     location: z.string().optional(),
     contact: z.object({
       phone: z.string().optional(),
-      email: z.string().email().optional(),
-      website: z.string().url().optional(),
+      email: z.string().optional(),
+      website: z.string().optional(),
       specialty: z.string().optional(),
     }).optional(),
-    categories: z.array(z.string()).optional(),
+    categories: z.array(z.enum(validCategories)).optional(),
     city: z.string().optional(),
-    price_range: z.string().optional(),
+    price_range: z.enum(validPriceRanges).optional(),
     cultural_specialties: z.array(z.string()).optional(),
-    preferred_wedding_traditions: z.array(z.string()).optional(),
+    preferred_wedding_traditions: z.array(z.enum(validTraditions)).optional(),
   });
 
   const bulkImportSchema = z.object({
     vendors: z.array(bulkVendorSchema).min(1).max(100),
     default_city: z.string().optional(),
-    default_categories: z.array(z.string()).optional(),
+    default_categories: z.array(z.enum(validCategories)).optional(),
   });
 
   router.post("/vendors/bulk-import", async (req: Request, res: Response) => {
@@ -694,12 +698,16 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       const results: { name: string; id: string; status: string }[] = [];
       const errors: { name: string; error: string }[] = [];
 
+      const existingVendors = await storage.getAllVendors();
+
       for (const vendor of vendors) {
         try {
-          const existingVendors = await storage.getAllVendors();
+          const vendorCity = (vendor.city || default_city || 'Vancouver').toLowerCase().trim();
+          const vendorName = vendor.name.toLowerCase().trim();
+          
           const duplicate = existingVendors.find(
-            v => v.name.toLowerCase() === vendor.name.toLowerCase() && 
-                 v.city === (vendor.city || default_city || 'Vancouver')
+            v => v.name.toLowerCase().trim() === vendorName && 
+                 v.city.toLowerCase().trim() === vendorCity
           );
 
           if (duplicate) {
@@ -712,14 +720,14 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             name: vendor.name,
             location: vendor.location || null,
             city: vendor.city || default_city || 'Vancouver',
-            categories: (vendor.categories || default_categories || ['photographer']) as InsertVendor['categories'],
-            priceRange: (vendor.price_range || '$$$') as InsertVendor['priceRange'],
+            categories: vendor.categories || default_categories || ['photographer'],
+            priceRange: vendor.price_range || '$$$',
             description: vendor.contact?.specialty || null,
             phone: vendor.contact?.phone || null,
             email: vendor.contact?.email || null,
             website: vendor.contact?.website || null,
             culturalSpecialties: vendor.cultural_specialties || ['south_asian'],
-            preferredWeddingTraditions: (vendor.preferred_wedding_traditions || ['sikh', 'hindu']) as InsertVendor['preferredWeddingTraditions'],
+            preferredWeddingTraditions: vendor.preferred_wedding_traditions || ['sikh', 'hindu'],
             isPublished: true,
             approvalStatus: 'approved',
             source: 'manual',
@@ -727,6 +735,7 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
           };
 
           const created = await storage.createVendor(newVendor);
+          existingVendors.push(created);
           results.push({ name: vendor.name, id: created.id, status: "created" });
         } catch (err) {
           errors.push({ name: vendor.name, error: String(err) });
