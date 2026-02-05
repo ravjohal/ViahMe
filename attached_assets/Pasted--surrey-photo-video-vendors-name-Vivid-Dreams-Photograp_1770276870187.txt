@@ -1,0 +1,104 @@
+{
+  "surrey_photo_video_vendors": [
+    {
+      "name": "Vivid Dreams Photography",
+      "location": "134 69 Ave, Surrey, BC, V3S 0Y8",
+      "contact": {
+        "phone": "778-883-2461",
+        "email": "info@vividdreams.ca",
+        "website": "https://vividdreams.ca",
+        "specialty": "Sikh and Hindu Wedding Cinematography & Photography"
+      }
+    },
+    {
+      "name": "The Saga Photos",
+      "location": "107-7475 138 St, Surrey, BC, V3W 0Y9",
+      "contact": {
+        "phone": "778-868-2450",
+        "email": "info@thesagaphotos.com",
+        "website": "https://thesagaphotos.com",
+        "specialty": "Cinematic South Asian Wedding Films"
+      }
+    },
+    {
+      "name": "AAA Movies",
+      "location": "2391 McLennan Avenue, Richmond, BC (Serves Surrey Area)",
+      "contact": {
+        "phone": "604-999-8536",
+        "email": "info@aaamovies.ca",
+        "website": "https://www.aaamovies.ca",
+        "specialty": "Legacy Punjabi Wedding Video & Photo since 1976"
+      }
+    },
+    {
+      "name": "Amrit Photography",
+      "location": "Surrey / Vancouver, BC",
+      "contact": {
+        "phone": "604-710-3844",
+        "email": "contact@amritphotography.com",
+        "website": "https://amritphotography.com",
+        "specialty": "Luxury Editorial South Asian Weddings"
+      }
+    },
+    {
+      "name": "Bhav Sidhu Photography",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-365-9400",
+        "email": "info@bhavsidhuphotography.com",
+        "website": "https://www.bhavsidhuphotography.com",
+        "specialty": "Candid and Emotion-Driven Bridal Portraits"
+      }
+    },
+    {
+      "name": "Cinecaves",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-722-9550",
+        "email": "info@cinecaves.com",
+        "website": "https://cinecaves.com",
+        "specialty": "High-Energy Cinematography and Same-Day Edits"
+      }
+    },
+    {
+      "name": "Ginger Photography",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-716-5629",
+        "email": "info@gingerphotography.ca",
+        "website": "https://www.gingerphotography.ca",
+        "specialty": "Traditional and Contemporary Indian Weddings"
+      }
+    },
+    {
+      "name": "Cherished Memories Photography",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-317-7223",
+        "email": "info@cherishedmemories.ca",
+        "website": "http://cherishedmemories.ca",
+        "specialty": "Multi-Day Event Coverage and Family Portraits"
+      }
+    },
+    {
+      "name": "Robert Demeter Photography",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-763-7140",
+        "email": "robert@robertdemeter.com",
+        "website": "https://robertdemeterphotography.com",
+        "specialty": "Fine Art Storytelling and Candid Moments"
+      }
+    },
+    {
+      "name": "Andrew Lukianiuk Photography",
+      "location": "Surrey, BC",
+      "contact": {
+        "phone": "604-441-2101",
+        "email": "info@alphotography.ca",
+        "website": "https://andrewlukianiuk.com",
+        "specialty": "Sophisticated Cinematic Wedding Photography"
+      }
+    }
+  ]
+}
