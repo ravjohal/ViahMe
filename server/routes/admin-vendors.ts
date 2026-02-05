@@ -652,4 +652,101 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       res.status(500).json({ error: "Failed to fetch unclaimed vendors" });
     }
   });
+
+  const bulkVendorSchema = z.object({
+    name: z.string().min(1),
+    location: z.string().optional(),
+    contact: z.object({
+      phone: z.string().optional(),
+      email: z.string().email().optional(),
+      website: z.string().url().optional(),
+      specialty: z.string().optional(),
+    }).optional(),
+    categories: z.array(z.string()).optional(),
+    city: z.string().optional(),
+    price_range: z.string().optional(),
+    cultural_specialties: z.array(z.string()).optional(),
+    preferred_wedding_traditions: z.array(z.string()).optional(),
+  });
+
+  const bulkImportSchema = z.object({
+    vendors: z.array(bulkVendorSchema).min(1).max(100),
+    default_city: z.string().optional(),
+    default_categories: z.array(z.string()).optional(),
+  });
+
+  router.post("/vendors/bulk-import", async (req: Request, res: Response) => {
+    try {
+      const adminKey = req.headers["x-admin-key"];
+      if (!adminKey || adminKey !== process.env.ADMIN_API_KEY) {
+        return res.status(401).json({ error: "Invalid or missing admin API key" });
+      }
+
+      const parsed = bulkImportSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ 
+          error: "Invalid request body", 
+          details: parsed.error.issues 
+        });
+      }
+
+      const { vendors, default_city, default_categories } = parsed.data;
+      const results: { name: string; id: string; status: string }[] = [];
+      const errors: { name: string; error: string }[] = [];
+
+      for (const vendor of vendors) {
+        try {
+          const existingVendors = await storage.getAllVendors();
+          const duplicate = existingVendors.find(
+            v => v.name.toLowerCase() === vendor.name.toLowerCase() && 
+                 v.city === (vendor.city || default_city || 'Vancouver')
+          );
+
+          if (duplicate) {
+            results.push({ name: vendor.name, id: duplicate.id, status: "skipped_duplicate" });
+            continue;
+          }
+
+          const newVendor: InsertVendor = {
+            id: randomUUID(),
+            name: vendor.name,
+            location: vendor.location || null,
+            city: vendor.city || default_city || 'Vancouver',
+            categories: (vendor.categories || default_categories || ['photographer']) as InsertVendor['categories'],
+            priceRange: (vendor.price_range || '$$$') as InsertVendor['priceRange'],
+            description: vendor.contact?.specialty || null,
+            phone: vendor.contact?.phone || null,
+            email: vendor.contact?.email || null,
+            website: vendor.contact?.website || null,
+            culturalSpecialties: vendor.cultural_specialties || ['south_asian'],
+            preferredWeddingTraditions: (vendor.preferred_wedding_traditions || ['sikh', 'hindu']) as InsertVendor['preferredWeddingTraditions'],
+            isPublished: true,
+            approvalStatus: 'approved',
+            source: 'manual',
+            claimed: false,
+          };
+
+          const created = await storage.createVendor(newVendor);
+          results.push({ name: vendor.name, id: created.id, status: "created" });
+        } catch (err) {
+          errors.push({ name: vendor.name, error: String(err) });
+        }
+      }
+
+      res.json({
+        success: true,
+        summary: {
+          total: vendors.length,
+          created: results.filter(r => r.status === "created").length,
+          skipped: results.filter(r => r.status === "skipped_duplicate").length,
+          errors: errors.length,
+        },
+        results,
+        errors: errors.length > 0 ? errors : undefined,
+      });
+    } catch (error) {
+      console.error("Error in bulk vendor import:", error);
+      res.status(500).json({ error: "Failed to import vendors" });
+    }
+  });
 }
