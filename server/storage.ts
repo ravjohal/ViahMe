@@ -272,6 +272,7 @@ import {
   type VendorCategory,
   type InsertVendorCategory,
   DEFAULT_VENDOR_CATEGORIES,
+  DEFAULT_METRO_AREAS,
   pricingRegions,
   type PricingRegion,
   type InsertPricingRegion,
@@ -1283,6 +1284,7 @@ export interface IStorage {
   createMetroArea(area: InsertMetroArea): Promise<MetroArea>;
   updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined>;
   deleteMetroArea(id: string): Promise<boolean>;
+  seedMetroAreas(): Promise<MetroArea[]>;
 
   // Favour Categories (database-driven favour/gift types)
   getFavourCategory(id: string): Promise<FavourCategory | undefined>;
@@ -4894,6 +4896,7 @@ export class MemStorage implements IStorage {
   async createMetroArea(area: InsertMetroArea): Promise<MetroArea> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async deleteMetroArea(id: string): Promise<boolean> { return false; }
+  async seedMetroAreas(): Promise<MetroArea[]> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
 
   // Favour Categories (database-driven) - stub methods for MemStorage
   async getFavourCategory(id: string): Promise<FavourCategory | undefined> { return undefined; }
@@ -11990,6 +11993,30 @@ export class DBStorage implements IStorage {
         isSystemCategory: true,
       });
       seeded.push(category);
+    }
+    return seeded;
+  }
+
+  async seedMetroAreas(): Promise<MetroArea[]> {
+    const seeded: MetroArea[] = [];
+    for (const areaData of DEFAULT_METRO_AREAS) {
+      const existing = await this.getMetroAreaBySlug(areaData.slug);
+      if (existing) {
+        seeded.push(existing);
+        continue;
+      }
+      const area = await this.createMetroArea({
+        slug: areaData.slug,
+        value: areaData.value,
+        label: areaData.label,
+        state: areaData.state,
+        country: areaData.country,
+        desiPopulation: areaData.desiPopulation,
+        hasVendorCoverage: areaData.hasVendorCoverage,
+        displayOrder: areaData.displayOrder,
+        isActive: true,
+      });
+      seeded.push(area);
     }
     return seeded;
   }

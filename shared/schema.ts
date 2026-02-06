@@ -270,6 +270,7 @@ export const DEFAULT_METRO_AREAS: Array<{
   { slug: "detroit", value: "Detroit", label: "Detroit Metro", state: "MI", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 14 },
   { slug: "toronto", value: "Toronto", label: "Toronto (Canada)", state: null, country: "CA", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 15 },
   { slug: "vancouver", value: "Vancouver", label: "Vancouver (Canada)", state: null, country: "CA", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 16 },
+  { slug: "miami", value: "Miami", label: "Miami", state: "FL", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 17 },
   { slug: "other", value: "Other", label: "Other (Enter ZIP Code)", state: null, country: "US", desiPopulation: null as any, hasVendorCoverage: false, displayOrder: 99 },
 ];
 

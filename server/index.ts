@@ -115,6 +115,17 @@ app.use(express.static(path.join(process.cwd(), "public")));
     serveStatic(app);
   }
 
+  // Auto-seed reference data if tables are empty
+  try {
+    const existingMetroAreas = await storage.getAllMetroAreas();
+    if (existingMetroAreas.length === 0) {
+      const seeded = await storage.seedMetroAreas();
+      log(`Auto-seeded ${seeded.length} metro areas`);
+    }
+  } catch (e) {
+    log(`Metro areas auto-seed skipped: ${(e as Error).message}`);
+  }
+
   // Initialize task reminder scheduler (checks every hour)
   const taskReminderScheduler = new TaskReminderScheduler(storage);
   taskReminderScheduler.start(60 * 60 * 1000);
