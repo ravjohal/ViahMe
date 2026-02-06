@@ -320,6 +320,11 @@ import {
   stagedVendors,
   type StagedVendor,
   type InsertStagedVendor,
+  discoveryRuns,
+  type DiscoveryRun,
+  type InsertDiscoveryRun,
+  schedulerConfig,
+  type SchedulerConfigRow,
   polls,
   type Poll,
   type InsertPoll,
@@ -1551,6 +1556,18 @@ export interface IStorage {
   createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor>;
   updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined>;
   deleteStagedVendor(id: string): Promise<boolean>;
+
+  // Discovery Runs
+  getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined>;
+  getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]>;
+  getDiscoveryRunsByJob(jobId: string, runDate?: string): Promise<DiscoveryRun[]>;
+  getTodayDiscoveredCount(runDate: string): Promise<number>;
+  createDiscoveryRun(run: InsertDiscoveryRun): Promise<DiscoveryRun>;
+  updateDiscoveryRun(id: string, run: Partial<DiscoveryRun>): Promise<DiscoveryRun | undefined>;
+
+  // Scheduler Config
+  getSchedulerConfig(): Promise<SchedulerConfigRow | undefined>;
+  upsertSchedulerConfig(config: Partial<SchedulerConfigRow>): Promise<SchedulerConfigRow>;
 
   // Live Polls
   getPoll(id: string): Promise<Poll | undefined>;
@@ -4996,6 +5013,18 @@ export class MemStorage implements IStorage {
   async createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
   async updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
   async deleteStagedVendor(id: string): Promise<boolean> { return false; }
+
+  // Discovery Runs (stub methods for MemStorage)
+  async getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined> { return undefined; }
+  async getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]> { return []; }
+  async getDiscoveryRunsByJob(jobId: string, runDate?: string): Promise<DiscoveryRun[]> { return []; }
+  async getTodayDiscoveredCount(runDate: string): Promise<number> { return 0; }
+  async createDiscoveryRun(run: InsertDiscoveryRun): Promise<DiscoveryRun> { throw new Error('MemStorage does not support Discovery Runs. Use DBStorage.'); }
+  async updateDiscoveryRun(id: string, run: Partial<DiscoveryRun>): Promise<DiscoveryRun | undefined> { throw new Error('MemStorage does not support Discovery Runs. Use DBStorage.'); }
+
+  // Scheduler Config (stub methods for MemStorage)
+  async getSchedulerConfig(): Promise<SchedulerConfigRow | undefined> { return undefined; }
+  async upsertSchedulerConfig(config: Partial<SchedulerConfigRow>): Promise<SchedulerConfigRow> { throw new Error('MemStorage does not support Scheduler Config. Use DBStorage.'); }
 
   // Live Polls (stub methods for MemStorage)
   async getPoll(id: string): Promise<Poll | undefined> { return undefined; }
@@ -13804,6 +13833,53 @@ export class DBStorage implements IStorage {
   async deleteStagedVendor(id: string): Promise<boolean> {
     const result = await this.db.delete(stagedVendors).where(eq(stagedVendors.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Discovery Runs
+  async getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined> {
+    const [run] = await this.db.select().from(discoveryRuns).where(eq(discoveryRuns.id, id));
+    return run;
+  }
+
+  async getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]> {
+    return this.db.select().from(discoveryRuns).where(eq(discoveryRuns.runDate, runDate)).orderBy(desc(discoveryRuns.startedAt));
+  }
+
+  async getDiscoveryRunsByJob(jobId: string, runDate?: string): Promise<DiscoveryRun[]> {
+    const conditions = [eq(discoveryRuns.jobId, jobId)];
+    if (runDate) conditions.push(eq(discoveryRuns.runDate, runDate));
+    return this.db.select().from(discoveryRuns).where(and(...conditions)).orderBy(desc(discoveryRuns.startedAt));
+  }
+
+  async getTodayDiscoveredCount(runDate: string): Promise<number> {
+    const result = await this.db.select({ total: sql<number>`COALESCE(SUM(${discoveryRuns.vendorsStaged}), 0)` }).from(discoveryRuns).where(and(eq(discoveryRuns.runDate, runDate), eq(discoveryRuns.status, 'completed')));
+    return Number(result[0]?.total ?? 0);
+  }
+
+  async createDiscoveryRun(run: InsertDiscoveryRun): Promise<DiscoveryRun> {
+    const [created] = await this.db.insert(discoveryRuns).values(run).returning();
+    return created;
+  }
+
+  async updateDiscoveryRun(id: string, run: Partial<DiscoveryRun>): Promise<DiscoveryRun | undefined> {
+    const [updated] = await this.db.update(discoveryRuns).set(run).where(eq(discoveryRuns.id, id)).returning();
+    return updated;
+  }
+
+  // Scheduler Config
+  async getSchedulerConfig(): Promise<SchedulerConfigRow | undefined> {
+    const [config] = await this.db.select().from(schedulerConfig).where(eq(schedulerConfig.id, 'default'));
+    return config;
+  }
+
+  async upsertSchedulerConfig(config: Partial<SchedulerConfigRow>): Promise<SchedulerConfigRow> {
+    const existing = await this.getSchedulerConfig();
+    if (existing) {
+      const [updated] = await this.db.update(schedulerConfig).set({ ...config, updatedAt: new Date() }).where(eq(schedulerConfig.id, 'default')).returning();
+      return updated;
+    }
+    const [created] = await this.db.insert(schedulerConfig).values({ id: 'default', runHour: config.runHour ?? 2, dailyCap: config.dailyCap ?? 50, updatedAt: new Date() }).returning();
+    return created;
   }
 
   // Live Polls

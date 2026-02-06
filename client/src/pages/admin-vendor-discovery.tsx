@@ -134,6 +134,8 @@ export default function AdminVendorDiscovery() {
   const [discoveryLogs, setDiscoveryLogs] = useState<DiscoveryLogEntry[]>([]);
   const [showLogs, setShowLogs] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
+  const [isPolling, setIsPolling] = useState(false);
   const [settingsRunHour, setSettingsRunHour] = useState(2);
   const [settingsDailyCap, setSettingsDailyCap] = useState(50);
 
@@ -232,21 +234,43 @@ export default function AdminVendorDiscovery() {
     mutationFn: async (id: string) => {
       setDiscoveryLogs([]);
       setShowLogs(true);
+      setIsPolling(true);
       const res = await apiRequest("POST", `/api/admin/discovery-jobs/${id}/run-now`);
       return res.json();
     },
-    onSuccess: (data: { discovered: number; staged: number; logs: DiscoveryLogEntry[] }) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/staged-vendors"] });
-      if (data.logs) {
-        setDiscoveryLogs(data.logs);
-      }
-      toast({ title: "Discovery complete", description: `Found ${data.staged} new vendors` });
+    onSuccess: (data: { runId: string; status: string }) => {
+      setActiveRunId(data.runId);
+      toast({ title: "Discovery started", description: "Running in background..." });
     },
     onError: (err: Error) => {
+      setIsPolling(false);
       toast({ title: "Discovery failed", description: err.message, variant: "destructive" });
     },
   });
+
+  useEffect(() => {
+    if (!activeRunId || !isPolling) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/admin/discovery-runs/${activeRunId}`, { credentials: "include" });
+        if (!res.ok) return;
+        const run = await res.json();
+        if (run.status === 'completed' || run.status === 'failed' || run.status === 'skipped') {
+          setIsPolling(false);
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/staged-vendors"] });
+          if (run.status === 'completed') {
+            toast({ title: "Discovery complete", description: `Staged ${run.vendorsStaged} new vendor(s), ${run.duplicatesFound} duplicate(s)` });
+          } else if (run.status === 'failed') {
+            toast({ title: "Discovery failed", description: run.error || "Unknown error", variant: "destructive" });
+          } else {
+            toast({ title: "Discovery skipped", description: "Job had no capacity or was invalid" });
+          }
+        }
+      } catch { }
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [activeRunId, isPolling]);
 
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -478,11 +502,11 @@ export default function AdminVendorDiscovery() {
                             variant="ghost"
                             size="icon"
                             onClick={() => runNowMutation.mutate(job.id)}
-                            disabled={runNowMutation.isPending}
+                            disabled={runNowMutation.isPending || isPolling}
                             title="Run now"
                             data-testid={`button-run-job-${job.id}`}
                           >
-                            {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                            {(runNowMutation.isPending || isPolling) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                           </Button>
                           <Button
                             variant="ghost"
@@ -722,13 +746,13 @@ export default function AdminVendorDiscovery() {
               <div className="flex items-center gap-2">
                 <Terminal className="h-4 w-4 text-muted-foreground" />
                 <CardTitle className="text-base">Discovery Run Logs</CardTitle>
-                {runNowMutation.isPending && (
+                {isPolling && (
                   <Badge variant="secondary" className="ml-2">
                     <Loader2 className="h-3 w-3 animate-spin mr-1" />
                     Running...
                   </Badge>
                 )}
-                {!runNowMutation.isPending && discoveryLogs.length > 0 && (
+                {!isPolling && discoveryLogs.length > 0 && (
                   <Badge variant="outline" className="ml-2">{discoveryLogs.length} entries</Badge>
                 )}
               </div>
@@ -741,10 +765,13 @@ export default function AdminVendorDiscovery() {
                 className="bg-muted/50 rounded-md p-3 max-h-96 overflow-y-auto font-mono text-xs space-y-1"
                 data-testid="container-log-entries"
               >
-                {discoveryLogs.length === 0 && runNowMutation.isPending && (
-                  <div className="text-muted-foreground py-4 text-center">Waiting for discovery results...</div>
+                {discoveryLogs.length === 0 && isPolling && (
+                  <div className="text-muted-foreground py-4 text-center">
+                    <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
+                    Discovery running in background...
+                  </div>
                 )}
-                {discoveryLogs.length === 0 && !runNowMutation.isPending && (
+                {discoveryLogs.length === 0 && !isPolling && (
                   <div className="text-muted-foreground py-4 text-center">No logs available.</div>
                 )}
                 {discoveryLogs.map((entry, i) => {

@@ -915,12 +915,50 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         return res.status(500).json({ error: "Scheduler not initialized" });
       }
       console.log(`[AdminAPI] Manual run triggered for job ${req.params.id}`);
-      const result = await scheduler.runJobNow(req.params.id);
-      console.log(`[AdminAPI] Manual run complete: ${result.staged} staged, ${result.logs.length} log entries`);
-      res.json(result);
+      const { runId } = await scheduler.runJobNow(req.params.id);
+      console.log(`[AdminAPI] Manual run queued with runId: ${runId}`);
+      res.json({ runId, status: 'queued', message: 'Discovery run started in background' });
     } catch (error: any) {
       console.error("[AdminAPI] Error running discovery job:", error);
       res.status(500).json({ error: error.message || "Failed to run discovery job" });
+    }
+  });
+
+  router.get("/discovery-runs/:id", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const run = await storage.getDiscoveryRun(req.params.id);
+      if (!run) {
+        return res.status(404).json({ error: "Discovery run not found" });
+      }
+      res.json(run);
+    } catch (error) {
+      console.error("Error fetching discovery run:", error);
+      res.status(500).json({ error: "Failed to fetch discovery run" });
+    }
+  });
+
+  router.get("/discovery-runs", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const jobId = req.query.jobId as string | undefined;
+      const runDate = req.query.runDate as string | undefined;
+      let runs;
+      if (jobId) {
+        runs = await storage.getDiscoveryRunsByJob(jobId, runDate);
+      } else if (runDate) {
+        runs = await storage.getDiscoveryRunsByDate(runDate);
+      } else {
+        runs = await storage.getDiscoveryRunsByDate(new Date().toISOString().split('T')[0]);
+      }
+      res.json(runs);
+    } catch (error) {
+      console.error("Error fetching discovery runs:", error);
+      res.status(500).json({ error: "Failed to fetch discovery runs" });
     }
   });
 
@@ -966,7 +1004,7 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         }
         updates.dailyCap = c;
       }
-      scheduler.updateConfig(updates);
+      await scheduler.updateConfig(updates);
       const config = scheduler.getConfig();
       res.json({ ...config, timezone: "PST" });
     } catch (error) {

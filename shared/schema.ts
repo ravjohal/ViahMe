@@ -5551,6 +5551,37 @@ export const insertStagedVendorSchema = createInsertSchema(stagedVendors).omit({
 export type InsertStagedVendor = z.infer<typeof insertStagedVendorSchema>;
 export type StagedVendor = typeof stagedVendors.$inferSelect;
 
+export const discoveryRuns = pgTable("discovery_runs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobId: varchar("job_id").references(() => discoveryJobs.id, { onDelete: 'cascade' }),
+  runDate: text("run_date").notNull(),
+  vendorsDiscovered: integer("vendors_discovered").notNull().default(0),
+  vendorsStaged: integer("vendors_staged").notNull().default(0),
+  duplicatesFound: integer("duplicates_found").notNull().default(0),
+  status: text("status").notNull().default('running'),
+  error: text("error"),
+  triggeredBy: text("triggered_by").notNull().default('scheduler'),
+  startedAt: timestamp("started_at").notNull().defaultNow(),
+  finishedAt: timestamp("finished_at"),
+});
+
+export const insertDiscoveryRunSchema = createInsertSchema(discoveryRuns).omit({
+  id: true,
+  startedAt: true,
+  finishedAt: true,
+});
+export type InsertDiscoveryRun = z.infer<typeof insertDiscoveryRunSchema>;
+export type DiscoveryRun = typeof discoveryRuns.$inferSelect;
+
+export const schedulerConfig = pgTable("scheduler_config", {
+  id: varchar("id").primaryKey().default('default'),
+  runHour: integer("run_hour").notNull().default(2),
+  dailyCap: integer("daily_cap").notNull().default(50),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type SchedulerConfigRow = typeof schedulerConfig.$inferSelect;
+
 // ============================================================================
 // LIVE POLLS - Guest preference polling for events
 // ============================================================================
