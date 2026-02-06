@@ -268,24 +268,32 @@ export class VendorDiscoveryService {
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
 
-      log('info', 'Step 3/8: Loading known vendors to build exclusion list for Gemini...');
+      log('info', 'Step 3/8: Building exclusion list and duplicate lookup maps...');
       const knownLoadStart = Date.now();
-      const jobStagedVendors = await this.storage.getStagedVendorsByJob(job.id);
-      const existingVendors = await this.storage.getAllVendors();
-      const knownLoadMs = Date.now() - knownLoadStart;
+      const [jobStagedVendors, existingVendorNameMap] = await Promise.all([
+        this.storage.getStagedVendorsByJob(job.id),
+        this.storage.getVendorNameIdMap(),
+      ]);
+
+      const stagedVendorMap = new Map<string, string>();
+      for (const v of jobStagedVendors) {
+        stagedVendorMap.set(v.name.toLowerCase().trim(), v.id);
+      }
 
       const MAX_EXCLUDE_NAMES = 200;
       const knownNames = new Set<string>();
-      for (const v of jobStagedVendors) {
-        knownNames.add(v.name.toLowerCase().trim());
-      }
-      for (const v of existingVendors) {
+      for (const name of stagedVendorMap.keys()) {
         if (knownNames.size >= MAX_EXCLUDE_NAMES) break;
-        knownNames.add(v.name.toLowerCase().trim());
+        knownNames.add(name);
+      }
+      for (const name of existingVendorNameMap.keys()) {
+        if (knownNames.size >= MAX_EXCLUDE_NAMES) break;
+        knownNames.add(name);
       }
       const knownNamesList = Array.from(knownNames);
+      const knownLoadMs = Date.now() - knownLoadStart;
 
-      log('info', `Step 3/8: Built exclusion list: ${jobStagedVendors.length} from this job + ${existingVendors.length} existing = ${knownNamesList.length} unique names (cap: ${MAX_EXCLUDE_NAMES}) in ${knownLoadMs}ms`);
+      log('info', `Step 3/8: Data prepared in ${knownLoadMs}ms. Staged vendors: ${stagedVendorMap.size}, Existing vendors: ${existingVendorNameMap.size}, Exclusion list: ${knownNamesList.length} (cap: ${MAX_EXCLUDE_NAMES})`);
 
       log('info', `Step 4/8: Loading chat history for ${job.area}/${job.specialty}...`);
       const chatRecord = await this.storage.getDiscoveryChatHistory(job.area, job.specialty);
@@ -331,29 +339,24 @@ export class VendorDiscoveryService {
 
       checkAborted();
 
-      log('info', `Step 6/8: Post-hoc duplicate safety check on ${discovered.length} vendors...`);
+      log('info', `Step 6/8: O(1) duplicate safety check on ${discovered.length} vendors...`);
 
       for (let i = 0; i < discovered.length; i++) {
         const vendor = discovered[i];
         const vendorName = vendor.name.toLowerCase().trim();
 
-        const existingDuplicate = existingVendors.find(
-          v => v.name.toLowerCase().trim() === vendorName
-        );
-        const stagedDuplicate = jobStagedVendors.find(
-          v => v.name.toLowerCase().trim() === vendorName
-        );
-
-        if (stagedDuplicate) {
+        const stagedDuplicateId = stagedVendorMap.get(vendorName);
+        if (stagedDuplicateId) {
           duplicateStagedCount++;
-          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — SKIP (already staged, staged ID: ${stagedDuplicate.id})`);
+          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — SKIP (already staged, ID: ${stagedDuplicateId})`);
           continue;
         }
 
-        const status = existingDuplicate ? 'duplicate' : 'staged';
-        if (existingDuplicate) {
+        const existingDuplicateId = existingVendorNameMap.get(vendorName);
+        const status = existingDuplicateId ? 'duplicate' : 'staged';
+        if (existingDuplicateId) {
           duplicateExistingCount++;
-          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — DUPLICATE of existing vendor "${existingDuplicate.name}" (ID: ${existingDuplicate.id}), staging with status=duplicate`);
+          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — DUPLICATE of existing vendor (ID: ${existingDuplicateId}), staging with status=duplicate`);
         } else {
           log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — NEW, staging with status=staged`);
         }
@@ -372,34 +375,25 @@ export class VendorDiscoveryService {
           priceRange: vendor.price_range,
           notes: vendor.notes,
           status,
-          duplicateOfVendorId: existingDuplicate?.id || null,
+          duplicateOfVendorId: existingDuplicateId || null,
         });
 
         newCount++;
       }
 
-      log('info', `Step 6/9: Safety check complete`, {
+      log('info', `Step 6/8: Safety check complete`, {
         totalFromGemini: discovered.length,
         stagedNew: newCount,
         skippedAlreadyStaged: duplicateStagedCount,
         markedAsDuplicateOfExisting: duplicateExistingCount,
       });
 
-      log('info', 'Step 7/9: Verifying vendor websites (non-blocking)...');
-      try {
-        const freshStagedVendors = await this.storage.getStagedVendorsByJob(job.id);
-        const vendorsToVerify = freshStagedVendors.filter(v => v.websiteVerified === 'pending' || !v.websiteVerified);
-        if (vendorsToVerify.length > 0) {
-          const verifyResults = await verifyVendorWebsites(vendorsToVerify, this.storage, log);
-          log('info', `Step 7/9: Website verification complete`, verifyResults);
-        } else {
-          log('info', `Step 7/9: No new vendors to verify.`);
-        }
-      } catch (verifyErr: any) {
-        log('error', `Step 7/9: Website verification failed (non-fatal): ${verifyErr.message}. Discovery run continues.`);
-      }
+      log('info', 'Step 7/8: Triggering background website verification...');
+      this.verifyWebsitesInBackground(job.id, log).catch(err =>
+        console.error(`${PREFIX} Background verification error for job ${job.id}:`, err)
+      );
 
-      log('info', 'Step 8/9: Updating job counters and saving chat history...');
+      log('info', 'Step 8/8: Updating job counters and saving chat history...');
       await this.storage.updateDiscoveryJob(job.id, {
         lastRunAt: new Date(),
         totalDiscovered: job.totalDiscovered + newCount,
@@ -414,16 +408,16 @@ export class VendorDiscoveryService {
           updatedChatHistory,
           totalVendorsStaged,
         );
-        log('info', `Step 8/9: Chat history saved (${updatedChatHistory.length} entries, ${totalVendorsStaged} total vendors staged for this area/specialty).`);
+        log('info', `Step 8/8: Chat history saved (${updatedChatHistory.length} entries, ${totalVendorsStaged} total vendors staged for this area/specialty).`);
       } catch (histErr: any) {
-        log('error', `Step 8/9: Failed to save chat history (non-fatal): ${histErr.message}. Run will still be marked completed.`);
+        log('error', `Step 8/8: Failed to save chat history (non-fatal): ${histErr.message}. Run will still be marked completed.`);
       }
 
-      log('info', `Step 8/9: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}.`);
+      log('info', `Step 8/8: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}.`);
 
       const totalDuplicates = duplicateStagedCount + duplicateExistingCount;
 
-      log('info', `Step 9/9: JOB COMPLETE`, {
+      log('info', `JOB COMPLETE`, {
         runId,
         geminiReturned: discovered.length,
         stagedCount: newCount,
@@ -444,6 +438,21 @@ export class VendorDiscoveryService {
       log('error', `FAILED during processing: ${errMsg}`, { stack: error.stack?.substring(0, 500) });
       await this.finishRun(runId, 0, 0, 0, 'failed', errMsg);
       return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
+    }
+  }
+
+  private async verifyWebsitesInBackground(jobId: string, log: (level: DiscoveryLog['level'], message: string, data?: Record<string, any>) => void) {
+    try {
+      const freshStagedVendors = await this.storage.getStagedVendorsByJob(jobId);
+      const vendorsToVerify = freshStagedVendors.filter(v => v.websiteVerified === 'pending' || !v.websiteVerified);
+      if (vendorsToVerify.length > 0) {
+        const verifyResults = await verifyVendorWebsites(vendorsToVerify, this.storage, log);
+        log('info', `Background website verification complete`, verifyResults);
+      } else {
+        log('info', `Background website verification: no vendors to verify.`);
+      }
+    } catch (verifyErr: any) {
+      log('error', `Background website verification failed: ${verifyErr.message}`);
     }
   }
 
