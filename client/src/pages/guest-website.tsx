@@ -15,6 +15,7 @@ import { CeremonyStyleCard, CEREMONY_STYLES } from "@/components/ceremony-style-
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { OrnamentalDivider, MandalaIcon } from "@/components/desi-modern";
+import { GuestMediaUpload } from "@/components/guest-media-upload";
 
 interface PublicWeddingData {
   website: WeddingWebsite;
@@ -560,6 +561,19 @@ export default function GuestWebsite() {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Guest Photo Uploads */}
+        {website.guestUploadsEnabled && (
+          <>
+            <OrnamentalDivider />
+            <GuestMediaUpload
+              uploadUrlEndpoint={`/api/public/guest-media/wedding/${slug}/upload-url`}
+              mediaEndpoint={`/api/public/guest-media/wedding/${slug}/media`}
+              showApproved={true}
+              approvedEndpoint={`/api/public/guest-media/wedding/${slug}/approved`}
+            />
+          </>
         )}
       </div>
 

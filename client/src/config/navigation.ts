@@ -4,6 +4,7 @@ import {
   Package, BookOpen, Radio, UsersRound, Globe, Bot, 
   Calendar, Wallet, BarChart3, Briefcase, Star, Send, Gamepad2,
   Mic, Shield, Sparkles, Flower2, AlarmClock, Palmtree, Gift, Vote,
+  Camera,
   type LucideIcon
 } from "lucide-react";
 import type { PermissionCategory } from "@shared/schema";
@@ -63,6 +64,7 @@ export const COUPLE_NAV_SECTIONS: NavSection[] = [
     items: [
       { path: "/communication-hub", label: "Send Invites", icon: Send, permission: "guests", description: "Send invitations & track RSVPs" },
       { path: "/polls", label: "Guest Polls", icon: Vote, permission: "guests", description: "Collect guest preferences" },
+      { path: "/guest-media", label: "Guest Photos", icon: Camera, permission: "guests", description: "Moderate guest uploads" },
     ],
   },
   {

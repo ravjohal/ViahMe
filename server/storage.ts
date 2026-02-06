@@ -7172,6 +7172,55 @@ export class DBStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Guest Media
+  async createGuestMedia(media: InsertGuestMedia): Promise<GuestMedia> {
+    const result = await this.db
+      .insert(schema.guestMedia)
+      .values(media)
+      .returning();
+    return result[0];
+  }
+
+  async getGuestMediaByWedding(weddingId: string, status?: string): Promise<GuestMedia[]> {
+    const conditions = [eq(schema.guestMedia.weddingId, weddingId)];
+    if (status) {
+      conditions.push(eq(schema.guestMedia.status, status));
+    }
+    return await this.db
+      .select()
+      .from(schema.guestMedia)
+      .where(and(...conditions))
+      .orderBy(desc(schema.guestMedia.createdAt));
+  }
+
+  async getGuestMediaById(id: string): Promise<GuestMedia | undefined> {
+    const result = await this.db
+      .select()
+      .from(schema.guestMedia)
+      .where(eq(schema.guestMedia.id, id));
+    return result[0];
+  }
+
+  async updateGuestMediaStatus(id: string, status: 'approved' | 'rejected'): Promise<GuestMedia | undefined> {
+    const result = await this.db
+      .update(schema.guestMedia)
+      .set({ status })
+      .where(eq(schema.guestMedia.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getGuestMediaCounts(weddingId: string): Promise<{ pending: number; approved: number; rejected: number; total: number }> {
+    const all = await this.db
+      .select()
+      .from(schema.guestMedia)
+      .where(eq(schema.guestMedia.weddingId, weddingId));
+    const pending = all.filter(m => m.status === 'pending').length;
+    const approved = all.filter(m => m.status === 'approved').length;
+    const rejected = all.filter(m => m.status === 'rejected').length;
+    return { pending, approved, rejected, total: all.length };
+  }
+
   // Vendor Availability
   async getVendorAvailability(id: string): Promise<VendorAvailability | undefined> {
     const result = await this.db

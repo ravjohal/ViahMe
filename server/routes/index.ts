@@ -77,6 +77,7 @@ import traditionRitualsRouter from "./tradition-rituals";
 import { registerTranslationRoutes } from "./translation";
 import { registerMetroAreasRoutes } from "./metro-areas";
 import { createPollsRouter, createPollOptionsRouter, createPollVotesRouter, createGuestPollsRouter } from "./polls";
+import { createGuestMediaRouter, createPublicGuestMediaRouter } from "./guest-media";
 import { seedVendors } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -481,6 +482,10 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/weddings", createRegistriesRouter(storage));
   app.use("/api/registries", createRegistriesRouter(storage));
   app.use("/api/public", createPublicWeddingRouter(storage));
+
+  // Guest media (public upload + couple moderation)
+  app.use("/api/guest-media", await createGuestMediaRouter(storage));
+  app.use("/api/public/guest-media", createPublicGuestMediaRouter(storage));
 
   // Galleries and photos
   app.use("/api/galleries", createGalleriesRouter(storage));
