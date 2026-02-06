@@ -1563,6 +1563,7 @@ export interface IStorage {
 
   // Discovery Runs
   getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined>;
+  getAllDiscoveryRuns(limit?: number): Promise<DiscoveryRun[]>;
   getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]>;
   getDiscoveryRunsByJob(jobId: string, runDate?: string): Promise<DiscoveryRun[]>;
   getTodayDiscoveredCount(runDate: string): Promise<number>;
@@ -5025,6 +5026,7 @@ export class MemStorage implements IStorage {
 
   // Discovery Runs (stub methods for MemStorage)
   async getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined> { return undefined; }
+  async getAllDiscoveryRuns(limit?: number): Promise<DiscoveryRun[]> { return []; }
   async getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]> { return []; }
   async getDiscoveryRunsByJob(jobId: string, runDate?: string): Promise<DiscoveryRun[]> { return []; }
   async getTodayDiscoveredCount(runDate: string): Promise<number> { return 0; }
@@ -13875,6 +13877,10 @@ export class DBStorage implements IStorage {
   async getDiscoveryRun(id: string): Promise<DiscoveryRun | undefined> {
     const [run] = await this.db.select().from(discoveryRuns).where(eq(discoveryRuns.id, id));
     return run;
+  }
+
+  async getAllDiscoveryRuns(limit: number = 100): Promise<DiscoveryRun[]> {
+    return this.db.select().from(discoveryRuns).orderBy(desc(discoveryRuns.startedAt)).limit(limit);
   }
 
   async getDiscoveryRunsByDate(runDate: string): Promise<DiscoveryRun[]> {

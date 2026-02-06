@@ -23,6 +23,7 @@ export class VendorDiscoveryScheduler {
   private intervalId: NodeJS.Timer | null = null;
   private isRunning = false;
   private cachedConfig: SchedulerConfig | null = null;
+  private activeRuns: Map<string, { controller: AbortController; jobId: string }> = new Map();
 
   constructor(storage: IStorage) {
     this.storage = storage;
@@ -140,16 +141,47 @@ export class VendorDiscoveryScheduler {
     console.log(`${PREFIX} [ManualRun] ${ts()} Firing background discovery for job ${jobId} (${job.area}/${job.specialty})`);
 
     const runId = await this.service.createPendingRun(job.id, 'manual');
+    const controller = new AbortController();
+    this.activeRuns.set(runId, { controller, jobId });
 
     setImmediate(async () => {
       try {
-        await this.service.executeJob(job, config.dailyCap, 'manual', runId);
+        await this.service.executeJob(job, config.dailyCap, 'manual', runId, controller.signal);
       } catch (error: any) {
         console.error(`${PREFIX} [ManualRun] ${ts()} Background discovery failed:`, error);
+      } finally {
+        this.activeRuns.delete(runId);
       }
     });
 
     return { runId };
+  }
+
+  async cancelRun(runId: string): Promise<boolean> {
+    const entry = this.activeRuns.get(runId);
+    if (entry) {
+      console.log(`${PREFIX} ${ts()} Cancelling active run ${runId} (job: ${entry.jobId})`);
+      entry.controller.abort();
+      this.activeRuns.delete(runId);
+      return true;
+    }
+
+    const run = await this.storage.getDiscoveryRun(runId);
+    if (run && (run.status === 'queued' || run.status === 'running')) {
+      console.log(`${PREFIX} ${ts()} Marking stale run ${runId} as cancelled`);
+      await this.storage.updateDiscoveryRun(runId, {
+        status: 'cancelled',
+        error: 'Cancelled by admin',
+        finishedAt: new Date(),
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  getActiveRunIds(): string[] {
+    return Array.from(this.activeRuns.keys());
   }
 }
 

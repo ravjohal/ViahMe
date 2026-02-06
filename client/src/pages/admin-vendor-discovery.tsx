@@ -54,12 +54,15 @@ import {
   ShieldCheck,
   ShieldAlert,
   ShieldQuestion,
+  Ban,
+  History,
+  Timer,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
 import { Link } from "wouter";
-import type { DiscoveryJob, StagedVendor, MetroArea, VendorCategory } from "@shared/schema";
+import type { DiscoveryJob, DiscoveryRun, StagedVendor, MetroArea, VendorCategory } from "@shared/schema";
 
 interface DiscoveryLogEntry {
   timestamp: string;
@@ -267,6 +270,28 @@ export default function AdminVendorDiscovery() {
     },
   });
 
+  const runsQuery = useQuery<DiscoveryRun[]>({
+    queryKey: ["/api/admin/discovery-runs"],
+    refetchInterval: isPolling ? 3000 : false,
+  });
+
+  const cancelRunMutation = useMutation({
+    mutationFn: async (runId: string) => {
+      const res = await apiRequest("POST", `/api/admin/discovery-runs/${runId}/cancel`);
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsPolling(false);
+      setActiveRunId(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-runs"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
+      toast({ title: "Run cancelled" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to cancel", description: err.message, variant: "destructive" });
+    },
+  });
+
   const runNowMutation = useMutation({
     mutationFn: async (id: string) => {
       setDiscoveryLogs([]);
@@ -292,14 +317,17 @@ export default function AdminVendorDiscovery() {
         const res = await fetch(`/api/admin/discovery-runs/${activeRunId}`, { credentials: "include" });
         if (!res.ok) return;
         const run = await res.json();
-        if (run.status === 'completed' || run.status === 'failed' || run.status === 'skipped') {
+        if (run.status === 'completed' || run.status === 'failed' || run.status === 'skipped' || run.status === 'cancelled') {
           setIsPolling(false);
           queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
           queryClient.invalidateQueries({ queryKey: ["/api/admin/staged-vendors"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-runs"] });
           if (run.status === 'completed') {
             toast({ title: "Discovery complete", description: `Staged ${run.vendorsStaged} new vendor(s), ${run.duplicatesFound} duplicate(s)` });
           } else if (run.status === 'failed') {
             toast({ title: "Discovery failed", description: run.error || "Unknown error", variant: "destructive" });
+          } else if (run.status === 'cancelled') {
+            toast({ title: "Run cancelled" });
           } else {
             toast({ title: "Discovery skipped", description: "Job had no capacity or was invalid" });
           }
@@ -406,6 +434,10 @@ export default function AdminVendorDiscovery() {
               {stageableCount > 0 && (
                 <Badge variant="secondary" className="ml-2">{stageableCount}</Badge>
               )}
+            </TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history">
+              <History className="h-4 w-4 mr-1" />
+              Run History
             </TabsTrigger>
           </TabsList>
 
@@ -541,16 +573,29 @@ export default function AdminVendorDiscovery() {
                           )}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => runNowMutation.mutate(job.id)}
-                            disabled={runNowMutation.isPending || isPolling}
-                            title="Run now"
-                            data-testid={`button-run-job-${job.id}`}
-                          >
-                            {(runNowMutation.isPending || isPolling) ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                          </Button>
+                          {isPolling && activeRunId ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => cancelRunMutation.mutate(activeRunId)}
+                              disabled={cancelRunMutation.isPending}
+                              title="Cancel run"
+                              data-testid={`button-cancel-run-${job.id}`}
+                            >
+                              {cancelRunMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4 text-destructive" />}
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => runNowMutation.mutate(job.id)}
+                              disabled={runNowMutation.isPending || isPolling}
+                              title="Run now"
+                              data-testid={`button-run-job-${job.id}`}
+                            >
+                              {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="icon"
@@ -793,6 +838,153 @@ export default function AdminVendorDiscovery() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <p className="text-sm text-muted-foreground">
+                Recent discovery runs across all jobs, sorted by most recent.
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => runsQuery.refetch()}
+                data-testid="button-refresh-history"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {runsQuery.isLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            ) : !runsQuery.data || runsQuery.data.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <History className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No discovery runs yet. Run a job to see history here.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Job</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Discovered</TableHead>
+                      <TableHead className="text-right">Staged</TableHead>
+                      <TableHead className="text-right">Duplicates</TableHead>
+                      <TableHead>Trigger</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {runsQuery.data.map((run) => {
+                      const matchedJob = jobs.find(j => j.id === run.jobId);
+                      const duration = run.startedAt && run.finishedAt
+                        ? Math.round((new Date(run.finishedAt).getTime() - new Date(run.startedAt).getTime()) / 1000)
+                        : null;
+                      const isActive = run.status === 'running' || run.status === 'queued';
+
+                      return (
+                        <TableRow key={run.id} data-testid={`row-run-${run.id}`}>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium text-sm">
+                                {matchedJob ? matchedJob.area : 'Unknown'}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {matchedJob ? formatSpecialty(matchedJob.specialty) : run.jobId?.slice(0, 8)}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="text-sm">{run.runDate}</span>
+                              {run.startedAt && (
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(run.startedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {run.status === 'completed' && (
+                              <Badge className="bg-green-600 border-green-600">Completed</Badge>
+                            )}
+                            {run.status === 'running' && (
+                              <Badge variant="secondary">
+                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                Running
+                              </Badge>
+                            )}
+                            {run.status === 'queued' && (
+                              <Badge variant="secondary">Queued</Badge>
+                            )}
+                            {run.status === 'failed' && (
+                              <Badge variant="destructive">Failed</Badge>
+                            )}
+                            {run.status === 'cancelled' && (
+                              <Badge variant="outline" className="text-muted-foreground">Cancelled</Badge>
+                            )}
+                            {run.status === 'skipped' && (
+                              <Badge variant="outline">Skipped</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">{run.vendorsDiscovered}</TableCell>
+                          <TableCell className="text-right tabular-nums">{run.vendorsStaged}</TableCell>
+                          <TableCell className="text-right tabular-nums">{run.duplicatesFound}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
+                              {run.triggeredBy === 'manual' ? 'Manual' : 'Scheduled'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {isActive ? (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Timer className="h-3 w-3 animate-pulse" />
+                                In progress
+                              </span>
+                            ) : duration !== null ? (
+                              <span className="text-xs text-muted-foreground">
+                                {duration < 60 ? `${duration}s` : `${Math.floor(duration / 60)}m ${duration % 60}s`}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isActive && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => cancelRunMutation.mutate(run.id)}
+                                disabled={cancelRunMutation.isPending}
+                                title="Cancel run"
+                                data-testid={`button-cancel-history-${run.id}`}
+                              >
+                                <Ban className="h-4 w-4 text-destructive" />
+                              </Button>
+                            )}
+                            {run.status === 'failed' && run.error && (
+                              <span className="text-xs text-destructive truncate max-w-[200px] block" title={run.error}>
+                                {run.error}
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
             )}
           </TabsContent>

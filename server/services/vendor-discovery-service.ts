@@ -175,6 +175,7 @@ export class VendorDiscoveryService {
     dailyCap: number,
     triggeredBy: 'scheduler' | 'manual' = 'scheduler',
     existingRunId?: string,
+    abortSignal?: AbortSignal,
   ): Promise<DiscoveryResult> {
     const logs: DiscoveryLog[] = [];
     const runDate = getPSTDate();
@@ -190,6 +191,12 @@ export class VendorDiscoveryService {
         console.warn(`${prefix} ${entry.timestamp} ${message}${dataStr}`);
       } else {
         console.log(`${prefix} ${entry.timestamp} ${message}${dataStr}`);
+      }
+    };
+
+    const checkAborted = () => {
+      if (abortSignal?.aborted) {
+        throw new Error('CANCELLED');
       }
     };
 
@@ -211,6 +218,8 @@ export class VendorDiscoveryService {
     }
 
     try {
+      checkAborted();
+
       log('info', 'Step 1/8: Checking job validity', {
         runId,
         jobId: job.id,
@@ -287,6 +296,8 @@ export class VendorDiscoveryService {
       }
       log('info', `Step 4/8: ${priorHistory.length > 0 ? `Resuming conversation (${priorHistory.length} prior turns, ${chatRecord?.totalVendorsFound || 0} vendors staged previously)` : 'Starting fresh conversation'}`);
 
+      checkAborted();
+
       log('info', `Step 5/8: Calling Gemini API to discover ${countToFetch} vendors (excluding ${knownNamesList.length} known)...`, { area: job.area, specialty: job.specialty });
       const geminiStart = Date.now();
 
@@ -300,6 +311,8 @@ export class VendorDiscoveryService {
         vendorNames: discovered.map(v => v.name),
         chatHistoryTurns: updatedChatHistory.length,
       });
+
+      checkAborted();
 
       if (discovered.length === 0) {
         log('warn', 'Step 5/8: Gemini returned 0 vendors. Saving chat history and finishing.');
@@ -315,6 +328,8 @@ export class VendorDiscoveryService {
       let newCount = 0;
       let duplicateExistingCount = 0;
       let duplicateStagedCount = 0;
+
+      checkAborted();
 
       log('info', `Step 6/8: Post-hoc duplicate safety check on ${discovered.length} vendors...`);
 
@@ -421,6 +436,11 @@ export class VendorDiscoveryService {
       return { runId, discovered: discovered.length, staged: newCount, duplicatesFound: totalDuplicates, logs };
     } catch (error: any) {
       const errMsg = error.message || String(error);
+      if (errMsg === 'CANCELLED') {
+        log('warn', 'Run was cancelled by admin.');
+        await this.finishRun(runId, 0, 0, 0, 'cancelled', 'Cancelled by admin');
+        return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
+      }
       log('error', `FAILED during processing: ${errMsg}`, { stack: error.stack?.substring(0, 500) });
       await this.finishRun(runId, 0, 0, 0, 'failed', errMsg);
       return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };

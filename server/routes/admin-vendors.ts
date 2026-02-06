@@ -1018,18 +1018,40 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       }
       const jobId = req.query.jobId as string | undefined;
       const runDate = req.query.runDate as string | undefined;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
       let runs;
       if (jobId) {
         runs = await storage.getDiscoveryRunsByJob(jobId, runDate);
       } else if (runDate) {
         runs = await storage.getDiscoveryRunsByDate(runDate);
       } else {
-        runs = await storage.getDiscoveryRunsByDate(new Date().toISOString().split('T')[0]);
+        runs = await storage.getAllDiscoveryRuns(limit || 100);
       }
       res.json(runs);
     } catch (error) {
       console.error("Error fetching discovery runs:", error);
       res.status(500).json({ error: "Failed to fetch discovery runs" });
+    }
+  });
+
+  router.post("/discovery-runs/:id/cancel", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const scheduler: VendorDiscoveryScheduler = (req.app as any).vendorDiscoveryScheduler;
+      if (!scheduler) {
+        return res.status(500).json({ error: "Scheduler not initialized" });
+      }
+      const cancelled = await scheduler.cancelRun(req.params.id);
+      if (cancelled) {
+        res.json({ status: 'cancelled', message: 'Run cancelled successfully' });
+      } else {
+        res.status(409).json({ error: 'Run is not active or already finished' });
+      }
+    } catch (error: any) {
+      console.error("Error cancelling discovery run:", error);
+      res.status(500).json({ error: error.message || "Failed to cancel run" });
     }
   });
 
