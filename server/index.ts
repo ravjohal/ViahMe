@@ -120,8 +120,8 @@ app.use(express.static(path.join(process.cwd(), "public")));
   taskReminderScheduler.start(60 * 60 * 1000);
   log('Task reminder scheduler started');
 
-  // Initialize vendor discovery scheduler (checks every hour, runs jobs at 2 AM UTC)
-  const vendorDiscoveryScheduler = new VendorDiscoveryScheduler(storage);
+  // Initialize vendor discovery scheduler (checks every hour, runs jobs at 2 AM PST)
+  const vendorDiscoveryScheduler = new VendorDiscoveryScheduler(storage, { runHour: 2, dailyCap: 50 });
   vendorDiscoveryScheduler.start(60 * 60 * 1000);
   log('Vendor discovery scheduler started');
   (app as any).vendorDiscoveryScheduler = vendorDiscoveryScheduler;

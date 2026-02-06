@@ -2,14 +2,45 @@ import type { IStorage } from '../storage';
 import type { DiscoveryJob } from '@shared/schema';
 import { discoverVendors } from '../ai/gemini';
 
-const DAILY_GLOBAL_CAP = 50;
-const RUN_HOUR = 2;
-
 const PREFIX = '[VendorDiscovery]';
 
 function ts(): string {
   return new Date().toISOString();
 }
+
+const LA_TZ = 'America/Los_Angeles';
+
+function getPSTHour(): number {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: LA_TZ,
+    hour: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+  const hourPart = parts.find(p => p.type === 'hour');
+  return Number(hourPart?.value ?? 0);
+}
+
+function getPSTDate(): string {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: LA_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+  return parts;
+}
+
+export interface SchedulerConfig {
+  runHour: number;
+  dailyCap: number;
+}
+
+const DEFAULT_CONFIG: SchedulerConfig = {
+  runHour: 2,
+  dailyCap: 50,
+};
 
 export interface DiscoveryLog {
   timestamp: string;
@@ -24,13 +55,29 @@ export class VendorDiscoveryScheduler {
   private isRunning = false;
   private todayDiscoveredCount = 0;
   private lastResetDate = '';
+  private config: SchedulerConfig;
 
-  constructor(storage: IStorage) {
+  constructor(storage: IStorage, config?: Partial<SchedulerConfig>) {
     this.storage = storage;
+    this.config = { ...DEFAULT_CONFIG, ...config };
+  }
+
+  getConfig(): SchedulerConfig {
+    return { ...this.config };
+  }
+
+  updateConfig(updates: Partial<SchedulerConfig>) {
+    if (updates.runHour !== undefined) {
+      this.config.runHour = Math.max(0, Math.min(23, Math.floor(updates.runHour)));
+    }
+    if (updates.dailyCap !== undefined) {
+      this.config.dailyCap = Math.max(1, Math.floor(updates.dailyCap));
+    }
+    console.log(`${PREFIX} ${ts()} Config updated: runHour=${this.config.runHour} PST, dailyCap=${this.config.dailyCap}`);
   }
 
   async start(intervalMs: number = 60000 * 60) {
-    console.log(`${PREFIX} ${ts()} Scheduler started. Checking every ${intervalMs / 60000} minutes. Cron fires at ${RUN_HOUR}:00 UTC. Daily cap: ${DAILY_GLOBAL_CAP}`);
+    console.log(`${PREFIX} ${ts()} Scheduler started. Checking every ${intervalMs / 60000} minutes. Cron fires at ${this.config.runHour}:00 PST. Daily cap: ${this.config.dailyCap}`);
     this.intervalId = setInterval(() => this.checkAndRun(), intervalMs);
   }
 
@@ -43,11 +90,11 @@ export class VendorDiscoveryScheduler {
   }
 
   private resetDailyCountIfNeeded() {
-    const today = new Date().toISOString().split('T')[0];
-    if (today !== this.lastResetDate) {
-      console.log(`${PREFIX} ${ts()} Daily counter reset. Previous date: ${this.lastResetDate || '(none)'}, new date: ${today}, previous count: ${this.todayDiscoveredCount}`);
+    const todayPST = getPSTDate();
+    if (todayPST !== this.lastResetDate) {
+      console.log(`${PREFIX} ${ts()} Daily counter reset (PST). Previous date: ${this.lastResetDate || '(none)'}, new date: ${todayPST}, previous count: ${this.todayDiscoveredCount}`);
       this.todayDiscoveredCount = 0;
-      this.lastResetDate = today;
+      this.lastResetDate = todayPST;
     }
   }
 
@@ -57,17 +104,16 @@ export class VendorDiscoveryScheduler {
       return;
     }
 
-    const now = new Date();
-    const currentHour = now.getUTCHours();
+    const currentHourPST = getPSTHour();
 
-    if (currentHour !== RUN_HOUR) {
+    if (currentHourPST !== this.config.runHour) {
       return;
     }
 
     this.resetDailyCountIfNeeded();
 
-    if (this.todayDiscoveredCount >= DAILY_GLOBAL_CAP) {
-      console.log(`${PREFIX} ${ts()} Daily global cap already reached (${this.todayDiscoveredCount}/${DAILY_GLOBAL_CAP}). Skipping.`);
+    if (this.todayDiscoveredCount >= this.config.dailyCap) {
+      console.log(`${PREFIX} ${ts()} Daily global cap already reached (${this.todayDiscoveredCount}/${this.config.dailyCap}). Skipping.`);
       return;
     }
 
@@ -79,15 +125,15 @@ export class VendorDiscoveryScheduler {
       console.log(`${PREFIX} ${ts()} Found ${activeJobs.length} active discovery job(s)`);
 
       for (const job of activeJobs) {
-        if (this.todayDiscoveredCount >= DAILY_GLOBAL_CAP) {
-          console.log(`${PREFIX} ${ts()} Daily global cap reached mid-run (${this.todayDiscoveredCount}/${DAILY_GLOBAL_CAP}). Stopping.`);
+        if (this.todayDiscoveredCount >= this.config.dailyCap) {
+          console.log(`${PREFIX} ${ts()} Daily global cap reached mid-run (${this.todayDiscoveredCount}/${this.config.dailyCap}). Stopping.`);
           break;
         }
 
         await this.processJob(job);
       }
 
-      console.log(`${PREFIX} ${ts()} === Scheduled run complete. Today's total: ${this.todayDiscoveredCount}/${DAILY_GLOBAL_CAP} ===`);
+      console.log(`${PREFIX} ${ts()} === Scheduled run complete. Today's total: ${this.todayDiscoveredCount}/${this.config.dailyCap} ===`);
     } catch (error) {
       console.error(`${PREFIX} ${ts()} ERROR in scheduler:`, error);
     } finally {
@@ -136,7 +182,7 @@ export class VendorDiscoveryScheduler {
     log('info', 'Step 1/7: Job is valid, proceeding.');
 
     const remaining = job.maxTotal ? job.maxTotal - job.totalDiscovered : job.countPerRun;
-    const globalBudget = DAILY_GLOBAL_CAP - this.todayDiscoveredCount;
+    const globalBudget = this.config.dailyCap - this.todayDiscoveredCount;
     const countToFetch = Math.min(job.countPerRun, remaining, globalBudget);
 
     log('info', 'Step 2/7: Calculating fetch count', {
@@ -249,7 +295,7 @@ export class VendorDiscoveryScheduler {
         stagedCount: newCount,
         duplicatesSkipped: duplicateStagedCount + duplicateExistingCount,
         todayGlobalTotal: this.todayDiscoveredCount,
-        dailyCap: DAILY_GLOBAL_CAP,
+        dailyCap: this.config.dailyCap,
       });
     } catch (error: any) {
       log('error', `FAILED during processing: ${error.message}`, { stack: error.stack?.substring(0, 500) });
@@ -283,7 +329,7 @@ export class VendorDiscoveryScheduler {
     });
 
     this.resetDailyCountIfNeeded();
-    logEntry('info', 'Daily counter state', { todayDiscoveredCount: this.todayDiscoveredCount, dailyCap: DAILY_GLOBAL_CAP });
+    logEntry('info', 'Daily counter state', { todayDiscoveredCount: this.todayDiscoveredCount, dailyCap: this.config.dailyCap });
 
     const beforeCount = job.totalDiscovered;
     await this.processJob(job, logs);

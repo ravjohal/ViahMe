@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,7 @@ import {
   ChevronUp,
   Terminal,
   X,
+  Settings,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,13 @@ function formatSpecialty(s: string) {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function formatHour(h: number): string {
+  if (h === 0) return "12:00 AM";
+  if (h === 12) return "12:00 PM";
+  if (h < 12) return `${h}:00 AM`;
+  return `${h - 12}:00 PM`;
+}
+
 function statusBadge(status: string) {
   switch (status) {
     case "staged":
@@ -125,6 +133,41 @@ export default function AdminVendorDiscovery() {
   const [expandedVendor, setExpandedVendor] = useState<string | null>(null);
   const [discoveryLogs, setDiscoveryLogs] = useState<DiscoveryLogEntry[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsRunHour, setSettingsRunHour] = useState(2);
+  const [settingsDailyCap, setSettingsDailyCap] = useState(50);
+
+  const schedulerConfigQuery = useQuery<{ runHour: number; dailyCap: number; timezone: string }>({
+    queryKey: ["/api/admin/scheduler-config"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/scheduler-config", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch scheduler config");
+      return res.json();
+    },
+  });
+
+  const updateConfigMutation = useMutation({
+    mutationFn: async (data: { runHour?: number; dailyCap?: number }) => {
+      const res = await apiRequest("PUT", "/api/admin/scheduler-config", data);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/scheduler-config"] });
+      setSettingsRunHour(data.runHour);
+      setSettingsDailyCap(data.dailyCap);
+      toast({ title: "Scheduler settings updated" });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to update settings", description: err.message, variant: "destructive" });
+    },
+  });
+
+  useEffect(() => {
+    if (schedulerConfigQuery.data) {
+      setSettingsRunHour(schedulerConfigQuery.data.runHour);
+      setSettingsDailyCap(schedulerConfigQuery.data.dailyCap);
+    }
+  }, [schedulerConfigQuery.data]);
 
   const [newJob, setNewJob] = useState({
     area: METRO_AREAS[0],
@@ -307,14 +350,82 @@ export default function AdminVendorDiscovery() {
 
           <TabsContent value="jobs" className="mt-4">
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-              <p className="text-sm text-muted-foreground">
-                Jobs run daily at 2 AM UTC. Each job discovers vendors for a specific area and specialty.
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-muted-foreground">
+                  Jobs run daily at {schedulerConfigQuery.data ? formatHour(schedulerConfigQuery.data.runHour) : "..."} PST.
+                  Daily cap: {schedulerConfigQuery.data?.dailyCap ?? "..."} vendors.
+                </p>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowSettings(!showSettings)}
+                  data-testid="button-toggle-settings"
+                >
+                  <Settings />
+                </Button>
+              </div>
               <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-job">
                 <Plus className="mr-2 h-4 w-4" />
                 New Job
               </Button>
             </div>
+
+            {showSettings && (
+              <Card className="mb-4" data-testid="card-scheduler-settings">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Settings className="w-4 h-4" />
+                    Scheduler Settings
+                  </CardTitle>
+                  <CardDescription>Configure when jobs run and how many vendors can be discovered daily.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-6 items-end">
+                    <div className="space-y-2">
+                      <Label htmlFor="run-hour">Run Time (PST)</Label>
+                      <Select
+                        value={String(settingsRunHour)}
+                        onValueChange={(v) => setSettingsRunHour(Number(v))}
+                      >
+                        <SelectTrigger className="w-48" data-testid="select-run-hour">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 24 }, (_, i) => (
+                            <SelectItem key={i} value={String(i)} data-testid={`option-hour-${i}`}>
+                              {formatHour(i)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="daily-cap">Daily Cap (vendors)</Label>
+                      <Input
+                        id="daily-cap"
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={settingsDailyCap}
+                        onChange={(e) => setSettingsDailyCap(Number(e.target.value))}
+                        className="w-32"
+                        data-testid="input-daily-cap"
+                      />
+                    </div>
+                    <Button
+                      onClick={() => updateConfigMutation.mutate({ runHour: settingsRunHour, dailyCap: settingsDailyCap })}
+                      disabled={updateConfigMutation.isPending}
+                      data-testid="button-save-settings"
+                    >
+                      {updateConfigMutation.isPending ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : null}
+                      Save Settings
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {jobsQuery.isLoading ? (
               <div className="space-y-3">

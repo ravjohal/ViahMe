@@ -924,6 +924,57 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.get("/scheduler-config", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const scheduler: VendorDiscoveryScheduler = (req.app as any).vendorDiscoveryScheduler;
+      if (!scheduler) {
+        return res.status(500).json({ error: "Scheduler not initialized" });
+      }
+      const config = scheduler.getConfig();
+      res.json({ ...config, timezone: "PST" });
+    } catch (error) {
+      console.error("Error fetching scheduler config:", error);
+      res.status(500).json({ error: "Failed to fetch scheduler config" });
+    }
+  });
+
+  router.put("/scheduler-config", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const scheduler: VendorDiscoveryScheduler = (req.app as any).vendorDiscoveryScheduler;
+      if (!scheduler) {
+        return res.status(500).json({ error: "Scheduler not initialized" });
+      }
+      const { runHour, dailyCap } = req.body;
+      const updates: Record<string, number> = {};
+      if (runHour !== undefined) {
+        const h = Number(runHour);
+        if (isNaN(h) || h < 0 || h > 23) {
+          return res.status(400).json({ error: "runHour must be between 0 and 23" });
+        }
+        updates.runHour = h;
+      }
+      if (dailyCap !== undefined) {
+        const c = Number(dailyCap);
+        if (isNaN(c) || c < 1) {
+          return res.status(400).json({ error: "dailyCap must be at least 1" });
+        }
+        updates.dailyCap = c;
+      }
+      scheduler.updateConfig(updates);
+      const config = scheduler.getConfig();
+      res.json({ ...config, timezone: "PST" });
+    } catch (error) {
+      console.error("Error updating scheduler config:", error);
+      res.status(500).json({ error: "Failed to update scheduler config" });
+    }
+  });
+
   // ============================================================
   // Staged Vendors Review / Approval
   // ============================================================
