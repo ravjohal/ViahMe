@@ -2035,6 +2035,10 @@ export interface DiscoveredVendor {
 
 export async function discoverVendors(area: string, specialty: string, count: number = 10): Promise<DiscoveredVendor[]> {
   const startTime = Date.now();
+  const DV = '[DiscoverVendors]';
+
+  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", count=${count}`);
+
   const prompt = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform.
 
 Find ${count} REAL vendors that specialize in "${specialty}" in the "${area}" area. These should be actual businesses that serve the South Asian wedding market (Sikh, Hindu, Muslim, Gujarati, South Indian weddings).
@@ -2056,9 +2060,13 @@ IMPORTANT: Return ONLY real businesses you are confident exist. If you cannot fi
 
 Respond with a JSON array of vendor objects. Only output the JSON array, no other text.`;
 
+  console.log(`${DV} Prompt length: ${prompt.length} chars`);
+  console.log(`${DV} Sending request to Gemini model: ${GEMINI_MODEL} (temperature=0.3, maxTokens=4000, timeout=90s)...`);
+
   try {
     logAIRequest('discoverVendors', { area, specialty, count });
 
+    const apiCallStart = Date.now();
     const response = await withTimeout(
       ai.models.generateContent({
         model: GEMINI_MODEL,
@@ -2071,31 +2079,48 @@ Respond with a JSON array of vendor objects. Only output the JSON array, no othe
       90000,
       'Vendor discovery'
     );
+    const apiCallMs = Date.now() - apiCallStart;
 
     const text = response.text || '';
+    console.log(`${DV} Gemini responded in ${apiCallMs}ms. Response length: ${text.length} chars`);
     logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
 
     const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
-      console.error('No JSON array found in vendor discovery response');
+      console.error(`${DV} FAILED: No JSON array found in response. Raw response (first 500 chars): ${text.substring(0, 500)}`);
       return [];
     }
 
+    console.log(`${DV} JSON array extracted (${jsonMatch[0].length} chars). Parsing...`);
+
     const vendors: DiscoveredVendor[] = JSON.parse(jsonMatch[0]);
-    return vendors.map(v => ({
-      name: v.name || '',
-      location: v.location || '',
-      phone: v.phone || '',
-      email: v.email || '',
-      website: v.website || '',
-      specialty: v.specialty || '',
-      categories: Array.isArray(v.categories) ? v.categories : ['photographer'],
-      cultural_specialties: Array.isArray(v.cultural_specialties) ? v.cultural_specialties : ['south_asian'],
-      preferred_wedding_traditions: Array.isArray(v.preferred_wedding_traditions) ? v.preferred_wedding_traditions : ['sikh', 'hindu'],
-      price_range: v.price_range || '$$$',
-      notes: v.notes || '',
-    }));
-  } catch (error) {
+    console.log(`${DV} Parsed ${vendors.length} vendor object(s) from JSON`);
+
+    const mapped = vendors.map((v, i) => {
+      const mapped = {
+        name: v.name || '',
+        location: v.location || '',
+        phone: v.phone || '',
+        email: v.email || '',
+        website: v.website || '',
+        specialty: v.specialty || '',
+        categories: Array.isArray(v.categories) ? v.categories : ['photographer'],
+        cultural_specialties: Array.isArray(v.cultural_specialties) ? v.cultural_specialties : ['south_asian'],
+        preferred_wedding_traditions: Array.isArray(v.preferred_wedding_traditions) ? v.preferred_wedding_traditions : ['sikh', 'hindu'],
+        price_range: v.price_range || '$$$',
+        notes: v.notes || '',
+      };
+      console.log(`${DV}   [${i + 1}] "${mapped.name}" | ${mapped.location} | ${mapped.website || 'no website'} | categories: ${mapped.categories.join(', ')}`);
+      return mapped;
+    });
+
+    const totalMs = Date.now() - startTime;
+    console.log(`${DV} <<< DONE: Returning ${mapped.length} vendor(s). Total time: ${totalMs}ms`);
+
+    return mapped;
+  } catch (error: any) {
+    const totalMs = Date.now() - startTime;
+    console.error(`${DV} <<< ERROR after ${totalMs}ms: ${error.message}`);
     logAIError('discoverVendors', error);
     throw error;
   }

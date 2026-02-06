@@ -46,12 +46,21 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
+  Terminal,
+  X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
 import { Link } from "wouter";
 import type { DiscoveryJob, StagedVendor } from "@shared/schema";
+
+interface DiscoveryLogEntry {
+  timestamp: string;
+  level: 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+  data?: Record<string, any>;
+}
 
 const METRO_AREAS = [
   "Bay Area, CA",
@@ -114,6 +123,8 @@ export default function AdminVendorDiscovery() {
   const [selectedVendors, setSelectedVendors] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("staged");
   const [expandedVendor, setExpandedVendor] = useState<string | null>(null);
+  const [discoveryLogs, setDiscoveryLogs] = useState<DiscoveryLogEntry[]>([]);
+  const [showLogs, setShowLogs] = useState(false);
 
   const [newJob, setNewJob] = useState({
     area: METRO_AREAS[0],
@@ -176,12 +187,17 @@ export default function AdminVendorDiscovery() {
 
   const runNowMutation = useMutation({
     mutationFn: async (id: string) => {
+      setDiscoveryLogs([]);
+      setShowLogs(true);
       const res = await apiRequest("POST", `/api/admin/discovery-jobs/${id}/run-now`);
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data: { discovered: number; staged: number; logs: DiscoveryLogEntry[] }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/staged-vendors"] });
+      if (data.logs) {
+        setDiscoveryLogs(data.logs);
+      }
       toast({ title: "Discovery complete", description: `Found ${data.staged} new vendors` });
     },
     onError: (err: Error) => {
@@ -588,6 +604,61 @@ export default function AdminVendorDiscovery() {
             )}
           </TabsContent>
         </Tabs>
+
+        {showLogs && (
+          <Card className="mt-4" data-testid="card-discovery-logs">
+            <CardHeader className="py-3 flex flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Terminal className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-base">Discovery Run Logs</CardTitle>
+                {runNowMutation.isPending && (
+                  <Badge variant="secondary" className="ml-2">
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    Running...
+                  </Badge>
+                )}
+                {!runNowMutation.isPending && discoveryLogs.length > 0 && (
+                  <Badge variant="outline" className="ml-2">{discoveryLogs.length} entries</Badge>
+                )}
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowLogs(false)} data-testid="button-close-logs">
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="py-0 pb-4">
+              <div
+                className="bg-muted/50 rounded-md p-3 max-h-96 overflow-y-auto font-mono text-xs space-y-1"
+                data-testid="container-log-entries"
+              >
+                {discoveryLogs.length === 0 && runNowMutation.isPending && (
+                  <div className="text-muted-foreground py-4 text-center">Waiting for discovery results...</div>
+                )}
+                {discoveryLogs.length === 0 && !runNowMutation.isPending && (
+                  <div className="text-muted-foreground py-4 text-center">No logs available.</div>
+                )}
+                {discoveryLogs.map((entry, i) => {
+                  const levelColor = entry.level === 'error' ? 'text-red-500'
+                    : entry.level === 'warn' ? 'text-yellow-500'
+                    : entry.level === 'debug' ? 'text-muted-foreground'
+                    : 'text-foreground';
+                  const time = entry.timestamp.split('T')[1]?.split('.')[0] || entry.timestamp;
+                  return (
+                    <div key={i} className={`${levelColor} leading-relaxed`} data-testid={`log-entry-${i}`}>
+                      <span className="text-muted-foreground mr-2">[{time}]</span>
+                      <span className="uppercase mr-2 font-semibold">{entry.level}</span>
+                      <span>{entry.message}</span>
+                      {entry.data && (
+                        <pre className="ml-6 text-muted-foreground whitespace-pre-wrap break-all">
+                          {JSON.stringify(entry.data, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogContent>

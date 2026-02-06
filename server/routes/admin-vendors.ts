@@ -914,10 +914,12 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       if (!scheduler) {
         return res.status(500).json({ error: "Scheduler not initialized" });
       }
+      console.log(`[AdminAPI] Manual run triggered for job ${req.params.id}`);
       const result = await scheduler.runJobNow(req.params.id);
+      console.log(`[AdminAPI] Manual run complete: ${result.staged} staged, ${result.logs.length} log entries`);
       res.json(result);
     } catch (error: any) {
-      console.error("Error running discovery job:", error);
+      console.error("[AdminAPI] Error running discovery job:", error);
       res.status(500).json({ error: error.message || "Failed to run discovery job" });
     }
   });
