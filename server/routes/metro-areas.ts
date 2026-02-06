@@ -14,44 +14,6 @@ function createSlugFromName(name: string): string {
 export function registerMetroAreasRoutes(app: Router, storage: IStorage) {
   const router = Router();
 
-  // POST /api/metro-areas/ensure - Check if city exists, create if not
-  router.post("/ensure", async (req, res) => {
-    try {
-      const { cityName } = req.body;
-      if (!cityName || typeof cityName !== 'string' || !cityName.trim()) {
-        return res.status(400).json({ error: "City name is required" });
-      }
-      
-      const trimmedName = cityName.trim();
-      
-      // Check if metro area already exists by value (case-insensitive search)
-      const allAreas = await storage.getAllMetroAreas();
-      const existingArea = allAreas.find(
-        area => area.value.toLowerCase() === trimmedName.toLowerCase() ||
-                area.label.toLowerCase() === trimmedName.toLowerCase()
-      );
-      
-      if (existingArea) {
-        return res.json({ metroArea: existingArea, created: false });
-      }
-      
-      // Create a new metro area
-      const slug = createSlugFromName(trimmedName);
-      const newArea = await storage.createMetroArea({
-        slug,
-        value: trimmedName,
-        label: trimmedName,
-        isActive: true,
-        displayOrder: 999, // Put at the end
-      });
-      
-      res.json({ metroArea: newArea, created: true });
-    } catch (error) {
-      console.error("Error ensuring metro area:", error);
-      res.status(500).json({ error: "Failed to ensure metro area" });
-    }
-  });
-
   // GET /api/metro-areas - Get all active metro areas (public)
   router.get("/", async (_req, res) => {
     try {
