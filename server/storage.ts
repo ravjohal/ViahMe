@@ -320,6 +320,15 @@ import {
   stagedVendors,
   type StagedVendor,
   type InsertStagedVendor,
+  polls,
+  type Poll,
+  type InsertPoll,
+  pollOptions,
+  type PollOption,
+  type InsertPollOption,
+  pollVotes,
+  type PollVote,
+  type InsertPollVote,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1542,6 +1551,27 @@ export interface IStorage {
   createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor>;
   updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined>;
   deleteStagedVendor(id: string): Promise<boolean>;
+
+  // Live Polls
+  getPoll(id: string): Promise<Poll | undefined>;
+  getPollsByWedding(weddingId: string): Promise<Poll[]>;
+  getPollsByEvent(eventId: string): Promise<Poll[]>;
+  createPoll(poll: InsertPoll): Promise<Poll>;
+  updatePoll(id: string, poll: Partial<Poll>): Promise<Poll | undefined>;
+  deletePoll(id: string): Promise<boolean>;
+
+  // Poll Options
+  getPollOption(id: string): Promise<PollOption | undefined>;
+  getPollOptionsByPoll(pollId: string): Promise<PollOption[]>;
+  createPollOption(option: InsertPollOption): Promise<PollOption>;
+  updatePollOption(id: string, option: Partial<PollOption>): Promise<PollOption | undefined>;
+  deletePollOption(id: string): Promise<boolean>;
+
+  // Poll Votes
+  getPollVotesByPoll(pollId: string): Promise<PollVote[]>;
+  getPollVotesByGuest(pollId: string, guestId: string): Promise<PollVote[]>;
+  createPollVote(vote: InsertPollVote): Promise<PollVote>;
+  deletePollVotesByGuest(pollId: string, guestId: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4966,6 +4996,25 @@ export class MemStorage implements IStorage {
   async createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
   async updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
   async deleteStagedVendor(id: string): Promise<boolean> { return false; }
+
+  // Live Polls (stub methods for MemStorage)
+  async getPoll(id: string): Promise<Poll | undefined> { return undefined; }
+  async getPollsByWedding(weddingId: string): Promise<Poll[]> { return []; }
+  async getPollsByEvent(eventId: string): Promise<Poll[]> { return []; }
+  async createPoll(poll: InsertPoll): Promise<Poll> { throw new Error('MemStorage does not support Polls. Use DBStorage.'); }
+  async updatePoll(id: string, poll: Partial<Poll>): Promise<Poll | undefined> { throw new Error('MemStorage does not support Polls. Use DBStorage.'); }
+  async deletePoll(id: string): Promise<boolean> { return false; }
+
+  async getPollOption(id: string): Promise<PollOption | undefined> { return undefined; }
+  async getPollOptionsByPoll(pollId: string): Promise<PollOption[]> { return []; }
+  async createPollOption(option: InsertPollOption): Promise<PollOption> { throw new Error('MemStorage does not support Polls. Use DBStorage.'); }
+  async updatePollOption(id: string, option: Partial<PollOption>): Promise<PollOption | undefined> { throw new Error('MemStorage does not support Polls. Use DBStorage.'); }
+  async deletePollOption(id: string): Promise<boolean> { return false; }
+
+  async getPollVotesByPoll(pollId: string): Promise<PollVote[]> { return []; }
+  async getPollVotesByGuest(pollId: string, guestId: string): Promise<PollVote[]> { return []; }
+  async createPollVote(vote: InsertPollVote): Promise<PollVote> { throw new Error('MemStorage does not support Polls. Use DBStorage.'); }
+  async deletePollVotesByGuest(pollId: string, guestId: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13754,6 +13803,79 @@ export class DBStorage implements IStorage {
 
   async deleteStagedVendor(id: string): Promise<boolean> {
     const result = await this.db.delete(stagedVendors).where(eq(stagedVendors.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Live Polls
+  async getPoll(id: string): Promise<Poll | undefined> {
+    const [poll] = await this.db.select().from(polls).where(eq(polls.id, id));
+    return poll;
+  }
+
+  async getPollsByWedding(weddingId: string): Promise<Poll[]> {
+    return this.db.select().from(polls).where(eq(polls.weddingId, weddingId)).orderBy(desc(polls.createdAt));
+  }
+
+  async getPollsByEvent(eventId: string): Promise<Poll[]> {
+    return this.db.select().from(polls).where(eq(polls.eventId, eventId)).orderBy(desc(polls.createdAt));
+  }
+
+  async createPoll(poll: InsertPoll): Promise<Poll> {
+    const [created] = await this.db.insert(polls).values(poll).returning();
+    return created;
+  }
+
+  async updatePoll(id: string, update: Partial<Poll>): Promise<Poll | undefined> {
+    const [updated] = await this.db.update(polls).set({ ...update, updatedAt: new Date() }).where(eq(polls.id, id)).returning();
+    return updated;
+  }
+
+  async deletePoll(id: string): Promise<boolean> {
+    const result = await this.db.delete(polls).where(eq(polls.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Poll Options
+  async getPollOption(id: string): Promise<PollOption | undefined> {
+    const [option] = await this.db.select().from(pollOptions).where(eq(pollOptions.id, id));
+    return option;
+  }
+
+  async getPollOptionsByPoll(pollId: string): Promise<PollOption[]> {
+    return this.db.select().from(pollOptions).where(eq(pollOptions.pollId, pollId)).orderBy(pollOptions.displayOrder);
+  }
+
+  async createPollOption(option: InsertPollOption): Promise<PollOption> {
+    const [created] = await this.db.insert(pollOptions).values(option).returning();
+    return created;
+  }
+
+  async updatePollOption(id: string, update: Partial<PollOption>): Promise<PollOption | undefined> {
+    const [updated] = await this.db.update(pollOptions).set(update).where(eq(pollOptions.id, id)).returning();
+    return updated;
+  }
+
+  async deletePollOption(id: string): Promise<boolean> {
+    const result = await this.db.delete(pollOptions).where(eq(pollOptions.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Poll Votes
+  async getPollVotesByPoll(pollId: string): Promise<PollVote[]> {
+    return this.db.select().from(pollVotes).where(eq(pollVotes.pollId, pollId));
+  }
+
+  async getPollVotesByGuest(pollId: string, guestId: string): Promise<PollVote[]> {
+    return this.db.select().from(pollVotes).where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.guestId, guestId)));
+  }
+
+  async createPollVote(vote: InsertPollVote): Promise<PollVote> {
+    const [created] = await this.db.insert(pollVotes).values(vote).returning();
+    return created;
+  }
+
+  async deletePollVotesByGuest(pollId: string, guestId: string): Promise<boolean> {
+    const result = await this.db.delete(pollVotes).where(and(eq(pollVotes.pollId, pollId), eq(pollVotes.guestId, guestId)));
     return (result.rowCount ?? 0) > 0;
   }
 }

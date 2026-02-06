@@ -76,6 +76,7 @@ import { createCeremonyExplainersRouter, createPublicCeremonyExplainersRouter } 
 import traditionRitualsRouter from "./tradition-rituals";
 import { registerTranslationRoutes } from "./translation";
 import { registerMetroAreasRoutes } from "./metro-areas";
+import { createPollsRouter, createPollOptionsRouter, createPollVotesRouter, createGuestPollsRouter } from "./polls";
 import { seedVendors } from "../seed-data";
 
 let defaultStorageSeeded = false;
@@ -462,6 +463,12 @@ export async function registerRoutes(app: Express, injectedStorage?: IStorage): 
   app.use("/api/playlists", createPlaylistsRouter(storage));
   app.use("/api/songs", createSongsRouter(storage));
   app.use("/api/votes", createVotesRouter(storage));
+
+  // Live Polls
+  app.use("/api/polls", createPollsRouter(storage));
+  app.use("/api/poll-options", createPollOptionsRouter(storage));
+  app.use("/api/poll-votes", createPollVotesRouter(storage));
+  app.use("/api/guest-polls", createGuestPollsRouter(storage));
 
   // Documents and object storage
   app.use("/api/documents", createDocumentsRouter(storage));

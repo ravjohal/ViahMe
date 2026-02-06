@@ -9,13 +9,23 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, CheckCircle, XCircle, Calendar, MapPin, Users, Mail, Sparkles, Clock, AlertTriangle, Shirt } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Calendar, MapPin, Users, Mail, Sparkles, Clock, AlertTriangle, Shirt, Vote, Send, Lock, Eye } from "lucide-react";
 import { useState } from "react";
-import type { Household, Guest, Invitation, Event, RitualRoleAssignment } from "@shared/schema";
+import type { Household, Guest, Invitation, Event, RitualRoleAssignment, Poll, PollOption, PollVote } from "@shared/schema";
 
 interface EnrichedRitualRole extends RitualRoleAssignment {
   event?: Event;
   guest?: Guest;
+}
+
+interface GuestPollData {
+  household: { id: string; name: string };
+  guests: { id: string; name: string }[];
+  polls: (Poll & {
+    options: PollOption[];
+    myVotes: PollVote[];
+    results: (PollOption & { voteCount: number })[] | null;
+  })[];
 }
 
 export default function RsvpPortal() {
@@ -26,6 +36,9 @@ export default function RsvpPortal() {
     dietaryRestrictions?: string;
     plusOneAttending?: boolean;
   }>>({});
+  const [pollSelections, setPollSelections] = useState<Record<string, string | string[]>>({});
+  const [textResponses, setTextResponses] = useState<Record<string, string>>({});
+  const [votingGuestId, setVotingGuestId] = useState<string>("");
 
   // Fetch household by magic token
   const { data: household, isLoading: loadingHousehold, error: householdError } = useQuery<Household>({
@@ -90,6 +103,75 @@ export default function RsvpPortal() {
     },
     enabled: guests.length > 0,
   });
+
+  const { data: guestPollData, isLoading: loadingPolls } = useQuery<GuestPollData>({
+    queryKey: ['/api/guest-polls/by-token', token],
+    enabled: !!token,
+  });
+
+  const submitVoteMutation = useMutation({
+    mutationFn: async (data: { pollId: string; guestId: string; householdId?: string; optionId?: string; optionIds?: string[]; textResponse?: string }) => {
+      return await apiRequest("POST", "/api/poll-votes", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/guest-polls/by-token', token] });
+      toast({
+        title: "Vote Submitted",
+        description: "Your response has been recorded!",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to submit your vote",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmitVote = (poll: GuestPollData["polls"][0]) => {
+    if (!guestPollData) return;
+    const guestId = votingGuestId || guestPollData.guests[0]?.id;
+    if (!guestId) return;
+
+    if (poll.type === "text") {
+      const response = textResponses[poll.id];
+      if (!response?.trim()) {
+        toast({ title: "Please enter a response", variant: "destructive" });
+        return;
+      }
+      submitVoteMutation.mutate({
+        pollId: poll.id,
+        guestId,
+        householdId: guestPollData.household.id,
+        textResponse: response,
+      });
+    } else if (poll.type === "multiple") {
+      const selected = pollSelections[poll.id] as string[] | undefined;
+      if (!selected || selected.length === 0) {
+        toast({ title: "Please select at least one option", variant: "destructive" });
+        return;
+      }
+      submitVoteMutation.mutate({
+        pollId: poll.id,
+        guestId,
+        householdId: guestPollData.household.id,
+        optionIds: selected,
+      });
+    } else {
+      const optionId = pollSelections[poll.id] as string | undefined;
+      if (!optionId) {
+        toast({ title: "Please select an option", variant: "destructive" });
+        return;
+      }
+      submitVoteMutation.mutate({
+        pollId: poll.id,
+        guestId,
+        householdId: guestPollData.household.id,
+        optionId,
+      });
+    }
+  };
 
   // Acknowledge ritual role mutation
   const acknowledgeRoleMutation = useMutation({
@@ -518,6 +600,205 @@ export default function RsvpPortal() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Guest Polls Section */}
+        {loadingPolls && (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin text-primary mr-3" />
+              <span className="text-muted-foreground">Loading polls...</span>
+            </CardContent>
+          </Card>
+        )}
+        {!loadingPolls && guestPollData && guestPollData.polls.length > 0 && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Vote className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-serif font-semibold">Share Your Preferences</h2>
+            </div>
+            <p className="text-muted-foreground">
+              The couple would love your input! Please vote on the polls below.
+            </p>
+
+            {guestPollData.guests.length > 1 && (
+              <div className="space-y-2">
+                <Label>Voting as:</Label>
+                <RadioGroup
+                  value={votingGuestId || guestPollData.guests[0]?.id || ""}
+                  onValueChange={setVotingGuestId}
+                  data-testid="radio-voting-guest"
+                >
+                  {guestPollData.guests.map((g) => (
+                    <div key={g.id} className="flex items-center space-x-2">
+                      <RadioGroupItem value={g.id} id={`voting-as-${g.id}`} data-testid={`radio-voting-as-${g.id}`} />
+                      <Label htmlFor={`voting-as-${g.id}`} className="cursor-pointer">{g.name}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              </div>
+            )}
+
+            {guestPollData.polls.map((poll) => {
+              const hasVoted = poll.myVotes.length > 0;
+              const totalResults = poll.results ? poll.results.reduce((sum, o) => sum + o.voteCount, 0) : 0;
+
+              return (
+                <Card key={poll.id} data-testid={`card-poll-${poll.id}`}>
+                  <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50">
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
+                      <CardTitle className="flex items-center gap-2">
+                        <Vote className="w-5 h-5 text-primary" />
+                        {poll.title}
+                      </CardTitle>
+                      <div className="flex gap-2 flex-wrap">
+                        {poll.isAnonymous && (
+                          <Badge variant="outline" className="text-xs">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Anonymous
+                          </Badge>
+                        )}
+                        {hasVoted && (
+                          <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Voted
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    {poll.description && (
+                      <CardDescription>{poll.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-4 pt-4">
+                    {/* Single Choice Poll */}
+                    {poll.type === "single" && (
+                      <RadioGroup
+                        value={(pollSelections[poll.id] as string) || (hasVoted ? poll.myVotes[0]?.optionId || "" : "")}
+                        onValueChange={(value) =>
+                          setPollSelections((prev) => ({ ...prev, [poll.id]: value }))
+                        }
+                        data-testid={`radio-poll-${poll.id}`}
+                      >
+                        {poll.options.map((option) => (
+                          <div key={option.id} className="flex items-center space-x-2">
+                            <RadioGroupItem
+                              value={option.id}
+                              id={`poll-${poll.id}-opt-${option.id}`}
+                              data-testid={`radio-option-${option.id}`}
+                            />
+                            <Label htmlFor={`poll-${poll.id}-opt-${option.id}`} className="cursor-pointer flex-1">
+                              {option.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </RadioGroup>
+                    )}
+
+                    {/* Multiple Choice Poll */}
+                    {poll.type === "multiple" && (
+                      <div className="space-y-2">
+                        {poll.options.map((option) => {
+                          const currentSelected = (pollSelections[poll.id] as string[]) || 
+                            (hasVoted ? poll.myVotes.map(v => v.optionId).filter(Boolean) as string[] : []);
+                          const isChecked = currentSelected.includes(option.id);
+                          return (
+                            <div key={option.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`poll-${poll.id}-opt-${option.id}`}
+                                checked={isChecked}
+                                onCheckedChange={(checked) => {
+                                  setPollSelections((prev) => {
+                                    const current = (prev[poll.id] as string[]) || 
+                                      (hasVoted ? poll.myVotes.map(v => v.optionId).filter(Boolean) as string[] : []);
+                                    if (checked) {
+                                      return { ...prev, [poll.id]: [...current, option.id] };
+                                    } else {
+                                      return { ...prev, [poll.id]: current.filter(id => id !== option.id) };
+                                    }
+                                  });
+                                }}
+                                data-testid={`checkbox-option-${option.id}`}
+                              />
+                              <Label htmlFor={`poll-${poll.id}-opt-${option.id}`} className="cursor-pointer flex-1">
+                                {option.label}
+                              </Label>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Text Response Poll */}
+                    {poll.type === "text" && (
+                      <div className="space-y-2">
+                        <Label>Your response</Label>
+                        <Textarea
+                          placeholder="Share your thoughts..."
+                          value={textResponses[poll.id] || (hasVoted && poll.myVotes[0]?.textResponse ? poll.myVotes[0].textResponse : "")}
+                          onChange={(e) =>
+                            setTextResponses((prev) => ({ ...prev, [poll.id]: e.target.value }))
+                          }
+                          data-testid={`textarea-poll-${poll.id}`}
+                        />
+                      </div>
+                    )}
+
+                    {/* Results Display */}
+                    {poll.showResultsToGuests && poll.results && poll.results.length > 0 && hasVoted && (
+                      <div className="space-y-2 pt-2 border-t">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Eye className="w-4 h-4" />
+                          <span>Current Results</span>
+                        </div>
+                        {poll.results.map((opt) => {
+                          const percentage = totalResults > 0 ? Math.round((opt.voteCount / totalResults) * 100) : 0;
+                          return (
+                            <div key={opt.id} className="space-y-1">
+                              <div className="flex items-center justify-between gap-2 text-sm">
+                                <span>{opt.label}</span>
+                                <span className="text-muted-foreground">{opt.voteCount} ({percentage}%)</span>
+                              </div>
+                              <div className="w-full bg-muted rounded-full h-2">
+                                <div
+                                  className="bg-primary rounded-full h-2 transition-all"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={() => handleSubmitVote(poll)}
+                      disabled={submitVoteMutation.isPending}
+                      className="w-full"
+                      data-testid={`button-submit-vote-${poll.id}`}
+                    >
+                      {submitVoteMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : hasVoted ? (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Update Vote
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          Submit Vote
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 

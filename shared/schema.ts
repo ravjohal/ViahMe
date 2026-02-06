@@ -5550,3 +5550,60 @@ export const insertStagedVendorSchema = createInsertSchema(stagedVendors).omit({
 });
 export type InsertStagedVendor = z.infer<typeof insertStagedVendorSchema>;
 export type StagedVendor = typeof stagedVendors.$inferSelect;
+
+// ============================================================================
+// LIVE POLLS - Guest preference polling for events
+// ============================================================================
+
+export const polls = pgTable("polls", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id").references(() => events.id, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  description: text("description"),
+  type: text("type").notNull().default("single"), // 'single' | 'multiple' | 'text'
+  isOpen: boolean("is_open").notNull().default(true),
+  isAnonymous: boolean("is_anonymous").notNull().default(false),
+  showResultsToGuests: boolean("show_results_to_guests").notNull().default(false),
+  createdByUserId: varchar("created_by_user_id"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertPollSchema = createInsertSchema(polls).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPoll = z.infer<typeof insertPollSchema>;
+export type Poll = typeof polls.$inferSelect;
+
+export const pollOptions = pgTable("poll_options", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pollId: varchar("poll_id").notNull().references(() => polls.id, { onDelete: 'cascade' }),
+  label: text("label").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+export const insertPollOptionSchema = createInsertSchema(pollOptions).omit({
+  id: true,
+});
+export type InsertPollOption = z.infer<typeof insertPollOptionSchema>;
+export type PollOption = typeof pollOptions.$inferSelect;
+
+export const pollVotes = pgTable("poll_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pollId: varchar("poll_id").notNull().references(() => polls.id, { onDelete: 'cascade' }),
+  optionId: varchar("option_id").references(() => pollOptions.id, { onDelete: 'cascade' }),
+  guestId: varchar("guest_id").references(() => guests.id, { onDelete: 'cascade' }),
+  householdId: varchar("household_id"),
+  textResponse: text("text_response"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertPollVoteSchema = createInsertSchema(pollVotes).omit({
+  id: true,
+  createdAt: true,
+});
+export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
+export type PollVote = typeof pollVotes.$inferSelect;

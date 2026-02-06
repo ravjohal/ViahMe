@@ -75,6 +75,7 @@ import Expenses from "@/pages/expenses";
 import GuestCollector from "@/pages/guest-collector";
 import CommunicationHub from "@/pages/communication-hub";
 import EngagementGames from "@/pages/engagement-games";
+import Polls from "@/pages/polls";
 import GamePortal from "@/pages/game-portal";
 import RitualRoles from "@/pages/ritual-roles";
 import MilniPage from "@/pages/milni";
@@ -165,6 +166,11 @@ function Router() {
       <Route path="/engagement-games">
         <ProtectedRoute requiredPermission="guests">
           <EngagementGames />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/polls">
+        <ProtectedRoute requiredPermission="guests">
+          <Polls />
         </ProtectedRoute>
       </Route>
       <Route path="/ritual-roles">
