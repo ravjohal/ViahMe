@@ -1106,6 +1106,23 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.delete("/discovery-chat-history", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const { area, specialty } = req.query;
+      if (!area || !specialty) {
+        return res.status(400).json({ error: "area and specialty query params required" });
+      }
+      const deleted = await storage.deleteDiscoveryChatHistory(area as string, specialty as string);
+      res.json({ deleted, area, specialty });
+    } catch (error) {
+      console.error("Error deleting chat history:", error);
+      res.status(500).json({ error: "Failed to delete chat history" });
+    }
+  });
+
   // ============================================================
   // Staged Vendors Review / Approval
   // ============================================================

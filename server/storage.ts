@@ -1587,6 +1587,7 @@ export interface IStorage {
   // Discovery Chat Histories
   getDiscoveryChatHistory(area: string, specialty: string): Promise<DiscoveryChatHistory | undefined>;
   upsertDiscoveryChatHistory(area: string, specialty: string, history: any[], totalVendorsFound: number): Promise<DiscoveryChatHistory>;
+  deleteDiscoveryChatHistory(area: string, specialty: string): Promise<boolean>;
 
   // Live Polls
   getPoll(id: string): Promise<Poll | undefined>;
@@ -5070,6 +5071,7 @@ export class MemStorage implements IStorage {
 
   async getDiscoveryChatHistory(area: string, specialty: string): Promise<DiscoveryChatHistory | undefined> { return undefined; }
   async upsertDiscoveryChatHistory(area: string, specialty: string, history: any[], totalVendorsFound: number): Promise<DiscoveryChatHistory> { throw new Error('MemStorage does not support Discovery Chat Histories. Use DBStorage.'); }
+  async deleteDiscoveryChatHistory(area: string, specialty: string): Promise<boolean> { return false; }
 
   // Live Polls (stub methods for MemStorage)
   async getPoll(id: string): Promise<Poll | undefined> { return undefined; }
@@ -14037,6 +14039,15 @@ export class DBStorage implements IStorage {
       .values({ area, specialty, history, totalVendorsFound, lastUsedAt: new Date() })
       .returning();
     return created;
+  }
+
+  async deleteDiscoveryChatHistory(area: string, specialty: string): Promise<boolean> {
+    const result = await this.db.delete(discoveryChatHistories)
+      .where(and(
+        eq(discoveryChatHistories.area, area),
+        eq(discoveryChatHistories.specialty, specialty),
+      ));
+    return (result?.rowCount ?? 0) > 0;
   }
 
   // Live Polls

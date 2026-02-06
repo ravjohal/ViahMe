@@ -2279,15 +2279,24 @@ export async function discoverVendors(
 
     logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
 
-    runHistory.push({ role: 'user', parts: [{ text: message }] });
-    runHistory.push({ role: 'model', parts: [{ text }] });
-
     const batch = parseVendorResponse(text, `${DV} [turn ${batchNum}]`);
-    allVendors.push(...batch);
+
+    if (batch.length > 0) {
+      runHistory.push({ role: 'user', parts: [{ text: message }] });
+      runHistory.push({ role: 'model', parts: [{ text }] });
+      allVendors.push(...batch);
+    } else {
+      console.log(`${DV} Chat turn ${batchNum}: 0 vendors parsed — NOT adding to chat history (prevents poisoning future runs)`);
+    }
+
     remaining -= batchSize;
 
     if (batch.length < batchSize) {
-      console.log(`${DV} Chat turn ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
+      if (batch.length === 0 && text.length > 100) {
+        console.log(`${DV} Chat turn ${batchNum} returned 0/${batchSize} but response was ${text.length} chars — likely a parse failure, not market exhaustion. Stopping.`);
+      } else {
+        console.log(`${DV} Chat turn ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
+      }
       break;
     }
   }

@@ -1,0 +1,112 @@
+8.35
+54e91014
+User
+6:25:58 PM [express] → POST /api/admin/discovery-jobs/c383875a-e550-456c-81b7-fbb4ab08b846/run-now (body: 0.0KB)
+2026-02-06 10:25:58.37
+54e91014
+User
+[AdminAPI] Manual run triggered for job c383875a-e550-456c-81b7-fbb4ab08b846
+2026-02-06 10:25:58.40
+54e91014
+User
+[VendorDiscovery] [ManualRun] 2026-02-06T18:25:58.409Z Firing background discovery for job c383875a-e550-456c-81b7-fbb4ab08b846 (Vancouver (Canada)/dhol_player)
+2026-02-06 10:25:58.43
+54e91014
+User
+[AdminAPI] Manual run queued with runId: 8e4740ba-ca6d-442a-88e6-7d955ecb050e
+2026-02-06 10:25:58.44
+54e91014
+User
+6:25:58 PM [express] ← ✓ POST /api/admin/discovery-jobs/c383875a-e550-456c-81b7-fbb4ab08b846/run-now 200 in 97ms
+2026-02-06 10:25:58.45
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.453Z Step 1/8: Checking job validity {"runId":"8e4740ba-ca6d-442a-88e6-7d955ecb050e","jobId":"c383875a-e550-456c-81b7-fbb4ab08b846","area":"Vancouver (Canada)","specialty":"dhol_player","isActive":true,"totalDiscovered":0,"maxTotal":200,"countPerRun":20,"endDate":null}
+2026-02-06 10:25:58.45
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.453Z Step 1/8: Job is valid, proceeding.
+2026-02-06 10:25:58.47
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.473Z Step 3/8: Building exclusion list and duplicate lookup maps...
+2026-02-06 10:25:58.47
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.473Z Step 2/8: Calculating fetch count {"countPerRun":20,"remainingForJob":200,"todayDiscoveredSoFar":100,"dailyCap":200,"globalBudgetRemaining":100,"countToFetch":20}
+2026-02-06 10:25:58.57
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.572Z Step 3/8: Data prepared in 99ms. Staged vendors: 0, Existing vendors: 2289, Exclusion list: 200 (cap: 200)
+2026-02-06 10:25:58.57
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.572Z Step 4/8: Loading chat history for Vancouver (Canada)/dhol_player...
+2026-02-06 10:25:58.61
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.615Z Step 5/8: Calling Gemini API to discover 20 vendors (excluding 200 known)... {"area":"Vancouver (Canada)","specialty":"dhol_player"}
+2026-02-06 10:25:58.61
+54e91014
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T18:25:58.615Z Step 4/8: Resuming conversation (6 prior turns, 0 vendors staged previously)
+2026-02-06 10:25:58.61
+54e91014
+User
+[AI REQUEST] discoverVendors
+2026-02-06 10:25:58.61
+54e91014
+User
+"specialty": "dhol_player",
+2026-02-06 10:25:58.61
+54e91014
+User
+[DiscoverVendors] --- Chat turn 1: requesting 10 vendors (0 found this run, 20 remaining) ---
+2026-02-06 10:25:58.61
+54e91014
+User
+"priorTurns": 6
+2026-02-06 10:25:58.61
+54e91014
+User
+}
+2026-02-06 10:25:58.61
+54e91014
+User
+Request: {
+2026-02-06 10:25:58.61
+54e91014
+User
+[DiscoverVendors] Chat mode (RESUMING with 6 prior turns)
+2026-02-06 10:25:58.61
+54e91014
+User
+"count": 20,
+2026-02-06 10:25:58.61
+54e91014
+User
+"area": "Vancouver (Canada)",
+2026-02-06 10:25:58.61
+54e91014
+User
+"mode": "resume-chat",
+2026-02-06 10:25:58.61
+54e91014
+User
+[DiscoverVendors] >>> START: area="Vancouver (Canada)", specialty="dhol_player", totalRequested=20, knownVendors=200, priorChatTurns=6
+2026-02-06 10:25:58.61
+54e91014
+User
+Timestamp: 2026-02-06T18:25:58.616Z
+2026-02-06 10:26:00.68
+54e91014
+User
+6:26:00 PM [express] → GET /api/admin/discovery-runs/8e4740ba-ca6d-442a-88e6-7d955ecb050e (body: unknown)
+2026-02-06 10:26:00.73
+54e91014
+User
+6:26:00 PM [express] ← ✓ GET /api/admin/discovery-runs/8e4740ba-ca6d-442a-88e6-7d955ecb050e 200 in 53ms
+2026-02-06 10:26:01.36
+54e91014
+User
+6:26:01 PM [express] → GET /api/admin/discovery-runs (body: unknown)

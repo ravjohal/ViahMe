@@ -57,6 +57,7 @@ import {
   Ban,
   History,
   Timer,
+  RotateCcw,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -307,6 +308,19 @@ export default function AdminVendorDiscovery() {
     onError: (err: Error) => {
       setIsPolling(false);
       toast({ title: "Discovery failed", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const resetChatMutation = useMutation({
+    mutationFn: async ({ area, specialty }: { area: string; specialty: string }) => {
+      const res = await apiRequest("DELETE", `/api/admin/discovery-chat-history?area=${encodeURIComponent(area)}&specialty=${encodeURIComponent(specialty)}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Chat history reset", description: "Next run will start a fresh conversation." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to reset", description: err.message, variant: "destructive" });
     },
   });
 
@@ -628,6 +642,19 @@ export default function AdminVendorDiscovery() {
                             data-testid={`button-toggle-job-${job.id}`}
                           >
                             {job.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              if (confirm("Reset chat history for this job? The next run will start a fresh conversation with the AI.")) {
+                                resetChatMutation.mutate({ area: job.area, specialty: job.specialty });
+                              }
+                            }}
+                            title="Reset chat history"
+                            data-testid={`button-reset-chat-${job.id}`}
+                          >
+                            <RotateCcw className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"

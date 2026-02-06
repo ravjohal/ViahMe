@@ -282,14 +282,12 @@ export class VendorDiscoveryService {
 
       const MAX_EXCLUDE_NAMES = 200;
       const knownNames = new Set<string>();
-      for (const name of stagedVendorMap.keys()) {
-        if (knownNames.size >= MAX_EXCLUDE_NAMES) break;
-        knownNames.add(name);
-      }
-      for (const name of existingVendorNameMap.keys()) {
-        if (knownNames.size >= MAX_EXCLUDE_NAMES) break;
-        knownNames.add(name);
-      }
+      stagedVendorMap.forEach((_, name) => {
+        if (knownNames.size < MAX_EXCLUDE_NAMES) knownNames.add(name);
+      });
+      existingVendorNameMap.forEach((_, name) => {
+        if (knownNames.size < MAX_EXCLUDE_NAMES) knownNames.add(name);
+      });
       const knownNamesList = Array.from(knownNames);
       const knownLoadMs = Date.now() - knownLoadStart;
 
@@ -323,11 +321,11 @@ export class VendorDiscoveryService {
       checkAborted();
 
       if (discovered.length === 0) {
-        log('warn', 'Step 5/8: Gemini returned 0 vendors. Saving chat history and finishing.');
-        try {
-          await this.storage.upsertDiscoveryChatHistory(job.area, job.specialty, updatedChatHistory, chatRecord?.totalVendorsFound || 0);
-        } catch (histErr: any) {
-          log('error', `Step 5/8: Failed to save chat history (non-fatal): ${histErr.message}`);
+        const historyGrew = updatedChatHistory.length > priorHistory.length;
+        if (historyGrew) {
+          log('warn', 'Step 5/8: Gemini returned 0 parseable vendors but chat history grew — skipping history save to prevent poisoning future runs.');
+        } else {
+          log('warn', 'Step 5/8: Gemini returned 0 vendors (no history change). Finishing.');
         }
         await this.finishRun(runId, 0, 0, 0, 'completed');
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
@@ -441,12 +439,12 @@ export class VendorDiscoveryService {
     }
   }
 
-  private async verifyWebsitesInBackground(jobId: string, log: (level: DiscoveryLog['level'], message: string, data?: Record<string, any>) => void) {
+  private async verifyWebsitesInBackground(jobId: string, log: (level: DiscoveryLog['level'], message: string, data?: Record<string, any> | undefined) => void) {
     try {
       const freshStagedVendors = await this.storage.getStagedVendorsByJob(jobId);
       const vendorsToVerify = freshStagedVendors.filter(v => v.websiteVerified === 'pending' || !v.websiteVerified);
       if (vendorsToVerify.length > 0) {
-        const verifyResults = await verifyVendorWebsites(vendorsToVerify, this.storage, log);
+        const verifyResults = await verifyVendorWebsites(vendorsToVerify, this.storage, log as (level: string, message: string, data?: any) => void);
         log('info', `Background website verification complete`, verifyResults);
       } else {
         log('info', `Background website verification: no vendors to verify.`);
