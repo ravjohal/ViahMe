@@ -2033,7 +2033,7 @@ export interface DiscoveredVendor {
   notes: string;
 }
 
-const MAX_VENDORS_PER_API_CALL = 20;
+const MAX_VENDORS_PER_API_CALL = 10;
 
 const VENDOR_DISCOVERY_SYSTEM_PROMPT = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform. Your job is to find REAL vendors that specifically serve the South Asian wedding market.
 
@@ -2154,7 +2154,7 @@ export async function discoverVendors(
   }
 
   const maxTokens = Math.max(4000, MAX_VENDORS_PER_API_CALL * 600);
-  const timeoutMs = Math.max(90000, MAX_VENDORS_PER_API_CALL * 5000);
+  const timeoutMs = Math.max(120000, MAX_VENDORS_PER_API_CALL * 8000);
 
   const trimmedHistory = trimChatHistory(priorChatHistory);
 
