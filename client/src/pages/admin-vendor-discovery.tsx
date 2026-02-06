@@ -540,7 +540,9 @@ export default function AdminVendorDiscovery() {
               </Card>
             ) : (
               <div className="space-y-3">
-                {jobs.map((job) => (
+                {jobs.map((job) => {
+                  const latestRun = runsQuery.data?.find(r => r.jobId === job.id);
+                  return (
                   <Card key={job.id} data-testid={`card-job-${job.id}`}>
                     <CardContent className="py-4">
                       <div className="flex items-start justify-between flex-wrap gap-3">
@@ -565,6 +567,28 @@ export default function AdminVendorDiscovery() {
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
                                 Last: {new Date(job.lastRunAt).toLocaleDateString()}
+                              </span>
+                            )}
+                            {latestRun && (
+                              <span className="flex items-center gap-1" data-testid={`text-job-last-status-${job.id}`}>
+                                {latestRun.status === 'completed' && (
+                                  <><CheckCircle2 className="h-3 w-3 text-green-600" /> <span className="text-green-600">{latestRun.vendorsStaged} staged</span></>
+                                )}
+                                {latestRun.status === 'running' && (
+                                  <><Loader2 className="h-3 w-3 animate-spin" /> Running</>
+                                )}
+                                {latestRun.status === 'failed' && (
+                                  <><XCircle className="h-3 w-3 text-destructive" /> <span className="text-destructive">Failed</span></>
+                                )}
+                                {latestRun.status === 'cancelled' && (
+                                  <><Ban className="h-3 w-3" /> Cancelled</>
+                                )}
+                                {latestRun.status === 'skipped' && (
+                                  <><Clock className="h-3 w-3" /> Skipped</>
+                                )}
+                                {latestRun.status === 'queued' && (
+                                  <><Clock className="h-3 w-3" /> Queued</>
+                                )}
                               </span>
                             )}
                           </div>
@@ -622,7 +646,8 @@ export default function AdminVendorDiscovery() {
                       </div>
                     </CardContent>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
