@@ -428,7 +428,7 @@ export interface IStorage {
   getVendor(id: string): Promise<Vendor | undefined>;
   getVendorsByIds(ids: string[]): Promise<Vendor[]>;
   getAllVendors(): Promise<Vendor[]>;
-  getVendorNameIdMap(): Promise<Map<string, string>>;
+  getVendorNameLocationIdMap(): Promise<Map<string, string>>;
   getVendorsByCategory(category: string): Promise<Vendor[]>;
   getVendorsByLocation(location: string): Promise<Vendor[]>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
@@ -1971,10 +1971,11 @@ export class MemStorage implements IStorage {
     return Array.from(this.vendors.values());
   }
 
-  async getVendorNameIdMap(): Promise<Map<string, string>> {
+  async getVendorNameLocationIdMap(): Promise<Map<string, string>> {
     const map = new Map<string, string>();
     for (const v of this.vendors.values()) {
-      map.set(v.name.toLowerCase().trim(), v.id);
+      const key = `${v.name.toLowerCase().trim()}|||${(v.location || '').toLowerCase().trim()}`;
+      map.set(key, v.id);
     }
     return map;
   }
@@ -5419,13 +5420,14 @@ export class DBStorage implements IStorage {
     return await this.db.select().from(schema.vendors);
   }
 
-  async getVendorNameIdMap(): Promise<Map<string, string>> {
+  async getVendorNameLocationIdMap(): Promise<Map<string, string>> {
     const rows = await this.db
-      .select({ id: schema.vendors.id, name: schema.vendors.name })
+      .select({ id: schema.vendors.id, name: schema.vendors.name, location: schema.vendors.location })
       .from(schema.vendors);
     const map = new Map<string, string>();
     for (const row of rows) {
-      map.set(row.name.toLowerCase().trim(), row.id);
+      const key = `${row.name.toLowerCase().trim()}|||${(row.location || '').toLowerCase().trim()}`;
+      map.set(key, row.id);
     }
     return map;
   }

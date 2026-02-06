@@ -268,30 +268,37 @@ export class VendorDiscoveryService {
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
 
-      log('info', 'Step 3/8: Building exclusion list and duplicate lookup maps...');
+      log('info', 'Step 3/8: Building exclusion list and duplicate lookup maps (name+location)...');
       const knownLoadStart = Date.now();
-      const [jobStagedVendors, existingVendorNameMap] = await Promise.all([
+      const [jobStagedVendors, existingVendorMap] = await Promise.all([
         this.storage.getStagedVendorsByJob(job.id),
-        this.storage.getVendorNameIdMap(),
+        this.storage.getVendorNameLocationIdMap(),
       ]);
 
       const stagedVendorMap = new Map<string, string>();
       for (const v of jobStagedVendors) {
-        stagedVendorMap.set(v.name.toLowerCase().trim(), v.id);
+        const key = `${v.name.toLowerCase().trim()}|||${(v.location || '').toLowerCase().trim()}`;
+        stagedVendorMap.set(key, v.id);
       }
 
       const MAX_EXCLUDE_NAMES = 200;
       const knownNames = new Set<string>();
-      stagedVendorMap.forEach((_, name) => {
-        if (knownNames.size < MAX_EXCLUDE_NAMES) knownNames.add(name);
+      stagedVendorMap.forEach((_, key) => {
+        if (knownNames.size < MAX_EXCLUDE_NAMES) {
+          const name = key.split('|||')[0];
+          knownNames.add(name);
+        }
       });
-      existingVendorNameMap.forEach((_, name) => {
-        if (knownNames.size < MAX_EXCLUDE_NAMES) knownNames.add(name);
+      existingVendorMap.forEach((_, key) => {
+        if (knownNames.size < MAX_EXCLUDE_NAMES) {
+          const name = key.split('|||')[0];
+          knownNames.add(name);
+        }
       });
       const knownNamesList = Array.from(knownNames);
       const knownLoadMs = Date.now() - knownLoadStart;
 
-      log('info', `Step 3/8: Data prepared in ${knownLoadMs}ms. Staged vendors: ${stagedVendorMap.size}, Existing vendors: ${existingVendorNameMap.size}, Exclusion list: ${knownNamesList.length} (cap: ${MAX_EXCLUDE_NAMES})`);
+      log('info', `Step 3/8: Data prepared in ${knownLoadMs}ms. Staged vendors: ${stagedVendorMap.size}, Existing vendors: ${existingVendorMap.size}, Exclusion list: ${knownNamesList.length} (cap: ${MAX_EXCLUDE_NAMES})`);
 
       log('info', `Step 4/8: Loading chat history for ${job.area}/${job.specialty}...`);
       const chatRecord = await this.storage.getDiscoveryChatHistory(job.area, job.specialty);
@@ -341,22 +348,22 @@ export class VendorDiscoveryService {
 
       for (let i = 0; i < discovered.length; i++) {
         const vendor = discovered[i];
-        const vendorName = vendor.name.toLowerCase().trim();
+        const vendorKey = `${vendor.name.toLowerCase().trim()}|||${(vendor.location || '').toLowerCase().trim()}`;
 
-        const stagedDuplicateId = stagedVendorMap.get(vendorName);
+        const stagedDuplicateId = stagedVendorMap.get(vendorKey);
         if (stagedDuplicateId) {
           duplicateStagedCount++;
-          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — SKIP (already staged, ID: ${stagedDuplicateId})`);
+          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" (${vendor.location}) — SKIP (already staged, ID: ${stagedDuplicateId})`);
           continue;
         }
 
-        const existingDuplicateId = existingVendorNameMap.get(vendorName);
+        const existingDuplicateId = existingVendorMap.get(vendorKey);
         const status = existingDuplicateId ? 'duplicate' : 'staged';
         if (existingDuplicateId) {
           duplicateExistingCount++;
-          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — DUPLICATE of existing vendor (ID: ${existingDuplicateId}), staging with status=duplicate`);
+          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" (${vendor.location}) — DUPLICATE of existing vendor (ID: ${existingDuplicateId}), staging with status=duplicate`);
         } else {
-          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" — NEW, staging with status=staged`);
+          log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" (${vendor.location}) — NEW, staging with status=staged`);
         }
 
         await this.storage.createStagedVendor({
