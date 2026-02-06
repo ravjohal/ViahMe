@@ -1,0 +1,132 @@
+6 09:24:35.83
+2ecb563a
+User
+5:24:35 PM [express] → GET /api/admin/discovery-runs/37b0ebc1-08c6-4e44-b7ae-9e7e87172c7f (body: unknown)
+2026-02-06 09:24:35.88
+2ecb563a
+User
+5:24:35 PM [express] ← ✓ GET /api/admin/discovery-runs/37b0ebc1-08c6-4e44-b7ae-9e7e87172c7f 304 in 53ms
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"location": "Surrey, BC",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[AI RESPONSE] discoverVendors
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T17:24:36.018Z Step 5/8: Gemini returned 0 vendors. Saving chat history and finishing.
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"name": "Royal Academy of Punjab",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"email": "info@royalacademyofpunjab.com",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"specialty": "Traditional Punjabi dhol performances and Bhangra teams for wedding grand entries.",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] [turn 1] JSON repair also failed: Expected ',' or '}' after property value in JSON at position 1084. Raw (first 800 chars): [
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"name": "Dholis of Vancouver",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"price_range": "$$",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"location": "Vancouver, BC",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] <<< DONE (1 chat turns, resumed conversation): Returning 0 vendor(s). Updated history: 4 entries. Total time: 72500ms
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] WARNING: No grounding metadata returned — response may not be search-grounded
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"preferred_wedding_traditions": ["sikh", "hindu", "general"],
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"phone": "604-501-0202",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+{
+2026-02-06 09:24:36.01
+2ecb563a
+User
+Duration: 72500ms
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"location": "Surrey, BC",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"notes": "A premier cultural academy in Surrey specializing in authentic Punjabi folk instruments and dance."
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"email": "dholisofvancouver@gmail.com",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] [turn 1] JSON array extracted (1084 chars). Parsing...
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"phone": "604-501-0202",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] Chat turn 1 returned 0/20 — fewer than requested, stopping early (market may be exhausted).
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"website": "http://www.royalacademyofpunjab.co
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[VendorDiscovery] [Job:Vancouver (Canada)/dhol_player] 2026-02-06T17:24:36.018Z Step 5/8: Gemini returned 0 vendor(s) in 72500ms {"geminiDurationMs":72500,"vendorNames":[],"chatHistoryTurns":4}
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"phone": "778-895-4444",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+},
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] Chat turn 1 responded in 72499ms. Response length: 1504 chars
+2026-02-06 09:24:36.01
+2ecb563a
+User
+{
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"email": "info@royalacademyofpunjab.com",
+2026-02-06 09:24:36.01
+2ecb563a
+User
+[DiscoverVendors] [turn 1] Initial JSON.parse failed: Expected ',' or '}' after property value in JSON at position 1084. Attempting repair...
+2026-02-06 09:24:36.01
+2ecb563a
+User
+"website": "http://www.royalacademyofpunjab.com",

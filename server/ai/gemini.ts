@@ -2061,23 +2061,82 @@ function repairJson(raw: string): string {
   s = s.replace(/,\s*([}\]])/g, '$1');
   s = s.replace(/([{,]\s*)"?(\w+)"?\s*:/g, '$1"$2":');
   s = s.replace(/:\s*'([^']*)'/g, ': "$1"');
-  if (!s.endsWith(']')) {
-    const lastComplete = s.lastIndexOf('}');
-    if (lastComplete > 0) {
-      s = s.substring(0, lastComplete + 1);
-      const depth = (s.match(/\[/g) || []).length - (s.match(/\]/g) || []).length;
-      for (let i = 0; i < depth; i++) s += ']';
-    }
+  try {
+    JSON.parse(s);
+    return s;
+  } catch {}
+  const completeObjects = extractCompleteTopLevelObjects(s);
+  if (completeObjects.length > 0) {
+    return '[' + completeObjects.join(',') + ']';
   }
   return s;
 }
 
+function extractCompleteTopLevelObjects(s: string): string[] {
+  const objects: string[] = [];
+  let i = 0;
+  while (i < s.length && s[i] !== '[') i++;
+  i++;
+  while (i < s.length) {
+    while (i < s.length && s[i] !== '{') {
+      if (s[i] === ']') return objects;
+      i++;
+    }
+    if (i >= s.length) break;
+    const objStart = i;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    let complete = false;
+    while (i < s.length) {
+      const ch = s[i];
+      if (escaped) {
+        escaped = false;
+        i++;
+        continue;
+      }
+      if (ch === '\\' && inString) {
+        escaped = true;
+        i++;
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+      } else if (!inString) {
+        if (ch === '{') depth++;
+        else if (ch === '}') {
+          depth--;
+          if (depth === 0) {
+            const objStr = s.substring(objStart, i + 1);
+            try {
+              JSON.parse(objStr);
+              objects.push(objStr);
+            } catch {}
+            complete = true;
+            i++;
+            break;
+          }
+        }
+      }
+      i++;
+    }
+    if (!complete) break;
+  }
+  return objects;
+}
+
 function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
   const DV = tag;
-  const jsonMatch = text.match(/\[[\s\S]*\]/);
+  let jsonMatch = text.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
-    console.error(`${DV} FAILED: No JSON array found in response. Raw response (first 500 chars): ${text.substring(0, 500)}`);
-    return [];
+    const truncatedMatch = text.match(/\[[\s\S]+/);
+    if (truncatedMatch) {
+      console.warn(`${DV} No complete JSON array found (likely truncated response). Attempting repair on partial content (${truncatedMatch[0].length} chars)...`);
+      jsonMatch = truncatedMatch;
+    } else {
+      console.error(`${DV} FAILED: No JSON array found in response. Raw response (first 500 chars): ${text.substring(0, 500)}`);
+      return [];
+    }
   }
 
   console.log(`${DV} JSON array extracted (${jsonMatch[0].length} chars). Parsing...`);
@@ -2090,7 +2149,7 @@ function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
     try {
       const repaired = repairJson(jsonMatch[0]);
       vendors = JSON.parse(repaired);
-      console.log(`${DV} JSON repair succeeded`);
+      console.log(`${DV} JSON repair succeeded — recovered ${Array.isArray(vendors) ? vendors.length : 0} vendor(s) from truncated response`);
     } catch (secondErr: any) {
       console.error(`${DV} JSON repair also failed: ${secondErr.message}. Raw (first 800 chars): ${jsonMatch[0].substring(0, 800)}`);
       return [];
@@ -2153,7 +2212,7 @@ export async function discoverVendors(
     return { vendors: [], chatHistory: priorChatHistory };
   }
 
-  const maxTokens = Math.max(4000, MAX_VENDORS_PER_API_CALL * 600);
+  const maxTokens = Math.max(8192, MAX_VENDORS_PER_API_CALL * 800);
   const timeoutMs = Math.max(120000, MAX_VENDORS_PER_API_CALL * 8000);
 
   const trimmedHistory = trimChatHistory(priorChatHistory);
