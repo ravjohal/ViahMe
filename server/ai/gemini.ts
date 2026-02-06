@@ -2056,6 +2056,22 @@ IMPORTANT: Return ONLY real businesses you are confident exist AND that genuinel
 
 Always respond with ONLY a JSON array of vendor objects. No other text before or after.`;
 
+function repairJson(raw: string): string {
+  let s = raw.trim();
+  s = s.replace(/,\s*([}\]])/g, '$1');
+  s = s.replace(/([{,]\s*)"?(\w+)"?\s*:/g, '$1"$2":');
+  s = s.replace(/:\s*'([^']*)'/g, ': "$1"');
+  if (!s.endsWith(']')) {
+    const lastComplete = s.lastIndexOf('}');
+    if (lastComplete > 0) {
+      s = s.substring(0, lastComplete + 1);
+      const depth = (s.match(/\[/g) || []).length - (s.match(/\]/g) || []).length;
+      for (let i = 0; i < depth; i++) s += ']';
+    }
+  }
+  return s;
+}
+
 function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
   const DV = tag;
   const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -2066,7 +2082,24 @@ function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
 
   console.log(`${DV} JSON array extracted (${jsonMatch[0].length} chars). Parsing...`);
 
-  const vendors: DiscoveredVendor[] = JSON.parse(jsonMatch[0]);
+  let vendors: DiscoveredVendor[];
+  try {
+    vendors = JSON.parse(jsonMatch[0]);
+  } catch (firstErr: any) {
+    console.warn(`${DV} Initial JSON.parse failed: ${firstErr.message}. Attempting repair...`);
+    try {
+      const repaired = repairJson(jsonMatch[0]);
+      vendors = JSON.parse(repaired);
+      console.log(`${DV} JSON repair succeeded`);
+    } catch (secondErr: any) {
+      console.error(`${DV} JSON repair also failed: ${secondErr.message}. Raw (first 800 chars): ${jsonMatch[0].substring(0, 800)}`);
+      return [];
+    }
+  }
+  if (!Array.isArray(vendors)) {
+    console.error(`${DV} Parsed JSON is not an array. Got: ${typeof vendors}`);
+    return [];
+  }
   console.log(`${DV} Parsed ${vendors.length} vendor object(s) from JSON`);
 
   return vendors.map((v, i) => {
