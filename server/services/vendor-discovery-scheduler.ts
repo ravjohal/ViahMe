@@ -197,36 +197,47 @@ export class VendorDiscoveryScheduler {
       return;
     }
 
-    log('info', `Step 3/7: Calling Gemini API to discover ${countToFetch} vendors...`, { area: job.area, specialty: job.specialty });
+    log('info', 'Step 3/7: Loading known vendors to build exclusion list for Gemini...');
+    const knownLoadStart = Date.now();
+    const jobStagedVendors = await this.storage.getStagedVendorsByJob(job.id);
+    const existingVendors = await this.storage.getAllVendors();
+    const knownLoadMs = Date.now() - knownLoadStart;
+
+    const MAX_EXCLUDE_NAMES = 200;
+    const knownNames = new Set<string>();
+    for (const v of jobStagedVendors) {
+      knownNames.add(v.name.toLowerCase().trim());
+    }
+    for (const v of existingVendors) {
+      if (knownNames.size >= MAX_EXCLUDE_NAMES) break;
+      knownNames.add(v.name.toLowerCase().trim());
+    }
+    const knownNamesList = Array.from(knownNames);
+
+    log('info', `Step 3/7: Built exclusion list: ${jobStagedVendors.length} from this job + ${existingVendors.length} existing = ${knownNamesList.length} unique names (cap: ${MAX_EXCLUDE_NAMES}) in ${knownLoadMs}ms`);
+
+    log('info', `Step 4/7: Calling Gemini API to discover ${countToFetch} vendors (excluding ${knownNamesList.length} known)...`, { area: job.area, specialty: job.specialty });
     const geminiStart = Date.now();
 
     try {
-      const discovered = await discoverVendors(job.area, job.specialty, countToFetch);
+      const discovered = await discoverVendors(job.area, job.specialty, countToFetch, knownNamesList);
       const geminiMs = Date.now() - geminiStart;
 
-      log('info', `Step 3/7: Gemini returned ${discovered.length} vendor(s) in ${geminiMs}ms`, {
+      log('info', `Step 4/7: Gemini returned ${discovered.length} vendor(s) in ${geminiMs}ms`, {
         geminiDurationMs: geminiMs,
         vendorNames: discovered.map(v => v.name),
       });
 
       if (discovered.length === 0) {
-        log('warn', 'Step 3/7: Gemini returned 0 vendors. Nothing to process.');
+        log('warn', 'Step 4/7: Gemini returned 0 vendors. Nothing to process.');
         return;
       }
-
-      log('info', 'Step 4/7: Loading existing vendors and all staged vendors for duplicate check...');
-      const dupCheckStart = Date.now();
-      const existingVendors = await this.storage.getAllVendors();
-      const allStagedVendors = await this.storage.getAllStagedVendors();
-      const dupCheckMs = Date.now() - dupCheckStart;
-
-      log('info', `Step 4/7: Loaded ${existingVendors.length} existing vendors, ${allStagedVendors.length} staged vendors in ${dupCheckMs}ms`);
 
       let newCount = 0;
       let duplicateExistingCount = 0;
       let duplicateStagedCount = 0;
 
-      log('info', `Step 5/7: Processing ${discovered.length} discovered vendors one by one...`);
+      log('info', `Step 5/7: Post-hoc duplicate safety check on ${discovered.length} vendors...`);
 
       for (let i = 0; i < discovered.length; i++) {
         const vendor = discovered[i];
@@ -235,7 +246,7 @@ export class VendorDiscoveryScheduler {
         const existingDuplicate = existingVendors.find(
           v => v.name.toLowerCase().trim() === vendorName
         );
-        const stagedDuplicate = allStagedVendors.find(
+        const stagedDuplicate = jobStagedVendors.find(
           v => v.name.toLowerCase().trim() === vendorName
         );
 
@@ -273,7 +284,7 @@ export class VendorDiscoveryScheduler {
         newCount++;
       }
 
-      log('info', `Step 5/7: Processing complete`, {
+      log('info', `Step 5/7: Safety check complete`, {
         totalFromGemini: discovered.length,
         stagedNew: newCount,
         skippedAlreadyStaged: duplicateStagedCount,

@@ -2035,11 +2035,11 @@ export interface DiscoveredVendor {
 
 const MAX_VENDORS_PER_API_CALL = 20;
 
-export async function discoverVendors(area: string, specialty: string, count: number = 20): Promise<DiscoveredVendor[]> {
+export async function discoverVendors(area: string, specialty: string, count: number = 20, knownVendorNames: string[] = []): Promise<DiscoveredVendor[]> {
   const startTime = Date.now();
   const DV = '[DiscoverVendors]';
 
-  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", totalRequested=${count}`);
+  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", totalRequested=${count}, knownVendors=${knownVendorNames.length}`);
 
   if (count <= 0) {
     console.log(`${DV} <<< count is ${count}, returning empty.`);
@@ -2047,7 +2047,7 @@ export async function discoverVendors(area: string, specialty: string, count: nu
   }
 
   if (count <= MAX_VENDORS_PER_API_CALL) {
-    const result = await discoverVendorsBatch(area, specialty, count);
+    const result = await discoverVendorsBatch(area, specialty, count, knownVendorNames.length > 0 ? knownVendorNames.join(', ') : undefined);
     const totalMs = Date.now() - startTime;
     console.log(`${DV} <<< DONE (single batch): Returning ${result.length} vendor(s). Total time: ${totalMs}ms`);
     return result;
@@ -2060,11 +2060,13 @@ export async function discoverVendors(area: string, specialty: string, count: nu
   while (remaining > 0) {
     batchNum++;
     const batchSize = Math.min(remaining, MAX_VENDORS_PER_API_CALL);
-    const alreadyFound = allVendors.map(v => v.name).join(', ');
+    const batchFoundNames = allVendors.map(v => v.name);
+    const allExcludeNames = [...knownVendorNames, ...batchFoundNames];
+    const excludeStr = allExcludeNames.length > 0 ? allExcludeNames.join(', ') : undefined;
 
-    console.log(`${DV} --- Batch ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found so far, ${remaining} remaining) ---`);
+    console.log(`${DV} --- Batch ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found this run, ${knownVendorNames.length} known from history, ${remaining} remaining) ---`);
 
-    const batch = await discoverVendorsBatch(area, specialty, batchSize, alreadyFound || undefined);
+    const batch = await discoverVendorsBatch(area, specialty, batchSize, excludeStr);
     allVendors.push(...batch);
     remaining -= batchSize;
 
