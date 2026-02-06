@@ -55,6 +55,8 @@ import {
   type InsertPhotoGallery,
   type Photo,
   type InsertPhoto,
+  type GuestMedia,
+  type InsertGuestMedia,
   type VendorAvailability,
   type InsertVendorAvailability,
   type VendorCalendarAccount,
@@ -687,6 +689,13 @@ export interface IStorage {
   createPhoto(photo: InsertPhoto): Promise<Photo>;
   updatePhoto(id: string, photo: Partial<InsertPhoto>): Promise<Photo | undefined>;
   deletePhoto(id: string): Promise<boolean>;
+
+  // Guest Media
+  createGuestMedia(media: InsertGuestMedia): Promise<GuestMedia>;
+  getGuestMediaByWedding(weddingId: string, status?: string): Promise<GuestMedia[]>;
+  getGuestMediaById(id: string): Promise<GuestMedia | undefined>;
+  updateGuestMediaStatus(id: string, status: 'approved' | 'rejected'): Promise<GuestMedia | undefined>;
+  getGuestMediaCounts(weddingId: string): Promise<{ pending: number; approved: number; rejected: number; total: number }>;
 
   // Vendor Availability
   getVendorAvailability(id: string): Promise<VendorAvailability | undefined>;
@@ -3596,6 +3605,19 @@ export class MemStorage implements IStorage {
 
   async deletePhoto(id: string): Promise<boolean> {
     return this.photos.delete(id);
+  }
+
+  // Guest Media
+  async createGuestMedia(media: InsertGuestMedia): Promise<GuestMedia> {
+    const id = crypto.randomUUID();
+    const item: GuestMedia = { ...media, id, status: media.status || 'pending', createdAt: new Date() };
+    return item;
+  }
+  async getGuestMediaByWedding(weddingId: string, status?: string): Promise<GuestMedia[]> { return []; }
+  async getGuestMediaById(id: string): Promise<GuestMedia | undefined> { return undefined; }
+  async updateGuestMediaStatus(id: string, status: 'approved' | 'rejected'): Promise<GuestMedia | undefined> { return undefined; }
+  async getGuestMediaCounts(weddingId: string): Promise<{ pending: number; approved: number; rejected: number; total: number }> {
+    return { pending: 0, approved: 0, rejected: 0, total: 0 };
   }
 
   // Vendor Availability

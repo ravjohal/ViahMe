@@ -649,7 +649,8 @@ export const weddings = pgTable("weddings", {
   coupleEmail: text("couple_email"),
   couplePhone: text("couple_phone"),
   weddingDate: timestamp("wedding_date"),
-  location: text("location").notNull(), // 'Bay Area' etc
+  metroAreaId: varchar("metro_area_id").references(() => metroAreas.id),
+  location: text("location").notNull(), // 'Bay Area' etc or custom city text
   guestCountEstimate: integer("guest_count_estimate"),
   ceremonyGuestCount: integer("ceremony_guest_count"), // Event-specific: ceremony guests
   receptionGuestCount: integer("reception_guest_count"), // Event-specific: reception guests
@@ -683,6 +684,7 @@ export const insertWeddingSchema = createInsertSchema(weddings).omit({
   subTradition: z.string().nullable().optional(),
   subTraditions: z.array(z.string()).nullable().optional(),
   role: z.enum(['bride', 'groom', 'planner']),
+  metroAreaId: z.string().nullable().optional(),
   location: z.string().min(1),
   weddingDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
   guestCountEstimate: z.number().min(1).optional(),
@@ -2346,6 +2348,37 @@ export const insertPhotoSchema = createInsertSchema(photos).omit({
 
 export type InsertPhoto = z.infer<typeof insertPhotoSchema>;
 export type Photo = typeof photos.$inferSelect;
+
+// ============================================================================
+// GUEST MEDIA - Guest-uploaded photos and videos with moderation
+// ============================================================================
+
+export const guestMedia = pgTable("guest_media", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  weddingId: varchar("wedding_id").notNull(),
+  eventId: varchar("event_id"),
+  url: text("url").notNull(),
+  mediaType: text("media_type").notNull().default('photo'),
+  caption: text("caption"),
+  uploaderName: text("uploader_name"),
+  guestId: varchar("guest_id"),
+  householdId: varchar("household_id"),
+  source: text("source").notNull().default('website'),
+  status: text("status").notNull().default('pending'),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertGuestMediaSchema = createInsertSchema(guestMedia).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  mediaType: z.enum(['photo', 'video']),
+  source: z.enum(['website', 'rsvp']),
+  status: z.enum(['pending', 'approved', 'rejected']).default('pending'),
+});
+
+export type InsertGuestMedia = z.infer<typeof insertGuestMediaSchema>;
+export type GuestMedia = typeof guestMedia.$inferSelect;
 
 // ============================================================================
 // VENDOR AVAILABILITY - Real-time calendar and booking management
