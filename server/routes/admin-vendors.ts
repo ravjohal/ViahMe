@@ -866,6 +866,77 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  const bulkCreateJobsSchema = z.object({
+    areas: z.array(z.string().min(1)).min(1, "At least one area is required"),
+    specialties: z.array(z.string().min(1)).min(1, "At least one specialty is required"),
+    countPerRun: z.number().min(1).max(50).default(20),
+    maxTotal: z.number().min(1).default(100),
+    notes: z.string().optional(),
+    skipExisting: z.boolean().default(true),
+  });
+
+  router.post("/discovery-jobs/bulk", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const parsed = bulkCreateJobsSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid bulk job data", details: parsed.error.format() });
+      }
+
+      const { areas, specialties, countPerRun, maxTotal, notes, skipExisting } = parsed.data;
+
+      let existingJobs: { area: string; specialty: string }[] = [];
+      if (skipExisting) {
+        const allJobs = await storage.getAllDiscoveryJobs();
+        existingJobs = allJobs.map(j => ({ area: j.area, specialty: j.specialty }));
+      }
+
+      const results: { area: string; specialty: string; status: 'created' | 'skipped_existing' | 'error'; id?: string; error?: string }[] = [];
+
+      for (const area of areas) {
+        for (const specialty of specialties) {
+          if (skipExisting) {
+            const exists = existingJobs.some(j => j.area === area && j.specialty === specialty);
+            if (exists) {
+              results.push({ area, specialty, status: 'skipped_existing' });
+              continue;
+            }
+          }
+
+          try {
+            const job = await storage.createDiscoveryJob({
+              area,
+              specialty,
+              countPerRun,
+              maxTotal,
+              notes: notes || null,
+              isActive: true,
+              paused: false,
+            });
+            results.push({ area, specialty, status: 'created', id: job.id });
+          } catch (err: any) {
+            results.push({ area, specialty, status: 'error', error: err.message });
+          }
+        }
+      }
+
+      res.status(201).json({
+        summary: {
+          total: results.length,
+          created: results.filter(r => r.status === 'created').length,
+          skipped: results.filter(r => r.status === 'skipped_existing').length,
+          errors: results.filter(r => r.status === 'error').length,
+        },
+        results,
+      });
+    } catch (error) {
+      console.error("Error in bulk create discovery jobs:", error);
+      res.status(500).json({ error: "Failed to bulk create discovery jobs" });
+    }
+  });
+
   router.patch("/discovery-jobs/:id", async (req: Request, res: Response) => {
     try {
       if (!(await checkAdminAccess(req, storage))) {

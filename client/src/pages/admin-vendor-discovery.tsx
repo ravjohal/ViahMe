@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -49,12 +50,13 @@ import {
   Terminal,
   X,
   Settings,
+  Layers,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
 import { Link } from "wouter";
-import type { DiscoveryJob, StagedVendor, MetroArea } from "@shared/schema";
+import type { DiscoveryJob, StagedVendor, MetroArea, VendorCategory } from "@shared/schema";
 
 interface DiscoveryLogEntry {
   timestamp: string;
@@ -62,29 +64,6 @@ interface DiscoveryLogEntry {
   message: string;
   data?: Record<string, any>;
 }
-
-const SPECIALTIES = [
-  "photographer",
-  "videographer",
-  "caterer",
-  "banquet_hall",
-  "decorator",
-  "florist",
-  "wedding_planner",
-  "makeup_artist",
-  "mehndi_artist",
-  "dj",
-  "dhol_player",
-  "bridal_wear",
-  "groom_wear",
-  "jeweler",
-  "invitation_designer",
-  "turban_tier",
-  "officiant",
-  "sangeet_choreographer",
-  "lighting",
-  "transportation",
-];
 
 function formatSpecialty(s: string) {
   return s
@@ -165,13 +144,27 @@ export default function AdminVendorDiscovery() {
     queryKey: ["/api/metro-areas/all"],
   });
 
-  const activeMetroAreas = (metroAreasQuery.data || [])
-    .filter(a => a.isActive && a.slug !== 'other')
-    .sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999));
+  const vendorCategoriesQuery = useQuery<VendorCategory[]>({
+    queryKey: ["/api/vendor-categories"],
+  });
+
+  const activeMetroAreas = useMemo(() =>
+    (metroAreasQuery.data || [])
+      .filter(a => a.isActive && a.slug !== 'other')
+      .sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999)),
+    [metroAreasQuery.data]
+  );
+
+  const activeCategories = useMemo(() =>
+    (vendorCategoriesQuery.data || [])
+      .filter(c => c.isActive)
+      .sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999)),
+    [vendorCategoriesQuery.data]
+  );
 
   const [newJob, setNewJob] = useState({
     area: "",
-    specialty: SPECIALTIES[0],
+    specialty: "",
     countPerRun: 20,
     maxTotal: 100,
     notes: "",
@@ -182,6 +175,22 @@ export default function AdminVendorDiscovery() {
       setNewJob(prev => ({ ...prev, area: activeMetroAreas[0].label }));
     }
   }, [activeMetroAreas.length]);
+
+  useEffect(() => {
+    if (activeCategories.length > 0 && !newJob.specialty) {
+      setNewJob(prev => ({ ...prev, specialty: activeCategories[0].slug }));
+    }
+  }, [activeCategories.length]);
+
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkSelectedAreas, setBulkSelectedAreas] = useState<Set<string>>(new Set());
+  const [bulkSelectedSpecialties, setBulkSelectedSpecialties] = useState<Set<string>>(new Set());
+  const [bulkCountPerRun, setBulkCountPerRun] = useState(20);
+  const [bulkMaxTotal, setBulkMaxTotal] = useState(100);
+  const [bulkNotes, setBulkNotes] = useState("");
+  const [bulkSkipExisting, setBulkSkipExisting] = useState(true);
+  const [bulkAreaSearch, setBulkAreaSearch] = useState("");
+  const [bulkSpecialtySearch, setBulkSpecialtySearch] = useState("");
 
   const jobsQuery = useQuery<DiscoveryJob[]>({
     queryKey: ["/api/admin/discovery-jobs"],
@@ -211,6 +220,27 @@ export default function AdminVendorDiscovery() {
     },
     onError: (err: Error) => {
       toast({ title: "Failed to create job", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const bulkCreateMutation = useMutation({
+    mutationFn: async (data: { areas: string[]; specialties: string[]; countPerRun: number; maxTotal: number; notes?: string; skipExisting: boolean }) => {
+      const res = await apiRequest("POST", "/api/admin/discovery-jobs/bulk", data);
+      return res.json();
+    },
+    onSuccess: (data: { summary: { total: number; created: number; skipped: number; errors: number } }) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
+      setBulkDialogOpen(false);
+      setBulkSelectedAreas(new Set());
+      setBulkSelectedSpecialties(new Set());
+      setBulkNotes("");
+      toast({
+        title: `Created ${data.summary.created} jobs`,
+        description: data.summary.skipped > 0 ? `${data.summary.skipped} skipped (already exist)` : undefined,
+      });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to create jobs", description: err.message, variant: "destructive" });
     },
   });
 
@@ -392,10 +422,16 @@ export default function AdminVendorDiscovery() {
                   <Settings />
                 </Button>
               </div>
-              <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-job">
-                <Plus className="mr-2 h-4 w-4" />
-                New Job
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button variant="outline" onClick={() => setBulkDialogOpen(true)} data-testid="button-bulk-create">
+                  <Layers className="mr-2 h-4 w-4" />
+                  Bulk Create
+                </Button>
+                <Button onClick={() => setCreateDialogOpen(true)} data-testid="button-create-job">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Job
+                </Button>
+              </div>
             </div>
 
             {showSettings && (
@@ -831,8 +867,8 @@ export default function AdminVendorDiscovery() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {SPECIALTIES.map((s) => (
-                      <SelectItem key={s} value={s}>{formatSpecialty(s)}</SelectItem>
+                    {activeCategories.map((cat) => (
+                      <SelectItem key={cat.slug} value={cat.slug}>{cat.displayName}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -881,6 +917,218 @@ export default function AdminVendorDiscovery() {
               >
                 {createJobMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                 Create Job
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Bulk Create Discovery Jobs</DialogTitle>
+              <DialogDescription>
+                Select multiple metro areas and specialties to create jobs for every combination.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-5 py-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Metro Areas</Label>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setBulkSelectedAreas(new Set(activeMetroAreas.map(a => a.label)))}
+                        data-testid="button-select-all-areas"
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setBulkSelectedAreas(new Set())}
+                        data-testid="button-clear-areas"
+                      >
+                        None
+                      </Button>
+                    </div>
+                  </div>
+                  <Input
+                    placeholder="Search areas..."
+                    value={bulkAreaSearch}
+                    onChange={(e) => setBulkAreaSearch(e.target.value)}
+                    data-testid="input-bulk-area-search"
+                  />
+                  <ScrollArea className="h-52 rounded-md border p-2">
+                    <div className="space-y-1">
+                      {activeMetroAreas
+                        .filter(a => !bulkAreaSearch || a.label.toLowerCase().includes(bulkAreaSearch.toLowerCase()))
+                        .map((area) => (
+                        <label
+                          key={area.id}
+                          className="flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover-elevate"
+                          data-testid={`bulk-area-${area.slug}`}
+                        >
+                          <Checkbox
+                            checked={bulkSelectedAreas.has(area.label)}
+                            onCheckedChange={(checked) => {
+                              setBulkSelectedAreas(prev => {
+                                const next = new Set(prev);
+                                if (checked) next.add(area.label);
+                                else next.delete(area.label);
+                                return next;
+                              });
+                            }}
+                          />
+                          <span className="text-sm">{area.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  <p className="text-xs text-muted-foreground">{bulkSelectedAreas.size} selected</p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>Specialties</Label>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setBulkSelectedSpecialties(new Set(activeCategories.map(c => c.slug)))}
+                        data-testid="button-select-all-specialties"
+                      >
+                        All
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setBulkSelectedSpecialties(new Set())}
+                        data-testid="button-clear-specialties"
+                      >
+                        None
+                      </Button>
+                    </div>
+                  </div>
+                  <Input
+                    placeholder="Search specialties..."
+                    value={bulkSpecialtySearch}
+                    onChange={(e) => setBulkSpecialtySearch(e.target.value)}
+                    data-testid="input-bulk-specialty-search"
+                  />
+                  <ScrollArea className="h-52 rounded-md border p-2">
+                    <div className="space-y-1">
+                      {activeCategories
+                        .filter(c => !bulkSpecialtySearch || c.displayName.toLowerCase().includes(bulkSpecialtySearch.toLowerCase()))
+                        .map((cat) => (
+                        <label
+                          key={cat.id}
+                          className="flex items-center gap-2 py-1 px-1 rounded cursor-pointer hover-elevate"
+                          data-testid={`bulk-specialty-${cat.slug}`}
+                        >
+                          <Checkbox
+                            checked={bulkSelectedSpecialties.has(cat.slug)}
+                            onCheckedChange={(checked) => {
+                              setBulkSelectedSpecialties(prev => {
+                                const next = new Set(prev);
+                                if (checked) next.add(cat.slug);
+                                else next.delete(cat.slug);
+                                return next;
+                              });
+                            }}
+                          />
+                          <span className="text-sm">{cat.displayName}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                  <p className="text-xs text-muted-foreground">{bulkSelectedSpecialties.size} selected</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Per Run</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={bulkCountPerRun}
+                    onChange={(e) => setBulkCountPerRun(parseInt(e.target.value) || 20)}
+                    data-testid="input-bulk-count-per-run"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Max Total</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={bulkMaxTotal}
+                    onChange={(e) => setBulkMaxTotal(parseInt(e.target.value) || 100)}
+                    data-testid="input-bulk-max-total"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Notes (optional)</Label>
+                <Input
+                  value={bulkNotes}
+                  onChange={(e) => setBulkNotes(e.target.value)}
+                  placeholder="Notes for all created jobs"
+                  data-testid="input-bulk-notes"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="skip-existing"
+                  checked={bulkSkipExisting}
+                  onCheckedChange={(checked) => setBulkSkipExisting(!!checked)}
+                  data-testid="checkbox-skip-existing"
+                />
+                <Label htmlFor="skip-existing" className="cursor-pointer text-sm">
+                  Skip combinations that already have a job
+                </Label>
+              </div>
+
+              {bulkSelectedAreas.size > 0 && bulkSelectedSpecialties.size > 0 && (
+                <Card>
+                  <CardContent className="py-3">
+                    <p className="text-sm font-medium" data-testid="text-bulk-summary">
+                      This will create up to {bulkSelectedAreas.size * bulkSelectedSpecialties.size} jobs
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {bulkSelectedAreas.size} area{bulkSelectedAreas.size !== 1 ? 's' : ''} x {bulkSelectedSpecialties.size} specialt{bulkSelectedSpecialties.size !== 1 ? 'ies' : 'y'}
+                      {bulkSkipExisting ? ' (existing combos will be skipped)' : ''}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setBulkDialogOpen(false)} data-testid="button-cancel-bulk">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => bulkCreateMutation.mutate({
+                  areas: Array.from(bulkSelectedAreas),
+                  specialties: Array.from(bulkSelectedSpecialties),
+                  countPerRun: bulkCountPerRun,
+                  maxTotal: bulkMaxTotal,
+                  notes: bulkNotes || undefined,
+                  skipExisting: bulkSkipExisting,
+                })}
+                disabled={bulkCreateMutation.isPending || bulkSelectedAreas.size === 0 || bulkSelectedSpecialties.size === 0}
+                data-testid="button-submit-bulk"
+              >
+                {bulkCreateMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Layers className="mr-2 h-4 w-4" />
+                )}
+                Create {bulkSelectedAreas.size * bulkSelectedSpecialties.size} Jobs
               </Button>
             </DialogFooter>
           </DialogContent>
