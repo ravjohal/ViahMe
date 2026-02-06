@@ -5,7 +5,7 @@ Viah.me is a specialized vertical SaaS platform designed to manage the unique lo
 
 ## User Preferences
 - Multi-tradition support: Sikh, Hindu, Muslim, Gujarati, South Indian, Mixed/Fusion, General
-- Coverage of 5 major US cities: Bay Area, NYC, LA, Chicago, Seattle
+- Coverage of 5 major US cities + 2 Canadian metros: Bay Area, NYC, LA, Chicago, Seattle, Vancouver, Toronto
 - Emphasis on culturally-authentic vendor discovery vs. generic wedding apps
 - Multi-event complexity must be core to the UX, not an afterthought
 - Culturally-specific event auto-seeding based on selected tradition
@@ -47,6 +47,7 @@ Key architectural decisions and features include:
 - **Ceremony vs Ritual Data Model**: `ceremony_types` serves as the source of truth for major events on the timeline, while `tradition_rituals` provides read-only educational content about rituals, some linked to ceremonies and others standalone.
 - **Ritual Information Display**: Ritual information is displayed via `RitualInfoTooltip` components and on the Cultural Info page, powered by database content.
 - **Database-Driven Reference Data**: Hardcoded constants for budget categories, Milni relation options, Milni pair templates, timeline templates, and vendor task categories have been migrated to database tables for admin maintainability and tradition affinity filtering.
+- **Automated Vendor Discovery**: AI-powered vendor discovery system using Gemini API with a staging/approval workflow. Includes `discovery_jobs` for configuring area/specialty/limits, `staged_vendors` for review before publishing, `VendorDiscoveryScheduler` for daily cron jobs (2 AM UTC), global daily cap (50 vendors), per-job limits, and duplicate detection across all existing and staged vendors. Admin UI at `/admin/vendor-discovery` for job management and vendor review.
 
 ## External Dependencies
 - **PostgreSQL (Neon)**: Relational database.
