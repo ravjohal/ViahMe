@@ -2125,17 +2125,24 @@ function extractCompleteTopLevelObjects(s: string): string[] {
   return objects;
 }
 
-function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
+interface ParseResult {
+  vendors: DiscoveredVendor[];
+  wasTruncated: boolean;
+}
+
+function parseVendorResponse(text: string, tag: string): ParseResult {
   const DV = tag;
+  let wasTruncated = false;
   let jsonMatch = text.match(/\[[\s\S]*\]/);
   if (!jsonMatch) {
     const truncatedMatch = text.match(/\[[\s\S]+/);
     if (truncatedMatch) {
       console.warn(`${DV} No complete JSON array found (likely truncated response). Attempting repair on partial content (${truncatedMatch[0].length} chars)...`);
       jsonMatch = truncatedMatch;
+      wasTruncated = true;
     } else {
       console.error(`${DV} FAILED: No JSON array found in response. Raw response (first 500 chars): ${text.substring(0, 500)}`);
-      return [];
+      return { vendors: [], wasTruncated: false };
     }
   }
 
@@ -2146,23 +2153,24 @@ function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
     vendors = JSON.parse(jsonMatch[0]);
   } catch (firstErr: any) {
     console.warn(`${DV} Initial JSON.parse failed: ${firstErr.message}. Attempting repair...`);
+    wasTruncated = true;
     try {
       const repaired = repairJson(jsonMatch[0]);
       vendors = JSON.parse(repaired);
       console.log(`${DV} JSON repair succeeded — recovered ${Array.isArray(vendors) ? vendors.length : 0} vendor(s) from truncated response`);
     } catch (secondErr: any) {
       console.error(`${DV} JSON repair also failed: ${secondErr.message}. Raw (first 800 chars): ${jsonMatch[0].substring(0, 800)}`);
-      return [];
+      return { vendors: [], wasTruncated: true };
     }
   }
   if (!Array.isArray(vendors)) {
     console.error(`${DV} Parsed JSON is not an array. Got: ${typeof vendors}`);
-    return [];
+    return { vendors: [], wasTruncated };
   }
   console.log(`${DV} Parsed ${vendors.length} vendor object(s) from JSON`);
 
-  return vendors.map((v, i) => {
-    const mapped = {
+  const mapped = vendors.map((v, i) => {
+    const m = {
       name: v.name || '',
       location: v.location || '',
       phone: v.phone || '',
@@ -2175,9 +2183,10 @@ function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
       price_range: v.price_range || '$$$',
       notes: v.notes || '',
     };
-    console.log(`${DV}   [${i + 1}] "${mapped.name}" | ${mapped.location} | ${mapped.website || 'no website'} | categories: ${mapped.categories.join(', ')}`);
-    return mapped;
+    console.log(`${DV}   [${i + 1}] "${m.name}" | ${m.location} | ${m.website || 'no website'} | categories: ${m.categories.join(', ')}`);
+    return m;
   });
+  return { vendors: mapped, wasTruncated };
 }
 
 export type ChatHistoryEntry = { role: 'user' | 'model'; parts: { text: string }[] };
@@ -2279,7 +2288,8 @@ export async function discoverVendors(
 
     logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
 
-    const batch = parseVendorResponse(text, `${DV} [turn ${batchNum}]`);
+    const parseResult = parseVendorResponse(text, `${DV} [turn ${batchNum}]`);
+    const batch = parseResult.vendors;
 
     if (batch.length > 0) {
       runHistory.push({ role: 'user', parts: [{ text: message }] });
@@ -2289,15 +2299,18 @@ export async function discoverVendors(
       console.log(`${DV} Chat turn ${batchNum}: 0 vendors parsed — NOT adding to chat history (prevents poisoning future runs)`);
     }
 
-    remaining -= batchSize;
+    remaining -= batch.length;
 
     if (batch.length < batchSize) {
       if (batch.length === 0 && text.length > 100) {
         console.log(`${DV} Chat turn ${batchNum} returned 0/${batchSize} but response was ${text.length} chars — likely a parse failure, not market exhaustion. Stopping.`);
+        break;
+      } else if (parseResult.wasTruncated && batch.length > 0) {
+        console.log(`${DV} Chat turn ${batchNum} returned ${batch.length}/${batchSize} — response was TRUNCATED, not market exhaustion. Continuing to request remaining ${remaining} vendors...`);
       } else {
         console.log(`${DV} Chat turn ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
+        break;
       }
-      break;
     }
   }
 
