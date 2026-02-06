@@ -2035,7 +2035,9 @@ export interface DiscoveredVendor {
 
 const MAX_VENDORS_PER_API_CALL = 20;
 
-const VENDOR_DISCOVERY_SYSTEM_PROMPT = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform. Your job is to find REAL vendors that serve the South Asian wedding market (Sikh, Hindu, Muslim, Gujarati, South Indian weddings).
+const VENDOR_DISCOVERY_SYSTEM_PROMPT = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform. Your job is to find REAL vendors that specifically serve the South Asian wedding market.
+
+CRITICAL: You must ONLY return vendors who explicitly specialize in or cater to South Asian weddings (Sikh, Hindu, Muslim, Gujarati, South Indian, Punjabi, Bengali, Tamil, Telugu, Malayali, etc.). Do NOT include generic/mainstream wedding vendors that do not have a demonstrated focus on South Asian clientele. Evidence of South Asian specialization includes: South Asian cuisine (Indian, Pakistani, Sri Lankan, Bangladeshi), Desi bridal/groom attire, mehndi/henna services, dhol/sangeet entertainment, mandap/gurudwara decor, or marketing that explicitly mentions serving the South Asian, Indian, Pakistani, or Desi community.
 
 For each vendor you find, provide these fields:
 - name: The business name
@@ -2045,12 +2047,12 @@ For each vendor you find, provide these fields:
 - website: Business website URL
 - specialty: What they specifically do for South Asian weddings
 - categories: Array of vendor categories from this list: photographer, videographer, caterer, banquet_hall, gurdwara, temple, decorator, florist, wedding_planner, invitation_designer, jeweler, bridal_wear, groom_wear, makeup_artist, hair_stylist, mehndi_artist, dj, dhol_player, turban_tier, lighting, transportation, officiant, priest, pandit, imam, mosque, church, event_venue, bartender, cake_baker, sangeet_choreographer, granthi, travel_agent, hotel, kolam_artist
-- cultural_specialties: Array of cultural focuses (e.g. "sikh", "hindu", "punjabi", "south_asian", "indian")
+- cultural_specialties: Array of cultural focuses (e.g. "sikh", "hindu", "punjabi", "south_asian", "indian", "pakistani", "bengali", "tamil")
 - preferred_wedding_traditions: Array from: sikh, hindu, muslim, gujarati, south_indian, mixed, general
 - price_range: One of "$", "$$", "$$$", "$$$$"
-- notes: Any relevant notes about the vendor
+- notes: Any relevant notes about the vendor's South Asian wedding experience
 
-IMPORTANT: Return ONLY real businesses you are confident exist. If you cannot find the requested number, return fewer rather than making up fake ones. Accuracy is more important than quantity.
+IMPORTANT: Return ONLY real businesses you are confident exist AND that genuinely specialize in South Asian weddings. If you cannot find the requested number of South Asian-focused vendors, return fewer rather than including generic vendors or making up fake ones. Accuracy and cultural relevance are more important than quantity.
 
 Always respond with ONLY a JSON array of vendor objects. No other text before or after.`;
 
@@ -2152,9 +2154,9 @@ export async function discoverVendors(
 
     let message: string;
     if (batchNum === 1 && !hasPriorHistory) {
-      message = `Find ${batchSize} REAL vendors that specialize in "${specialty}" in the "${area}" area.${excludeClause}`;
+      message = `Find ${batchSize} REAL South Asian wedding vendors that specialize in "${specialty}" in the "${area}" area. Only include vendors who explicitly cater to the South Asian (Indian, Pakistani, Sri Lankan, Bangladeshi, Desi) wedding community.${excludeClause}`;
     } else {
-      message = `Find ${batchSize} MORE REAL vendors that specialize in "${specialty}" in the "${area}" area. They must be COMPLETELY DIFFERENT businesses from all the ones you have already listed in this conversation. Do not repeat any vendor.${excludeClause}`;
+      message = `Find ${batchSize} MORE REAL South Asian wedding vendors that specialize in "${specialty}" in the "${area}" area. They must be COMPLETELY DIFFERENT businesses from all the ones you have already listed in this conversation. Do not repeat any vendor. Only include vendors who explicitly cater to the South Asian wedding community.${excludeClause}`;
     }
 
     console.log(`${DV} --- Chat turn ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found this run, ${remaining} remaining) ---`);
