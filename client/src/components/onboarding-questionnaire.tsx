@@ -34,7 +34,7 @@ const questionnaireSchema = z.object({
   weddingDate: z.string().optional(),
   flexibleDate: z.boolean().optional(),
   location: z.string().min(1, "Location is required"),
-  customZipCode: z.string().optional(),
+  customCity: z.string().optional(),
   guestCountEstimate: z.string().optional(),
   ceremonyGuestCount: z.string().optional(),
   receptionGuestCount: z.string().optional(),
@@ -204,7 +204,7 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       weddingDate: new Date().toISOString().split('T')[0],
       flexibleDate: false,
       location: "",
-      customZipCode: "",
+      customCity: "",
       guestCountEstimate: "300",
       ceremonyGuestCount: "",
       receptionGuestCount: "",
@@ -469,9 +469,13 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
       }
       // "other" tradition has neither subTradition nor subTraditions
       
-      // Transform data before passing to onComplete
+      const resolvedLocation = data.location === "Other" && data.customCity
+        ? data.customCity
+        : data.location;
+
       const transformedData = {
         ...data,
+        location: resolvedLocation,
         subTradition: normalizedSubTradition,
         subTraditions: normalizedSubTraditions,
         weddingDate: data.weddingDate ? new Date(data.weddingDate) : undefined,
@@ -508,6 +512,9 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
         break;
       case 4:
         isValid = !!form.getValues('location');
+        if (isValid && form.getValues('location') === 'Other') {
+          isValid = !!form.getValues('customCity')?.trim();
+        }
         break;
       case 5:
         isValid = true; // Budget is optional
@@ -905,6 +912,32 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
                         </FormItem>
                       )}
                     />
+                    {selectedLocation === "Other" && (
+                      <FormField
+                        control={form.control}
+                        name="customCity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
+                              Your City or Metro Area
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="text"
+                                placeholder="e.g., Austin, Phoenix, Nashville"
+                                {...field}
+                                data-testid="input-custom-city"
+                                className="h-12"
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Enter your city or metro area so we can help match you with nearby vendors
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
                     {/* Dynamic Ceremony/Event Creation */}
                     <div className="space-y-4">
                       <div>
@@ -1072,33 +1105,6 @@ export function OnboardingQuestionnaire({ onComplete }: OnboardingQuestionnaireP
 
                     </div>
 
-                    {selectedLocation === "Other" && (
-                      <FormField
-                        control={form.control}
-                        name="customZipCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-lg font-semibold tracking-wide" style={{ fontFamily: 'Cormorant Garamond, serif' }}>
-                              ZIP Code
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="text"
-                                placeholder="e.g., 77001"
-                                {...field}
-                                maxLength={5}
-                                data-testid="input-zip-code"
-                                className="h-12"
-                              />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              Enter your ZIP code so we can show you nearby vendors
-                            </p>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
 
                   </>
                 )}
