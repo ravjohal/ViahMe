@@ -1,0 +1,77 @@
+
+2026-02-05 22:42:29.08
+a2e3d028
+User
+6:42:29 AM [express] → GET /api/ai/chat/history/c6341fa5-c60f-4dda-9f15-8e0324c33c4e (body: unknown)
+2026-02-05 22:42:29.08
+a2e3d028
+User
+6:42:29 AM [express] → GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/collaborators (body: unknown)
+2026-02-05 22:42:29.09
+a2e3d028
+User
+6:42:29 AM [express] → GET /api/notifications/couple/c6341fa5-c60f-4dda-9f15-8e0324c33c4e (body: unknown)
+2026-02-05 22:42:29.12
+a2e3d028
+User
+6:42:29 AM [express] ← ✓ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/my-permissions 304 in 43ms
+2026-02-05 22:42:29.15
+a2e3d028
+User
+6:42:29 AM [express] ← ✓ GET /api/weddings/c6341fa5-c60f-4dda-9f15-8e0324c33c4e/collaborators 304 in 69ms
+2026-02-05 22:42:29.17
+a2e3d028
+User
+6:42:29 AM [express] ← ✓ GET /api/notifications/couple/c6341fa5-c60f-4dda-9f15-8e0324c33c4e 304 in 80ms
+2026-02-05 22:42:29.17
+a2e3d028
+User
+6:42:29 AM [express] ← ✓ GET /api/ai/chat/history/c6341fa5-c60f-4dda-9f15-8e0324c33c4e 304 in 90ms
+2026-02-05 22:42:31.25
+a2e3d028
+User
+6:42:31 AM [express] → GET /api/metro-areas/all (body: unknown)
+2026-02-05 22:42:31.25
+a2e3d028
+User
+6:42:31 AM [express] → GET /api/vendor-categories (body: unknown)
+2026-02-05 22:42:31.25
+a2e3d028
+User
+6:42:31 AM [express] → GET /api/admin/scheduler-config (body: unknown)
+2026-02-05 22:42:31.25
+a2e3d028
+User
+6:42:31 AM [express] → GET /api/admin/discovery-jobs (body: unknown)
+2026-02-05 22:42:31.26
+a2e3d028
+User
+6:42:31 AM [express] → GET /api/admin/staged-vendors (body: unknown)
+2026-02-05 22:42:31.29
+a2e3d028
+User
+6:42:31 AM [express] ← ✓ GET /api/admin/scheduler-config 200 in 34ms
+2026-02-05 22:42:31.29
+a2e3d028
+User
+6:42:31 AM [express] ← ✓ GET /api/metro-areas/all 200 in 38ms
+2026-02-05 22:42:31.29
+a2e3d028
+User
+6:42:31 AM [express] ← ✓ GET /api/vendor-categories 200 in 41ms
+2026-02-05 22:42:31.31
+a2e3d028
+User
+6:42:31 AM [express] ← ✓ GET /api/admin/discovery-jobs 304 in 52ms
+2026-02-05 22:42:31.31
+a2e3d028
+User
+6:42:31 AM [express] ← ✓ GET /api/admin/staged-vendors 304 in 52ms
+2026-02-05 22:42:59.58
+a2e3d028
+User
+6:42:59 AM [express] → GET /api/notifications/couple/c6341fa5-c60f-4dda-9f15-8e0324c33c4e (body: unknown)
+2026-02-05 22:42:59.71
+a2e3d028
+User
+6:42:59 AM [express] ← ✓ GET /api/notifications/couple/c6341fa5-c60f-4dda-9f15-8e0324c33c4e 304
