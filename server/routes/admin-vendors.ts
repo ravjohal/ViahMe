@@ -1322,4 +1322,49 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       res.status(500).json({ error: "Failed to delete staged vendor" });
     }
   });
+
+  router.get("/email-templates/:key", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const template = await storage.getEmailTemplate(req.params.key);
+      res.json(template || null);
+    } catch (error) {
+      console.error("Error fetching email template:", error);
+      res.status(500).json({ error: "Failed to fetch email template" });
+    }
+  });
+
+  router.put("/email-templates/:key", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const templateSchema = z.object({
+        subject: z.string().min(1),
+        heading: z.string().min(1),
+        bodyHtml: z.string().min(1),
+        ctaText: z.string().min(1).optional(),
+        footerHtml: z.string().optional(),
+      });
+
+      const parsed = templateSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid template data", details: parsed.error.issues });
+      }
+
+      const result = await storage.upsertEmailTemplate({
+        templateKey: req.params.key,
+        ...parsed.data,
+      });
+      res.json(result);
+    } catch (error) {
+      console.error("Error saving email template:", error);
+      res.status(500).json({ error: "Failed to save email template" });
+    }
+  });
 }

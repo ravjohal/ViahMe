@@ -5687,3 +5687,25 @@ export const insertPollVoteSchema = createInsertSchema(pollVotes).omit({
 });
 export type InsertPollVote = z.infer<typeof insertPollVoteSchema>;
 export type PollVote = typeof pollVotes.$inferSelect;
+
+// ============================================================================
+// EMAIL TEMPLATES - Admin-configurable email templates
+// ============================================================================
+
+export const emailTemplates = pgTable("email_templates", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateKey: text("template_key").notNull().unique(),
+  subject: text("subject").notNull(),
+  heading: text("heading").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  ctaText: text("cta_text").notNull().default("Claim Your Profile"),
+  footerHtml: text("footer_html"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;

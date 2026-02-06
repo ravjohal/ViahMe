@@ -339,6 +339,9 @@ import {
   pollVotes,
   type PollVote,
   type InsertPollVote,
+  emailTemplates,
+  type EmailTemplate,
+  type InsertEmailTemplate,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -439,6 +442,10 @@ export interface IStorage {
   incrementVendorViewCount(id: string): Promise<void>;
   queueClaimNotification(vendorId: string): Promise<void>;
   sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void>;
+
+  // Email Templates
+  getEmailTemplate(templateKey: string): Promise<EmailTemplate | undefined>;
+  upsertEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate>;
 
   // Service Packages
   getServicePackage(id: string): Promise<ServicePackage | undefined>;
@@ -2048,8 +2055,33 @@ export class MemStorage implements IStorage {
   }
 
   async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
-    // In MemStorage, just log the email that would be sent
-    console.log(`[ClaimEmail] Would send to ${email}: Claim your profile at ${claimLink}`);
+    const template = await this.getEmailTemplate('vendor_claim_invitation');
+    const replaceVars = (text: string) =>
+      text.replace(/\{\{vendorName\}\}/g, vendorName).replace(/\{\{claimLink\}\}/g, claimLink);
+    const subject = replaceVars(template?.subject || `Claim Your Business Profile on Viah.me - ${vendorName}`);
+    console.log(`[ClaimEmail] Would send to ${email}: Subject: "${subject}" | Claim link: ${claimLink}`);
+  }
+
+  private emailTemplatesMap = new Map<string, EmailTemplate>();
+
+  async getEmailTemplate(templateKey: string): Promise<EmailTemplate | undefined> {
+    return this.emailTemplatesMap.get(templateKey);
+  }
+
+  async upsertEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate> {
+    const existing = this.emailTemplatesMap.get(data.templateKey);
+    const template: EmailTemplate = {
+      id: existing?.id || randomUUID(),
+      templateKey: data.templateKey,
+      subject: data.subject,
+      heading: data.heading,
+      bodyHtml: data.bodyHtml,
+      ctaText: data.ctaText || 'Claim Your Profile',
+      footerHtml: data.footerHtml || null,
+      updatedAt: new Date(),
+    };
+    this.emailTemplatesMap.set(data.templateKey, template);
+    return template;
   }
 
   // Service Packages
@@ -5501,48 +5533,94 @@ export class DBStorage implements IStorage {
   }
 
   async sendClaimEmail(vendorId: string, email: string, vendorName: string, claimLink: string): Promise<void> {
-    // Use Brevo to send the claim email
     console.log(`[ClaimEmail] Preparing to send claim invitation:`, {
       vendorId,
       vendorName,
       recipientEmail: email,
       claimLink,
     });
-    
-    try {
-      const { sendBrevoEmail } = await import('./email');
-      
-      await sendBrevoEmail({
-        to: email,
-        subject: `Claim Your Business Profile on Viah.me - ${vendorName}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #C2410C;">Claim Your Profile on Viah.me</h1>
-            <p>Hello,</p>
-            <p>You're invited to claim your business profile <strong>${vendorName}</strong> on Viah.me, the premier South Asian wedding planning platform.</p>
+
+    const template = await this.getEmailTemplate('vendor_claim_invitation');
+
+    const defaultSubject = `Claim Your Business Profile on Viah.me - ${vendorName}`;
+    const defaultHeading = 'Claim Your Profile on Viah.me';
+    const defaultBody = `<p>Hello,</p>
+            <p>You're invited to claim your business profile <strong>{{vendorName}}</strong> on Viah.me, the premier South Asian wedding planning platform.</p>
             <p>Claim your free profile to:</p>
             <ul>
               <li>Update your photos and portfolio</li>
               <li>Respond directly to inquiries</li>
               <li>Showcase your services to engaged couples</li>
-            </ul>
-            <p style="margin: 30px 0;">
-              <a href="${claimLink}" style="background-color: #C2410C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
-                Claim Your Profile
-              </a>
-            </p>
-            <p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
+            </ul>`;
+    const defaultCta = 'Claim Your Profile';
+    const defaultFooter = `<p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
             <p style="color: #666; font-size: 12px;">
               If you don't want to receive these emails, you can ignore this message.
-            </p>
-          </div>
-        `,
-      });
+            </p>`;
+
+    const replaceVars = (text: string) =>
+      text.replace(/\{\{vendorName\}\}/g, vendorName).replace(/\{\{claimLink\}\}/g, claimLink);
+
+    const subject = replaceVars(template?.subject || defaultSubject);
+    const heading = replaceVars(template?.heading || defaultHeading);
+    const bodyHtml = replaceVars(template?.bodyHtml || defaultBody);
+    const ctaText = replaceVars(template?.ctaText || defaultCta);
+    const footerHtml = replaceVars(template?.footerHtml || defaultFooter);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #C2410C;">${heading}</h1>
+        ${bodyHtml}
+        <p style="margin: 30px 0;">
+          <a href="${claimLink}" style="background-color: #C2410C; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px;">
+            ${ctaText}
+          </a>
+        </p>
+        ${footerHtml}
+      </div>
+    `;
+
+    try {
+      const { sendBrevoEmail } = await import('./email');
+      await sendBrevoEmail({ to: email, subject, html });
       console.log(`[ClaimEmail] Successfully sent to ${email} for vendor ${vendorName} (${vendorId})`);
     } catch (err) {
       console.error(`[ClaimEmail] Failed to send to ${email} for vendor ${vendorName} (${vendorId}):`, err);
-      throw err; // Re-throw so caller knows it failed
+      throw err;
     }
+  }
+
+  async getEmailTemplate(templateKey: string): Promise<EmailTemplate | undefined> {
+    const result = await this.db.select().from(schema.emailTemplates)
+      .where(eq(schema.emailTemplates.templateKey, templateKey));
+    return result[0];
+  }
+
+  async upsertEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate> {
+    const existing = await this.getEmailTemplate(data.templateKey);
+    if (existing) {
+      const [updated] = await this.db.update(schema.emailTemplates)
+        .set({
+          subject: data.subject,
+          heading: data.heading,
+          bodyHtml: data.bodyHtml,
+          ctaText: data.ctaText || 'Claim Your Profile',
+          footerHtml: data.footerHtml || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.emailTemplates.templateKey, data.templateKey))
+        .returning();
+      return updated;
+    }
+    const [created] = await this.db.insert(schema.emailTemplates).values({
+      templateKey: data.templateKey,
+      subject: data.subject,
+      heading: data.heading,
+      bodyHtml: data.bodyHtml,
+      ctaText: data.ctaText || 'Claim Your Profile',
+      footerHtml: data.footerHtml || null,
+    }).returning();
+    return created;
   }
 
   // Service Packages
