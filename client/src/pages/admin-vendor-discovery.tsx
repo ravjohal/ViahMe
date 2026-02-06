@@ -51,6 +51,9 @@ import {
   X,
   Settings,
   Layers,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -672,6 +675,21 @@ export default function AdminVendorDiscovery() {
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium" data-testid={`text-vendor-name-${vendor.id}`}>{vendor.name}</span>
                             {statusBadge(vendor.status)}
+                            {vendor.websiteVerified === 'valid' && (
+                              <Badge variant="outline" className="text-xs text-green-600 border-green-200 gap-1" data-testid={`badge-verified-${vendor.id}`}>
+                                <ShieldCheck className="h-3 w-3" /> Verified
+                              </Badge>
+                            )}
+                            {(vendor.websiteVerified === 'invalid' || vendor.websiteVerified === 'error') && (
+                              <Badge variant="outline" className="text-xs text-destructive border-destructive/30 gap-1" data-testid={`badge-unverified-${vendor.id}`}>
+                                <ShieldAlert className="h-3 w-3" /> Unverified
+                              </Badge>
+                            )}
+                            {(vendor.websiteVerified === 'pending' || vendor.websiteVerified === 'no_url') && (
+                              <Badge variant="outline" className="text-xs text-muted-foreground gap-1" data-testid={`badge-pending-${vendor.id}`}>
+                                <ShieldQuestion className="h-3 w-3" /> {vendor.websiteVerified === 'no_url' ? 'No URL' : 'Pending'}
+                              </Badge>
+                            )}
                             {vendor.categories?.map((cat) => (
                               <Badge key={cat} variant="outline" className="text-xs">
                                 {formatSpecialty(cat)}

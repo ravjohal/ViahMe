@@ -1,7 +1,93 @@
 import type { IStorage } from '../storage';
-import type { DiscoveryJob, DiscoveryRun } from '@shared/schema';
+import type { DiscoveryJob, DiscoveryRun, StagedVendor } from '@shared/schema';
 import { discoverVendors, type ChatHistoryEntry } from '../ai/gemini';
 import { z } from 'zod';
+
+async function verifyWebsiteUrl(url: string, timeoutMs: number = 8000): Promise<'valid' | 'invalid' | 'error'> {
+  if (!url || url.trim() === '') return 'invalid';
+  try {
+    let normalizedUrl = url.trim();
+    if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
+      normalizedUrl = 'https://' + normalizedUrl;
+    }
+    new URL(normalizedUrl);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    let response: Response;
+    try {
+      response = await fetch(normalizedUrl, {
+        method: 'HEAD',
+        signal: controller.signal,
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Viah.me Vendor Verification Bot' },
+      });
+    } catch {
+      clearTimeout(timer);
+      const getController = new AbortController();
+      const getTimer = setTimeout(() => getController.abort(), timeoutMs);
+      response = await fetch(normalizedUrl, {
+        method: 'GET',
+        signal: getController.signal,
+        redirect: 'follow',
+        headers: { 'User-Agent': 'Viah.me Vendor Verification Bot' },
+      });
+      clearTimeout(getTimer);
+    }
+    clearTimeout(timer);
+    return response.ok || response.status === 403 || response.status === 405 || response.status === 301 || response.status === 302 ? 'valid' : 'invalid';
+  } catch {
+    return 'error';
+  }
+}
+
+const VERIFY_CONCURRENCY = 5;
+const VERIFY_MAX_PER_RUN = 50;
+
+async function verifyVendorWebsites(
+  vendors: { id: string; website: string | null }[],
+  storage: IStorage,
+  log: (level: string, message: string, data?: any) => void,
+): Promise<{ verified: number; failed: number; skipped: number }> {
+  let verified = 0, failed = 0, skipped = 0;
+
+  const capped = vendors.slice(0, VERIFY_MAX_PER_RUN);
+  if (vendors.length > VERIFY_MAX_PER_RUN) {
+    log('info', `Website verification capped at ${VERIFY_MAX_PER_RUN} vendors (${vendors.length} total pending).`);
+  }
+
+  for (let i = 0; i < capped.length; i += VERIFY_CONCURRENCY) {
+    const batch = capped.slice(i, i + VERIFY_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map(async (vendor) => {
+        if (!vendor.website || vendor.website.trim() === '') {
+          await storage.updateStagedVendor(vendor.id, { websiteVerified: 'no_url' });
+          return 'no_url' as const;
+        }
+        const result = await verifyWebsiteUrl(vendor.website);
+        await storage.updateStagedVendor(vendor.id, { websiteVerified: result });
+        return result;
+      })
+    );
+
+    for (let j = 0; j < results.length; j++) {
+      const r = results[j];
+      if (r.status === 'fulfilled') {
+        if (r.value === 'valid') verified++;
+        else if (r.value === 'no_url') skipped++;
+        else {
+          failed++;
+          log('warn', `Website verification FAILED for "${batch[j].website}" → ${r.value}`);
+        }
+      } else {
+        failed++;
+        log('warn', `Website verification ERROR for "${batch[j].website}": ${r.reason}`);
+        try { await storage.updateStagedVendor(batch[j].id, { websiteVerified: 'error' }); } catch {}
+      }
+    }
+  }
+
+  return { verified, failed, skipped };
+}
 
 const chatHistoryEntrySchema = z.object({
   role: z.enum(['user', 'model']),
@@ -277,14 +363,28 @@ export class VendorDiscoveryService {
         newCount++;
       }
 
-      log('info', `Step 6/8: Safety check complete`, {
+      log('info', `Step 6/9: Safety check complete`, {
         totalFromGemini: discovered.length,
         stagedNew: newCount,
         skippedAlreadyStaged: duplicateStagedCount,
         markedAsDuplicateOfExisting: duplicateExistingCount,
       });
 
-      log('info', 'Step 7/8: Updating job counters and saving chat history...');
+      log('info', 'Step 7/9: Verifying vendor websites (non-blocking)...');
+      try {
+        const freshStagedVendors = await this.storage.getStagedVendorsByJob(job.id);
+        const vendorsToVerify = freshStagedVendors.filter(v => v.websiteVerified === 'pending' || !v.websiteVerified);
+        if (vendorsToVerify.length > 0) {
+          const verifyResults = await verifyVendorWebsites(vendorsToVerify, this.storage, log);
+          log('info', `Step 7/9: Website verification complete`, verifyResults);
+        } else {
+          log('info', `Step 7/9: No new vendors to verify.`);
+        }
+      } catch (verifyErr: any) {
+        log('error', `Step 7/9: Website verification failed (non-fatal): ${verifyErr.message}. Discovery run continues.`);
+      }
+
+      log('info', 'Step 8/9: Updating job counters and saving chat history...');
       await this.storage.updateDiscoveryJob(job.id, {
         lastRunAt: new Date(),
         totalDiscovered: job.totalDiscovered + newCount,
@@ -299,16 +399,16 @@ export class VendorDiscoveryService {
           updatedChatHistory,
           totalVendorsStaged,
         );
-        log('info', `Step 7/8: Chat history saved (${updatedChatHistory.length} entries, ${totalVendorsStaged} total vendors staged for this area/specialty).`);
+        log('info', `Step 8/9: Chat history saved (${updatedChatHistory.length} entries, ${totalVendorsStaged} total vendors staged for this area/specialty).`);
       } catch (histErr: any) {
-        log('error', `Step 7/8: Failed to save chat history (non-fatal): ${histErr.message}. Run will still be marked completed.`);
+        log('error', `Step 8/9: Failed to save chat history (non-fatal): ${histErr.message}. Run will still be marked completed.`);
       }
 
-      log('info', `Step 7/8: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}.`);
+      log('info', `Step 8/9: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}.`);
 
       const totalDuplicates = duplicateStagedCount + duplicateExistingCount;
 
-      log('info', `Step 8/8: JOB COMPLETE`, {
+      log('info', `Step 9/9: JOB COMPLETE`, {
         runId,
         geminiReturned: discovered.length,
         stagedCount: newCount,

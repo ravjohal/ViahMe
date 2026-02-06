@@ -5539,6 +5539,7 @@ export const stagedVendors = pgTable("staged_vendors", {
   notes: text("notes"),
   status: text("status").notNull().default('staged'),
   duplicateOfVendorId: varchar("duplicate_of_vendor_id"),
+  websiteVerified: text("website_verified").default('pending'),
   discoveredAt: timestamp("discovered_at").notNull().defaultNow(),
   reviewedAt: timestamp("reviewed_at"),
 });

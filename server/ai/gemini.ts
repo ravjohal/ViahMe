@@ -2134,6 +2134,7 @@ export async function discoverVendors(
       systemInstruction: VENDOR_DISCOVERY_SYSTEM_PROMPT,
       temperature: 0.3,
       maxOutputTokens: maxTokens,
+      tools: [{ googleSearch: {} }],
     },
     history: trimmedHistory,
   });
@@ -2171,6 +2172,19 @@ export async function discoverVendors(
 
     const text = response.text || '';
     console.log(`${DV} Chat turn ${batchNum} responded in ${apiCallMs}ms. Response length: ${text.length} chars`);
+
+    const groundingMeta = response.candidates?.[0]?.groundingMetadata;
+    if (groundingMeta) {
+      const searchQueries = groundingMeta.webSearchQueries || [];
+      const sourceCount = groundingMeta.groundingChunks?.length || 0;
+      console.log(`${DV} Grounding: ${searchQueries.length} search queries, ${sourceCount} sources cited`);
+      if (searchQueries.length > 0) {
+        console.log(`${DV} Search queries: ${searchQueries.join(' | ')}`);
+      }
+    } else {
+      console.log(`${DV} WARNING: No grounding metadata returned — response may not be search-grounded`);
+    }
+
     logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
 
     runHistory.push({ role: 'user', parts: [{ text: message }] });
