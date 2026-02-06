@@ -1,0 +1,51 @@
+2026-02-06 14:29:44.21
+099b006b
+User
+10:29:44 PM [express] ← ✓ GET /api/admin/staged-vendors 304 in 56ms
+2026-02-06 14:29:44.21
+099b006b
+User
+10:29:44 PM [express] ← ✓ GET /api/admin/discovery-runs 304 in 51ms
+2026-02-06 14:29:47.66
+099b006b
+User
+10:29:47 PM [express] → POST /api/admin/discovery-jobs/2f756901-bbbd-4a0d-8213-2974706f9b00/run-now (body: 0.0KB)
+2026-02-06 14:29:47.68
+099b006b
+User
+[AdminAPI] Manual run triggered for job 2f756901-bbbd-4a0d-8213-2974706f9b00
+2026-02-06 14:29:47.71
+099b006b
+User
+[VendorDiscovery] [ManualRun] 2026-02-06T22:29:47.717Z Firing background discovery for job 2f756901-bbbd-4a0d-8213-2974706f9b00 (Toronto (Canada)/caterer)
+2026-02-06 14:29:47.73
+099b006b
+User
+[AdminAPI] Manual run queued with runId: 00564341-7e7d-4508-a05e-e0bfd69c22c1
+2026-02-06 14:29:47.75
+099b006b
+User
+10:29:47 PM [express] ← ✓ POST /api/admin/discovery-jobs/2f756901-bbbd-4a0d-8213-2974706f9b00/run-now 200 in 94ms
+2026-02-06 14:29:47.75
+099b006b
+User
+[VendorDiscovery] [Job:Toronto (Canada)/caterer] 2026-02-06T22:29:47.759Z Step 1/8: Checking job validity {"runId":"00564341-7e7d-4508-a05e-e0bfd69c22c1","jobId":"2f756901-bbbd-4a0d-8213-2974706f9b00","area":"Toronto (Canada)","specialty":"caterer","isActive":true,"totalDiscovered":0,"maxTotal":200,"countPerRun":10,"endDate":null}
+2026-02-06 14:29:47.75
+099b006b
+User
+[VendorDiscovery] [Job:Toronto (Canada)/caterer] 2026-02-06T22:29:47.759Z Step 1/8: Job is valid, proceeding.
+2026-02-06 14:29:47.78
+099b006b
+User
+[VendorDiscovery] [Job:Toronto (Canada)/caterer] 2026-02-06T22:29:47.780Z Step 2/8: STOPPED — countToFetch is 0. No capacity.
+2026-02-06 14:29:47.78
+099b006b
+User
+[VendorDiscovery] [Job:Toronto (Canada)/caterer] 2026-02-06T22:29:47.780Z Step 2/8: Calculating fetch count {"countPerRun":10,"remainingForJob":200,"todayDiscoveredSoFar":245,"dailyCap":200,"globalBudgetRemaining":-45,"countToFetch":-45}
+2026-02-06 14:29:49.96
+099b006b
+User
+10:29:49 PM [express] → GET /api/admin/discovery-runs/00564341-7e7d-4508-a05e-e0bfd69c22c1 (body: unknown)
+2026-02-06 14:29:50.02
+099b006b
+User
