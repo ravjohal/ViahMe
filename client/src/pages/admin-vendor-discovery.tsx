@@ -54,7 +54,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { AppHeader } from "@/components/app-header";
 import { Link } from "wouter";
-import type { DiscoveryJob, StagedVendor } from "@shared/schema";
+import type { DiscoveryJob, StagedVendor, MetroArea } from "@shared/schema";
 
 interface DiscoveryLogEntry {
   timestamp: string;
@@ -62,16 +62,6 @@ interface DiscoveryLogEntry {
   message: string;
   data?: Record<string, any>;
 }
-
-const METRO_AREAS = [
-  "Bay Area, CA",
-  "New York City, NY",
-  "Los Angeles, CA",
-  "Chicago, IL",
-  "Seattle, WA",
-  "Vancouver, BC",
-  "Toronto, ON",
-];
 
 const SPECIALTIES = [
   "photographer",
@@ -171,13 +161,27 @@ export default function AdminVendorDiscovery() {
     }
   }, [schedulerConfigQuery.data]);
 
+  const metroAreasQuery = useQuery<MetroArea[]>({
+    queryKey: ["/api/metro-areas/all"],
+  });
+
+  const activeMetroAreas = (metroAreasQuery.data || [])
+    .filter(a => a.isActive && a.slug !== 'other')
+    .sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999));
+
   const [newJob, setNewJob] = useState({
-    area: METRO_AREAS[0],
+    area: "",
     specialty: SPECIALTIES[0],
     countPerRun: 20,
     maxTotal: 100,
     notes: "",
   });
+
+  useEffect(() => {
+    if (activeMetroAreas.length > 0 && !newJob.area) {
+      setNewJob(prev => ({ ...prev, area: activeMetroAreas[0].label }));
+    }
+  }, [activeMetroAreas.length]);
 
   const jobsQuery = useQuery<DiscoveryJob[]>({
     queryKey: ["/api/admin/discovery-jobs"],
@@ -814,8 +818,8 @@ export default function AdminVendorDiscovery() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {METRO_AREAS.map((area) => (
-                      <SelectItem key={area} value={area}>{area}</SelectItem>
+                    {activeMetroAreas.map((area) => (
+                      <SelectItem key={area.id} value={area.label}>{area.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

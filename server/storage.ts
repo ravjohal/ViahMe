@@ -325,6 +325,8 @@ import {
   type InsertDiscoveryRun,
   schedulerConfig,
   type SchedulerConfigRow,
+  discoveryChatHistories,
+  type DiscoveryChatHistory,
   polls,
   type Poll,
   type InsertPoll,
@@ -1568,6 +1570,10 @@ export interface IStorage {
   // Scheduler Config
   getSchedulerConfig(): Promise<SchedulerConfigRow | undefined>;
   upsertSchedulerConfig(config: Partial<SchedulerConfigRow>): Promise<SchedulerConfigRow>;
+
+  // Discovery Chat Histories
+  getDiscoveryChatHistory(area: string, specialty: string): Promise<DiscoveryChatHistory | undefined>;
+  upsertDiscoveryChatHistory(area: string, specialty: string, history: any[], totalVendorsFound: number): Promise<DiscoveryChatHistory>;
 
   // Live Polls
   getPoll(id: string): Promise<Poll | undefined>;
@@ -5025,6 +5031,9 @@ export class MemStorage implements IStorage {
   // Scheduler Config (stub methods for MemStorage)
   async getSchedulerConfig(): Promise<SchedulerConfigRow | undefined> { return undefined; }
   async upsertSchedulerConfig(config: Partial<SchedulerConfigRow>): Promise<SchedulerConfigRow> { throw new Error('MemStorage does not support Scheduler Config. Use DBStorage.'); }
+
+  async getDiscoveryChatHistory(area: string, specialty: string): Promise<DiscoveryChatHistory | undefined> { return undefined; }
+  async upsertDiscoveryChatHistory(area: string, specialty: string, history: any[], totalVendorsFound: number): Promise<DiscoveryChatHistory> { throw new Error('MemStorage does not support Discovery Chat Histories. Use DBStorage.'); }
 
   // Live Polls (stub methods for MemStorage)
   async getPoll(id: string): Promise<Poll | undefined> { return undefined; }
@@ -13879,6 +13888,30 @@ export class DBStorage implements IStorage {
       return updated;
     }
     const [created] = await this.db.insert(schedulerConfig).values({ id: 'default', runHour: config.runHour ?? 2, dailyCap: config.dailyCap ?? 50, updatedAt: new Date() }).returning();
+    return created;
+  }
+
+  async getDiscoveryChatHistory(area: string, specialty: string): Promise<DiscoveryChatHistory | undefined> {
+    const [row] = await this.db.select().from(discoveryChatHistories)
+      .where(and(
+        eq(discoveryChatHistories.area, area),
+        eq(discoveryChatHistories.specialty, specialty),
+      ));
+    return row;
+  }
+
+  async upsertDiscoveryChatHistory(area: string, specialty: string, history: any[], totalVendorsFound: number): Promise<DiscoveryChatHistory> {
+    const existing = await this.getDiscoveryChatHistory(area, specialty);
+    if (existing) {
+      const [updated] = await this.db.update(discoveryChatHistories)
+        .set({ history, totalVendorsFound, lastUsedAt: new Date() })
+        .where(eq(discoveryChatHistories.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await this.db.insert(discoveryChatHistories)
+      .values({ area, specialty, history, totalVendorsFound, lastUsedAt: new Date() })
+      .returning();
     return created;
   }
 

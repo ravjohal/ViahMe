@@ -1,6 +1,24 @@
 import type { IStorage } from '../storage';
 import type { DiscoveryJob, DiscoveryRun } from '@shared/schema';
-import { discoverVendors } from '../ai/gemini';
+import { discoverVendors, type ChatHistoryEntry } from '../ai/gemini';
+import { z } from 'zod';
+
+const chatHistoryEntrySchema = z.object({
+  role: z.enum(['user', 'model']),
+  parts: z.array(z.object({ text: z.string() })),
+});
+
+function validateChatHistory(raw: unknown): ChatHistoryEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const valid: ChatHistoryEntry[] = [];
+  for (const item of raw) {
+    const parsed = chatHistoryEntrySchema.safeParse(item);
+    if (parsed.success) {
+      valid.push(parsed.data as ChatHistoryEntry);
+    }
+  }
+  return valid;
+}
 
 const PREFIX = '[VendorDiscovery]';
 
@@ -107,7 +125,7 @@ export class VendorDiscoveryService {
     }
 
     try {
-      log('info', 'Step 1/7: Checking job validity', {
+      log('info', 'Step 1/8: Checking job validity', {
         runId,
         jobId: job.id,
         area: job.area,
@@ -120,27 +138,27 @@ export class VendorDiscoveryService {
       });
 
       if (job.endDate && new Date() > new Date(job.endDate)) {
-        log('warn', 'Step 1/7: STOPPED — Job past end date, deactivating.', { endDate: new Date(job.endDate).toISOString() });
+        log('warn', 'Step 1/8: STOPPED — Job past end date, deactivating.', { endDate: new Date(job.endDate).toISOString() });
         await this.storage.updateDiscoveryJob(job.id, { isActive: false });
         await this.finishRun(runId, 0, 0, 0, 'skipped');
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
 
       if (job.maxTotal && job.totalDiscovered >= job.maxTotal) {
-        log('warn', 'Step 1/7: STOPPED — Job reached maxTotal, deactivating.', { totalDiscovered: job.totalDiscovered, maxTotal: job.maxTotal });
+        log('warn', 'Step 1/8: STOPPED — Job reached maxTotal, deactivating.', { totalDiscovered: job.totalDiscovered, maxTotal: job.maxTotal });
         await this.storage.updateDiscoveryJob(job.id, { isActive: false });
         await this.finishRun(runId, 0, 0, 0, 'skipped');
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
 
-      log('info', 'Step 1/7: Job is valid, proceeding.');
+      log('info', 'Step 1/8: Job is valid, proceeding.');
 
       const todayCount = await this.storage.getTodayDiscoveredCount(runDate);
       const remaining = job.maxTotal ? job.maxTotal - job.totalDiscovered : job.countPerRun;
       const globalBudget = dailyCap - todayCount;
       const countToFetch = Math.min(job.countPerRun, remaining, globalBudget);
 
-      log('info', 'Step 2/7: Calculating fetch count', {
+      log('info', 'Step 2/8: Calculating fetch count', {
         countPerRun: job.countPerRun,
         remainingForJob: remaining,
         todayDiscoveredSoFar: todayCount,
@@ -150,12 +168,12 @@ export class VendorDiscoveryService {
       });
 
       if (countToFetch <= 0) {
-        log('warn', 'Step 2/7: STOPPED — countToFetch is 0. No capacity.');
+        log('warn', 'Step 2/8: STOPPED — countToFetch is 0. No capacity.');
         await this.finishRun(runId, 0, 0, 0, 'skipped');
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
 
-      log('info', 'Step 3/7: Loading known vendors to build exclusion list for Gemini...');
+      log('info', 'Step 3/8: Loading known vendors to build exclusion list for Gemini...');
       const knownLoadStart = Date.now();
       const jobStagedVendors = await this.storage.getStagedVendorsByJob(job.id);
       const existingVendors = await this.storage.getAllVendors();
@@ -172,21 +190,38 @@ export class VendorDiscoveryService {
       }
       const knownNamesList = Array.from(knownNames);
 
-      log('info', `Step 3/7: Built exclusion list: ${jobStagedVendors.length} from this job + ${existingVendors.length} existing = ${knownNamesList.length} unique names (cap: ${MAX_EXCLUDE_NAMES}) in ${knownLoadMs}ms`);
+      log('info', `Step 3/8: Built exclusion list: ${jobStagedVendors.length} from this job + ${existingVendors.length} existing = ${knownNamesList.length} unique names (cap: ${MAX_EXCLUDE_NAMES}) in ${knownLoadMs}ms`);
 
-      log('info', `Step 4/7: Calling Gemini API to discover ${countToFetch} vendors (excluding ${knownNamesList.length} known)...`, { area: job.area, specialty: job.specialty });
+      log('info', `Step 4/8: Loading chat history for ${job.area}/${job.specialty}...`);
+      const chatRecord = await this.storage.getDiscoveryChatHistory(job.area, job.specialty);
+      const rawHistory = chatRecord?.history;
+      const priorHistory = validateChatHistory(rawHistory);
+      if (rawHistory && Array.isArray(rawHistory) && priorHistory.length !== rawHistory.length) {
+        log('warn', `Step 4/8: Chat history had ${rawHistory.length} entries but only ${priorHistory.length} passed validation. Invalid entries discarded.`);
+      }
+      log('info', `Step 4/8: ${priorHistory.length > 0 ? `Resuming conversation (${priorHistory.length} prior turns, ${chatRecord?.totalVendorsFound || 0} vendors staged previously)` : 'Starting fresh conversation'}`);
+
+      log('info', `Step 5/8: Calling Gemini API to discover ${countToFetch} vendors (excluding ${knownNamesList.length} known)...`, { area: job.area, specialty: job.specialty });
       const geminiStart = Date.now();
 
-      const discovered = await discoverVendors(job.area, job.specialty, countToFetch, knownNamesList);
+      const result = await discoverVendors(job.area, job.specialty, countToFetch, knownNamesList, priorHistory);
+      const discovered = result.vendors;
+      const updatedChatHistory = result.chatHistory;
       const geminiMs = Date.now() - geminiStart;
 
-      log('info', `Step 4/7: Gemini returned ${discovered.length} vendor(s) in ${geminiMs}ms`, {
+      log('info', `Step 5/8: Gemini returned ${discovered.length} vendor(s) in ${geminiMs}ms`, {
         geminiDurationMs: geminiMs,
         vendorNames: discovered.map(v => v.name),
+        chatHistoryTurns: updatedChatHistory.length,
       });
 
       if (discovered.length === 0) {
-        log('warn', 'Step 4/7: Gemini returned 0 vendors. Nothing to process.');
+        log('warn', 'Step 5/8: Gemini returned 0 vendors. Saving chat history and finishing.');
+        try {
+          await this.storage.upsertDiscoveryChatHistory(job.area, job.specialty, updatedChatHistory, chatRecord?.totalVendorsFound || 0);
+        } catch (histErr: any) {
+          log('error', `Step 5/8: Failed to save chat history (non-fatal): ${histErr.message}`);
+        }
         await this.finishRun(runId, 0, 0, 0, 'completed');
         return { runId, discovered: 0, staged: 0, duplicatesFound: 0, logs };
       }
@@ -195,7 +230,7 @@ export class VendorDiscoveryService {
       let duplicateExistingCount = 0;
       let duplicateStagedCount = 0;
 
-      log('info', `Step 5/7: Post-hoc duplicate safety check on ${discovered.length} vendors...`);
+      log('info', `Step 6/8: Post-hoc duplicate safety check on ${discovered.length} vendors...`);
 
       for (let i = 0; i < discovered.length; i++) {
         const vendor = discovered[i];
@@ -242,28 +277,43 @@ export class VendorDiscoveryService {
         newCount++;
       }
 
-      log('info', `Step 5/7: Safety check complete`, {
+      log('info', `Step 6/8: Safety check complete`, {
         totalFromGemini: discovered.length,
         stagedNew: newCount,
         skippedAlreadyStaged: duplicateStagedCount,
         markedAsDuplicateOfExisting: duplicateExistingCount,
       });
 
-      log('info', 'Step 6/7: Updating job counters...');
+      log('info', 'Step 7/8: Updating job counters and saving chat history...');
       await this.storage.updateDiscoveryJob(job.id, {
         lastRunAt: new Date(),
         totalDiscovered: job.totalDiscovered + newCount,
       });
 
-      log('info', `Step 6/7: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}`);
+      const priorVendorsStaged = chatRecord?.totalVendorsFound || 0;
+      const totalVendorsStaged = priorVendorsStaged + newCount;
+      try {
+        await this.storage.upsertDiscoveryChatHistory(
+          job.area,
+          job.specialty,
+          updatedChatHistory,
+          totalVendorsStaged,
+        );
+        log('info', `Step 7/8: Chat history saved (${updatedChatHistory.length} entries, ${totalVendorsStaged} total vendors staged for this area/specialty).`);
+      } catch (histErr: any) {
+        log('error', `Step 7/8: Failed to save chat history (non-fatal): ${histErr.message}. Run will still be marked completed.`);
+      }
+
+      log('info', `Step 7/8: Job updated. totalDiscovered: ${job.totalDiscovered} → ${job.totalDiscovered + newCount}.`);
 
       const totalDuplicates = duplicateStagedCount + duplicateExistingCount;
 
-      log('info', `Step 7/7: JOB COMPLETE`, {
+      log('info', `Step 8/8: JOB COMPLETE`, {
         runId,
         geminiReturned: discovered.length,
         stagedCount: newCount,
         duplicatesSkipped: totalDuplicates,
+        chatHistoryTurns: updatedChatHistory.length,
       });
 
       await this.finishRun(runId, discovered.length, newCount, totalDuplicates, 'completed');

@@ -2086,61 +2086,45 @@ function parseVendorResponse(text: string, tag: string): DiscoveredVendor[] {
   });
 }
 
-export async function discoverVendors(area: string, specialty: string, count: number = 20, knownVendorNames: string[] = []): Promise<DiscoveredVendor[]> {
+export type ChatHistoryEntry = { role: 'user' | 'model'; parts: { text: string }[] };
+
+export interface DiscoverVendorsResult {
+  vendors: DiscoveredVendor[];
+  chatHistory: ChatHistoryEntry[];
+}
+
+const MAX_CHAT_HISTORY_TURNS = 20;
+
+function trimChatHistory(history: ChatHistoryEntry[]): ChatHistoryEntry[] {
+  if (history.length <= MAX_CHAT_HISTORY_TURNS * 2) return history;
+  return history.slice(-(MAX_CHAT_HISTORY_TURNS * 2));
+}
+
+export async function discoverVendors(
+  area: string,
+  specialty: string,
+  count: number = 20,
+  knownVendorNames: string[] = [],
+  priorChatHistory: ChatHistoryEntry[] = [],
+): Promise<DiscoverVendorsResult> {
   const startTime = Date.now();
   const DV = '[DiscoverVendors]';
+  const hasPriorHistory = priorChatHistory.length > 0;
 
-  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", totalRequested=${count}, knownVendors=${knownVendorNames.length}`);
+  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", totalRequested=${count}, knownVendors=${knownVendorNames.length}, priorChatTurns=${priorChatHistory.length}`);
 
   if (count <= 0) {
     console.log(`${DV} <<< count is ${count}, returning empty.`);
-    return [];
+    return { vendors: [], chatHistory: priorChatHistory };
   }
-
-  const excludeClause = knownVendorNames.length > 0
-    ? `\n\nDo NOT include any of these vendors that are already in our system: ${knownVendorNames.join(', ')}`
-    : '';
-
-  if (count <= MAX_VENDORS_PER_API_CALL) {
-    const maxTokens = Math.max(4000, count * 600);
-    const timeoutMs = Math.max(90000, count * 5000);
-
-    const prompt = `Find ${count} REAL vendors that specialize in "${specialty}" in the "${area}" area.${excludeClause}`;
-
-    console.log(`${DV} Single-batch mode (count=${count}). maxTokens=${maxTokens}, timeout=${timeoutMs / 1000}s`);
-    logAIRequest('discoverVendors', { area, specialty, count, mode: 'single-batch' });
-
-    const apiCallStart = Date.now();
-    const response = await withTimeout(
-      ai.models.generateContent({
-        model: GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          systemInstruction: VENDOR_DISCOVERY_SYSTEM_PROMPT,
-          temperature: 0.3,
-          maxOutputTokens: maxTokens,
-        },
-      }),
-      timeoutMs,
-      'Vendor discovery'
-    );
-    const apiCallMs = Date.now() - apiCallStart;
-
-    const text = response.text || '';
-    console.log(`${DV} Gemini responded in ${apiCallMs}ms. Response length: ${text.length} chars`);
-    logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
-
-    const result = parseVendorResponse(text, DV);
-    const totalMs = Date.now() - startTime;
-    console.log(`${DV} <<< DONE (single batch): Returning ${result.length} vendor(s). Total time: ${totalMs}ms`);
-    return result;
-  }
-
-  console.log(`${DV} Multi-batch CHAT mode: requesting ${count} vendors across multiple batches with continuous conversation`);
-  logAIRequest('discoverVendors', { area, specialty, count, mode: 'multi-batch-chat' });
 
   const maxTokens = Math.max(4000, MAX_VENDORS_PER_API_CALL * 600);
   const timeoutMs = Math.max(90000, MAX_VENDORS_PER_API_CALL * 5000);
+
+  const trimmedHistory = trimChatHistory(priorChatHistory);
+
+  console.log(`${DV} Chat mode (${hasPriorHistory ? 'RESUMING with ' + trimmedHistory.length + ' prior turns' : 'NEW conversation'})`);
+  logAIRequest('discoverVendors', { area, specialty, count, mode: hasPriorHistory ? 'resume-chat' : 'new-chat', priorTurns: trimmedHistory.length });
 
   const chat = ai.chats.create({
     model: GEMINI_MODEL,
@@ -2149,7 +2133,14 @@ export async function discoverVendors(area: string, specialty: string, count: nu
       temperature: 0.3,
       maxOutputTokens: maxTokens,
     },
+    history: trimmedHistory,
   });
+
+  const runHistory: ChatHistoryEntry[] = [...trimmedHistory];
+
+  const excludeClause = knownVendorNames.length > 0
+    ? `\n\nDo NOT include any of these vendors that are already in our system: ${knownVendorNames.join(', ')}`
+    : '';
 
   const allVendors: DiscoveredVendor[] = [];
   let remaining = count;
@@ -2160,37 +2151,42 @@ export async function discoverVendors(area: string, specialty: string, count: nu
     const batchSize = Math.min(remaining, MAX_VENDORS_PER_API_CALL);
 
     let message: string;
-    if (batchNum === 1) {
+    if (batchNum === 1 && !hasPriorHistory) {
       message = `Find ${batchSize} REAL vendors that specialize in "${specialty}" in the "${area}" area.${excludeClause}`;
     } else {
-      message = `Great, now find ${batchSize} MORE vendors in the same area and specialty. They must be COMPLETELY DIFFERENT businesses from all the ones you already listed. Do not repeat any vendor. Return only the JSON array.`;
+      message = `Find ${batchSize} MORE REAL vendors that specialize in "${specialty}" in the "${area}" area. They must be COMPLETELY DIFFERENT businesses from all the ones you have already listed in this conversation. Do not repeat any vendor.${excludeClause}`;
     }
 
-    console.log(`${DV} --- Chat batch ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found so far, ${remaining} remaining) ---`);
+    console.log(`${DV} --- Chat turn ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found this run, ${remaining} remaining) ---`);
 
     const apiCallStart = Date.now();
     const response = await withTimeout(
       chat.sendMessage({ message }),
       timeoutMs,
-      `Vendor discovery chat batch ${batchNum}`
+      `Vendor discovery chat turn ${batchNum}`
     );
     const apiCallMs = Date.now() - apiCallStart;
 
     const text = response.text || '';
-    console.log(`${DV} Chat batch ${batchNum} responded in ${apiCallMs}ms. Response length: ${text.length} chars`);
+    console.log(`${DV} Chat turn ${batchNum} responded in ${apiCallMs}ms. Response length: ${text.length} chars`);
     logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
 
-    const batch = parseVendorResponse(text, `${DV} [batch ${batchNum}]`);
+    runHistory.push({ role: 'user', parts: [{ text: message }] });
+    runHistory.push({ role: 'model', parts: [{ text }] });
+
+    const batch = parseVendorResponse(text, `${DV} [turn ${batchNum}]`);
     allVendors.push(...batch);
     remaining -= batchSize;
 
     if (batch.length < batchSize) {
-      console.log(`${DV} Chat batch ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
+      console.log(`${DV} Chat turn ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
       break;
     }
   }
 
+  const updatedHistory = trimChatHistory(runHistory);
+
   const totalMs = Date.now() - startTime;
-  console.log(`${DV} <<< DONE (${batchNum} chat batches): Returning ${allVendors.length} vendor(s). Total time: ${totalMs}ms`);
-  return allVendors;
+  console.log(`${DV} <<< DONE (${batchNum} chat turns, ${hasPriorHistory ? 'resumed' : 'new'} conversation): Returning ${allVendors.length} vendor(s). Updated history: ${updatedHistory.length} entries. Total time: ${totalMs}ms`);
+  return { vendors: allVendors, chatHistory: updatedHistory };
 }

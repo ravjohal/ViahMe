@@ -5582,6 +5582,18 @@ export const schedulerConfig = pgTable("scheduler_config", {
 
 export type SchedulerConfigRow = typeof schedulerConfig.$inferSelect;
 
+export const discoveryChatHistories = pgTable("discovery_chat_histories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  area: text("area").notNull(),
+  specialty: text("specialty").notNull(),
+  history: jsonb("history").notNull().default(sql`'[]'::jsonb`),
+  totalVendorsFound: integer("total_vendors_found").notNull().default(0),
+  lastUsedAt: timestamp("last_used_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type DiscoveryChatHistory = typeof discoveryChatHistories.$inferSelect;
+
 // ============================================================================
 // LIVE POLLS - Guest preference polling for events
 // ============================================================================
