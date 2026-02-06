@@ -2033,11 +2033,62 @@ export interface DiscoveredVendor {
   notes: string;
 }
 
-export async function discoverVendors(area: string, specialty: string, count: number = 10): Promise<DiscoveredVendor[]> {
+const MAX_VENDORS_PER_API_CALL = 20;
+
+export async function discoverVendors(area: string, specialty: string, count: number = 20): Promise<DiscoveredVendor[]> {
   const startTime = Date.now();
   const DV = '[DiscoverVendors]';
 
-  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", count=${count}`);
+  console.log(`${DV} >>> START: area="${area}", specialty="${specialty}", totalRequested=${count}`);
+
+  if (count <= 0) {
+    console.log(`${DV} <<< count is ${count}, returning empty.`);
+    return [];
+  }
+
+  if (count <= MAX_VENDORS_PER_API_CALL) {
+    const result = await discoverVendorsBatch(area, specialty, count);
+    const totalMs = Date.now() - startTime;
+    console.log(`${DV} <<< DONE (single batch): Returning ${result.length} vendor(s). Total time: ${totalMs}ms`);
+    return result;
+  }
+
+  const allVendors: DiscoveredVendor[] = [];
+  let remaining = count;
+  let batchNum = 0;
+
+  while (remaining > 0) {
+    batchNum++;
+    const batchSize = Math.min(remaining, MAX_VENDORS_PER_API_CALL);
+    const alreadyFound = allVendors.map(v => v.name).join(', ');
+
+    console.log(`${DV} --- Batch ${batchNum}: requesting ${batchSize} vendors (${allVendors.length} found so far, ${remaining} remaining) ---`);
+
+    const batch = await discoverVendorsBatch(area, specialty, batchSize, alreadyFound || undefined);
+    allVendors.push(...batch);
+    remaining -= batchSize;
+
+    if (batch.length < batchSize) {
+      console.log(`${DV} Batch ${batchNum} returned ${batch.length}/${batchSize} — fewer than requested, stopping early (market may be exhausted).`);
+      break;
+    }
+  }
+
+  const totalMs = Date.now() - startTime;
+  console.log(`${DV} <<< DONE (${batchNum} batches): Returning ${allVendors.length} vendor(s). Total time: ${totalMs}ms`);
+  return allVendors;
+}
+
+async function discoverVendorsBatch(area: string, specialty: string, count: number, excludeNames?: string): Promise<DiscoveredVendor[]> {
+  const startTime = Date.now();
+  const DV = '[DiscoverVendors]';
+
+  const maxTokens = Math.max(4000, count * 600);
+  const timeoutMs = Math.max(90000, count * 5000);
+
+  const excludeClause = excludeNames
+    ? `\n\nDo NOT include any of these vendors that were already found: ${excludeNames}`
+    : '';
 
   const prompt = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform.
 
@@ -2054,14 +2105,14 @@ For each vendor, provide:
 - cultural_specialties: Array of cultural focuses (e.g. "sikh", "hindu", "punjabi", "south_asian", "indian")
 - preferred_wedding_traditions: Array from: sikh, hindu, muslim, gujarati, south_indian, mixed, general
 - price_range: One of "$", "$$", "$$$", "$$$$"
-- notes: Any relevant notes about the vendor
+- notes: Any relevant notes about the vendor${excludeClause}
 
 IMPORTANT: Return ONLY real businesses you are confident exist. If you cannot find ${count} real vendors, return fewer rather than making up fake ones. Accuracy is more important than quantity.
 
 Respond with a JSON array of vendor objects. Only output the JSON array, no other text.`;
 
   console.log(`${DV} Prompt length: ${prompt.length} chars`);
-  console.log(`${DV} Sending request to Gemini model: ${GEMINI_MODEL} (temperature=0.3, maxTokens=4000, timeout=90s)...`);
+  console.log(`${DV} Sending request to Gemini model: ${GEMINI_MODEL} (temperature=0.3, maxTokens=${maxTokens}, timeout=${timeoutMs / 1000}s, batchSize=${count})...`);
 
   try {
     logAIRequest('discoverVendors', { area, specialty, count });
@@ -2073,10 +2124,10 @@ Respond with a JSON array of vendor objects. Only output the JSON array, no othe
         contents: prompt,
         config: {
           temperature: 0.3,
-          maxOutputTokens: 4000,
+          maxOutputTokens: maxTokens,
         },
       }),
-      90000,
+      timeoutMs,
       'Vendor discovery'
     );
     const apiCallMs = Date.now() - apiCallStart;
@@ -2115,7 +2166,7 @@ Respond with a JSON array of vendor objects. Only output the JSON array, no othe
     });
 
     const totalMs = Date.now() - startTime;
-    console.log(`${DV} <<< DONE: Returning ${mapped.length} vendor(s). Total time: ${totalMs}ms`);
+    console.log(`${DV} <<< Batch complete: ${mapped.length} vendor(s) in ${totalMs}ms`);
 
     return mapped;
   } catch (error: any) {

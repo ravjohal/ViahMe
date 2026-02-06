@@ -172,7 +172,7 @@ export default function AdminVendorDiscovery() {
   const [newJob, setNewJob] = useState({
     area: METRO_AREAS[0],
     specialty: SPECIALTIES[0],
-    countPerRun: 10,
+    countPerRun: 20,
     maxTotal: 100,
     notes: "",
   });
@@ -812,9 +812,9 @@ export default function AdminVendorDiscovery() {
                   <Input
                     type="number"
                     min={1}
-                    max={25}
+                    max={50}
                     value={newJob.countPerRun}
-                    onChange={(e) => setNewJob({ ...newJob, countPerRun: parseInt(e.target.value) || 10 })}
+                    onChange={(e) => setNewJob({ ...newJob, countPerRun: parseInt(e.target.value) || 20 })}
                     data-testid="input-count-per-run"
                   />
                 </div>

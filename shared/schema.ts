@@ -5501,7 +5501,7 @@ export const discoveryJobs = pgTable("discovery_jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   area: text("area").notNull(),
   specialty: text("specialty").notNull(),
-  countPerRun: integer("count_per_run").notNull().default(10),
+  countPerRun: integer("count_per_run").notNull().default(20),
   maxTotal: integer("max_total").default(100),
   totalDiscovered: integer("total_discovered").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
