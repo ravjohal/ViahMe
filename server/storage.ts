@@ -314,6 +314,12 @@ import {
   aiFaq,
   type AiFaq,
   type InsertAiFaq,
+  discoveryJobs,
+  type DiscoveryJob,
+  type InsertDiscoveryJob,
+  stagedVendors,
+  type StagedVendor,
+  type InsertStagedVendor,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -1520,6 +1526,22 @@ export interface IStorage {
   getActiveFaq(): Promise<AiFaq[]>;
   findFaqByNormalizedQuestion(normalizedQuestion: string): Promise<AiFaq | null>;
   createFaq(faq: InsertAiFaq): Promise<AiFaq>;
+
+  // Discovery Jobs & Staged Vendors
+  getDiscoveryJob(id: string): Promise<DiscoveryJob | undefined>;
+  getAllDiscoveryJobs(): Promise<DiscoveryJob[]>;
+  getActiveDiscoveryJobs(): Promise<DiscoveryJob[]>;
+  createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob>;
+  updateDiscoveryJob(id: string, job: Partial<DiscoveryJob>): Promise<DiscoveryJob | undefined>;
+  deleteDiscoveryJob(id: string): Promise<boolean>;
+
+  getStagedVendor(id: string): Promise<StagedVendor | undefined>;
+  getStagedVendorsByJob(jobId: string): Promise<StagedVendor[]>;
+  getStagedVendorsByStatus(status: string): Promise<StagedVendor[]>;
+  getAllStagedVendors(): Promise<StagedVendor[]>;
+  createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor>;
+  updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined>;
+  deleteStagedVendor(id: string): Promise<boolean>;
 }
 
 // Guest Planning Snapshot - comprehensive view of all guests and per-event costs
@@ -4927,6 +4949,23 @@ export class MemStorage implements IStorage {
   async getActiveFaq(): Promise<AiFaq[]> { return []; }
   async findFaqByNormalizedQuestion(normalizedQuestion: string): Promise<AiFaq | null> { return null; }
   async createFaq(faq: InsertAiFaq): Promise<AiFaq> { throw new Error('MemStorage does not support FAQ. Use DBStorage.'); }
+
+  // Discovery Jobs (stub methods for MemStorage)
+  async getDiscoveryJob(id: string): Promise<DiscoveryJob | undefined> { return undefined; }
+  async getAllDiscoveryJobs(): Promise<DiscoveryJob[]> { return []; }
+  async getActiveDiscoveryJobs(): Promise<DiscoveryJob[]> { return []; }
+  async createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob> { throw new Error('MemStorage does not support Discovery Jobs. Use DBStorage.'); }
+  async updateDiscoveryJob(id: string, job: Partial<DiscoveryJob>): Promise<DiscoveryJob | undefined> { throw new Error('MemStorage does not support Discovery Jobs. Use DBStorage.'); }
+  async deleteDiscoveryJob(id: string): Promise<boolean> { return false; }
+
+  // Staged Vendors (stub methods for MemStorage)
+  async getStagedVendor(id: string): Promise<StagedVendor | undefined> { return undefined; }
+  async getStagedVendorsByJob(jobId: string): Promise<StagedVendor[]> { return []; }
+  async getStagedVendorsByStatus(status: string): Promise<StagedVendor[]> { return []; }
+  async getAllStagedVendors(): Promise<StagedVendor[]> { return []; }
+  async createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
+  async updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined> { throw new Error('MemStorage does not support Staged Vendors. Use DBStorage.'); }
+  async deleteStagedVendor(id: string): Promise<boolean> { return false; }
 }
 
 import { neon } from "@neondatabase/serverless";
@@ -13654,6 +13693,68 @@ export class DBStorage implements IStorage {
       .values(faqData)
       .returning();
     return newFaq;
+  }
+
+  // Discovery Jobs
+  async getDiscoveryJob(id: string): Promise<DiscoveryJob | undefined> {
+    const [job] = await this.db.select().from(discoveryJobs).where(eq(discoveryJobs.id, id));
+    return job;
+  }
+
+  async getAllDiscoveryJobs(): Promise<DiscoveryJob[]> {
+    return this.db.select().from(discoveryJobs).orderBy(discoveryJobs.createdAt);
+  }
+
+  async getActiveDiscoveryJobs(): Promise<DiscoveryJob[]> {
+    return this.db.select().from(discoveryJobs).where(and(eq(discoveryJobs.isActive, true), eq(discoveryJobs.paused, false)));
+  }
+
+  async createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob> {
+    const [created] = await this.db.insert(discoveryJobs).values(job).returning();
+    return created;
+  }
+
+  async updateDiscoveryJob(id: string, job: Partial<DiscoveryJob>): Promise<DiscoveryJob | undefined> {
+    const [updated] = await this.db.update(discoveryJobs).set({ ...job, updatedAt: new Date() }).where(eq(discoveryJobs.id, id)).returning();
+    return updated;
+  }
+
+  async deleteDiscoveryJob(id: string): Promise<boolean> {
+    const result = await this.db.delete(discoveryJobs).where(eq(discoveryJobs.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Staged Vendors
+  async getStagedVendor(id: string): Promise<StagedVendor | undefined> {
+    const [vendor] = await this.db.select().from(stagedVendors).where(eq(stagedVendors.id, id));
+    return vendor;
+  }
+
+  async getStagedVendorsByJob(jobId: string): Promise<StagedVendor[]> {
+    return this.db.select().from(stagedVendors).where(eq(stagedVendors.discoveryJobId, jobId));
+  }
+
+  async getStagedVendorsByStatus(status: string): Promise<StagedVendor[]> {
+    return this.db.select().from(stagedVendors).where(eq(stagedVendors.status, status));
+  }
+
+  async getAllStagedVendors(): Promise<StagedVendor[]> {
+    return this.db.select().from(stagedVendors).orderBy(desc(stagedVendors.discoveredAt));
+  }
+
+  async createStagedVendor(vendor: InsertStagedVendor): Promise<StagedVendor> {
+    const [created] = await this.db.insert(stagedVendors).values(vendor).returning();
+    return created;
+  }
+
+  async updateStagedVendor(id: string, vendor: Partial<StagedVendor>): Promise<StagedVendor | undefined> {
+    const [updated] = await this.db.update(stagedVendors).set(vendor).where(eq(stagedVendors.id, id)).returning();
+    return updated;
+  }
+
+  async deleteStagedVendor(id: string): Promise<boolean> {
+    const result = await this.db.delete(stagedVendors).where(eq(stagedVendors.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

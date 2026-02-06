@@ -5,6 +5,7 @@ import path from "path";
 import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { TaskReminderScheduler } from "./services/task-reminder-scheduler";
+import { VendorDiscoveryScheduler } from "./services/vendor-discovery-scheduler";
 import { storage } from "./storage";
 
 const app = express();
@@ -118,6 +119,12 @@ app.use(express.static(path.join(process.cwd(), "public")));
   const taskReminderScheduler = new TaskReminderScheduler(storage);
   taskReminderScheduler.start(60 * 60 * 1000);
   log('Task reminder scheduler started');
+
+  // Initialize vendor discovery scheduler (checks every hour, runs jobs at 2 AM UTC)
+  const vendorDiscoveryScheduler = new VendorDiscoveryScheduler(storage);
+  vendorDiscoveryScheduler.start(60 * 60 * 1000);
+  log('Vendor discovery scheduler started');
+  (app as any).vendorDiscoveryScheduler = vendorDiscoveryScheduler;
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.

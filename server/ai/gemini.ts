@@ -2018,3 +2018,85 @@ export async function generateCeremonyExplainersForWedding(
 
   return results;
 }
+
+export interface DiscoveredVendor {
+  name: string;
+  location: string;
+  phone: string;
+  email: string;
+  website: string;
+  specialty: string;
+  categories: string[];
+  cultural_specialties: string[];
+  preferred_wedding_traditions: string[];
+  price_range: string;
+  notes: string;
+}
+
+export async function discoverVendors(area: string, specialty: string, count: number = 10): Promise<DiscoveredVendor[]> {
+  const startTime = Date.now();
+  const prompt = `You are a vendor research assistant for Viah.me, a South Asian wedding planning platform.
+
+Find ${count} REAL vendors that specialize in "${specialty}" in the "${area}" area. These should be actual businesses that serve the South Asian wedding market (Sikh, Hindu, Muslim, Gujarati, South Indian weddings).
+
+For each vendor, provide:
+- name: The business name
+- location: Full address or city/province/state
+- phone: Phone number (use real format like 604-XXX-XXXX or 778-XXX-XXXX)
+- email: Business email
+- website: Business website URL
+- specialty: What they specifically do for South Asian weddings
+- categories: Array of vendor categories from this list: photographer, videographer, caterer, banquet_hall, gurdwara, temple, decorator, florist, wedding_planner, invitation_designer, jeweler, bridal_wear, groom_wear, makeup_artist, hair_stylist, mehndi_artist, dj, dhol_player, turban_tier, lighting, transportation, officiant, priest, pandit, imam, mosque, church, event_venue, bartender, cake_baker, sangeet_choreographer, granthi, travel_agent, hotel, kolam_artist
+- cultural_specialties: Array of cultural focuses (e.g. "sikh", "hindu", "punjabi", "south_asian", "indian")
+- preferred_wedding_traditions: Array from: sikh, hindu, muslim, gujarati, south_indian, mixed, general
+- price_range: One of "$", "$$", "$$$", "$$$$"
+- notes: Any relevant notes about the vendor
+
+IMPORTANT: Return ONLY real businesses you are confident exist. If you cannot find ${count} real vendors, return fewer rather than making up fake ones. Accuracy is more important than quantity.
+
+Respond with a JSON array of vendor objects. Only output the JSON array, no other text.`;
+
+  try {
+    logAIRequest('discoverVendors', { area, specialty, count });
+
+    const response = await withTimeout(
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 4000,
+        },
+      }),
+      90000,
+      'Vendor discovery'
+    );
+
+    const text = response.text || '';
+    logAIResponse('discoverVendors', text.substring(0, 200), Date.now() - startTime);
+
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.error('No JSON array found in vendor discovery response');
+      return [];
+    }
+
+    const vendors: DiscoveredVendor[] = JSON.parse(jsonMatch[0]);
+    return vendors.map(v => ({
+      name: v.name || '',
+      location: v.location || '',
+      phone: v.phone || '',
+      email: v.email || '',
+      website: v.website || '',
+      specialty: v.specialty || '',
+      categories: Array.isArray(v.categories) ? v.categories : ['photographer'],
+      cultural_specialties: Array.isArray(v.cultural_specialties) ? v.cultural_specialties : ['south_asian'],
+      preferred_wedding_traditions: Array.isArray(v.preferred_wedding_traditions) ? v.preferred_wedding_traditions : ['sikh', 'hindu'],
+      price_range: v.price_range || '$$$',
+      notes: v.notes || '',
+    }));
+  } catch (error) {
+    logAIError('discoverVendors', error);
+    throw error;
+  }
+}

@@ -12,7 +12,8 @@ import {
   LayoutDashboard,
   MessageSquareWarning,
   Users,
-  Mail
+  Mail,
+  Search,
 } from "lucide-react";
 
 interface AdminAction {
@@ -64,6 +65,13 @@ const adminActions: AdminAction[] = [
     description: "View all registered users and their associated wedding details",
     href: "/admin/users",
     icon: Users,
+    category: "vendors",
+  },
+  {
+    title: "Vendor Discovery",
+    description: "Configure AI-powered automated vendor discovery jobs and review staged vendors before publishing",
+    href: "/admin/vendor-discovery",
+    icon: Search,
     category: "vendors",
   },
 ];

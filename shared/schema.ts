@@ -5496,3 +5496,57 @@ export const insertAiFaqSchema = createInsertSchema(aiFaq).omit({
 });
 export type InsertAiFaq = z.infer<typeof insertAiFaqSchema>;
 export type AiFaq = typeof aiFaq.$inferSelect;
+
+export const discoveryJobs = pgTable("discovery_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  area: text("area").notNull(),
+  specialty: text("specialty").notNull(),
+  countPerRun: integer("count_per_run").notNull().default(10),
+  maxTotal: integer("max_total").default(100),
+  totalDiscovered: integer("total_discovered").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  paused: boolean("paused").notNull().default(false),
+  lastRunAt: timestamp("last_run_at"),
+  endDate: timestamp("end_date"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertDiscoveryJobSchema = createInsertSchema(discoveryJobs).omit({
+  id: true,
+  totalDiscovered: true,
+  lastRunAt: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertDiscoveryJob = z.infer<typeof insertDiscoveryJobSchema>;
+export type DiscoveryJob = typeof discoveryJobs.$inferSelect;
+
+export const stagedVendors = pgTable("staged_vendors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discoveryJobId: varchar("discovery_job_id").references(() => discoveryJobs.id),
+  name: text("name").notNull(),
+  location: text("location"),
+  phone: text("phone"),
+  email: text("email"),
+  website: text("website"),
+  specialty: text("specialty"),
+  categories: text("categories").array().notNull().default(sql`ARRAY['photographer']`),
+  culturalSpecialties: text("cultural_specialties").array(),
+  preferredWeddingTraditions: text("preferred_wedding_traditions").array(),
+  priceRange: text("price_range").default('$$$'),
+  notes: text("notes"),
+  status: text("status").notNull().default('staged'),
+  duplicateOfVendorId: varchar("duplicate_of_vendor_id"),
+  discoveredAt: timestamp("discovered_at").notNull().defaultNow(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertStagedVendorSchema = createInsertSchema(stagedVendors).omit({
+  id: true,
+  discoveredAt: true,
+  reviewedAt: true,
+});
+export type InsertStagedVendor = z.infer<typeof insertStagedVendorSchema>;
+export type StagedVendor = typeof stagedVendors.$inferSelect;

@@ -3,7 +3,9 @@ import { randomUUID } from "crypto";
 import { IStorage } from "../storage";
 import { AuthRequest } from "../auth-middleware";
 import { z } from "zod";
-import { coupleSubmitVendorSchema, type InsertVendor } from "@shared/schema";
+import { coupleSubmitVendorSchema, insertDiscoveryJobSchema, type InsertVendor } from "@shared/schema";
+import { discoverVendors, type DiscoveredVendor } from "../ai/gemini";
+import { VendorDiscoveryScheduler } from "../services/vendor-discovery-scheduler";
 
 async function requireAdminAuth(req: Request, storage: IStorage): Promise<{ userId: string; isAdmin: boolean } | null> {
   const authReq = req as AuthRequest;
@@ -15,6 +17,21 @@ async function requireAdminAuth(req: Request, storage: IStorage): Promise<{ user
     return null;
   }
   return { userId: user.id, isAdmin: user.isSiteAdmin === true };
+}
+
+function checkAdminAccess(req: Request, storage: IStorage): Promise<boolean> {
+  return (async () => {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey && adminKey === process.env.ADMIN_API_KEY) {
+      return true;
+    }
+    const authReq = req as AuthRequest;
+    if (authReq.session?.userId) {
+      const user = await storage.getUser(authReq.session.userId);
+      if (user?.isSiteAdmin) return true;
+    }
+    return false;
+  })();
 }
 
 export async function registerAdminVendorRoutes(router: Router, storage: IStorage) {
@@ -756,6 +773,352 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     } catch (error) {
       console.error("Error in bulk vendor import:", error);
       res.status(500).json({ error: "Failed to import vendors" });
+    }
+  });
+
+  const discoverySchema = z.object({
+    area: z.string().min(1),
+    specialty: z.string().min(1),
+    count: z.number().min(1).max(20).optional(),
+  });
+
+  router.post("/vendors/discover", async (req: Request, res: Response) => {
+    try {
+      const adminKey = req.headers["x-admin-key"];
+      if (!adminKey || adminKey !== process.env.ADMIN_API_KEY) {
+        return res.status(401).json({ error: "Invalid or missing admin API key" });
+      }
+
+      const parsed = discoverySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({
+          error: "Invalid request body",
+          details: parsed.error.issues,
+        });
+      }
+
+      const { area, specialty, count } = parsed.data;
+
+      const discovered = await discoverVendors(area, specialty, count || 10);
+
+      const existingVendors = await storage.getAllVendors();
+
+      const staged = discovered.map((vendor) => {
+        const vendorName = vendor.name.toLowerCase().trim();
+        const duplicate = existingVendors.find(
+          (v) => v.name.toLowerCase().trim() === vendorName
+        );
+
+        return {
+          ...vendor,
+          isDuplicate: !!duplicate,
+          existingVendorId: duplicate?.id || null,
+          suggested: !duplicate,
+        };
+      });
+
+      res.json({
+        success: true,
+        area,
+        specialty,
+        total: staged.length,
+        duplicates: staged.filter((s) => s.isDuplicate).length,
+        newVendors: staged.filter((s) => !s.isDuplicate).length,
+        vendors: staged,
+      });
+    } catch (error) {
+      console.error("Error in vendor discovery:", error);
+      res.status(500).json({ error: "Failed to discover vendors" });
+    }
+  });
+
+  // ============================================================
+  // Discovery Jobs CRUD
+  // ============================================================
+
+  router.get("/discovery-jobs", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const jobs = await storage.getAllDiscoveryJobs();
+      res.json(jobs);
+    } catch (error) {
+      console.error("Error fetching discovery jobs:", error);
+      res.status(500).json({ error: "Failed to fetch discovery jobs" });
+    }
+  });
+
+  router.post("/discovery-jobs", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const parsed = insertDiscoveryJobSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid job data", details: parsed.error.format() });
+      }
+      const job = await storage.createDiscoveryJob(parsed.data);
+      res.status(201).json(job);
+    } catch (error) {
+      console.error("Error creating discovery job:", error);
+      res.status(500).json({ error: "Failed to create discovery job" });
+    }
+  });
+
+  router.patch("/discovery-jobs/:id", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const allowedFields = ["area", "specialty", "countPerRun", "maxTotal", "isActive", "paused", "endDate", "notes"];
+      const updates: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updates[field] = req.body[field];
+        }
+      }
+      const job = await storage.updateDiscoveryJob(req.params.id, updates);
+      if (!job) {
+        return res.status(404).json({ error: "Discovery job not found" });
+      }
+      res.json(job);
+    } catch (error) {
+      console.error("Error updating discovery job:", error);
+      res.status(500).json({ error: "Failed to update discovery job" });
+    }
+  });
+
+  router.delete("/discovery-jobs/:id", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const deleted = await storage.deleteDiscoveryJob(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Discovery job not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting discovery job:", error);
+      res.status(500).json({ error: "Failed to delete discovery job" });
+    }
+  });
+
+  router.post("/discovery-jobs/:id/run-now", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const scheduler: VendorDiscoveryScheduler = (req.app as any).vendorDiscoveryScheduler;
+      if (!scheduler) {
+        return res.status(500).json({ error: "Scheduler not initialized" });
+      }
+      const result = await scheduler.runJobNow(req.params.id);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Error running discovery job:", error);
+      res.status(500).json({ error: error.message || "Failed to run discovery job" });
+    }
+  });
+
+  // ============================================================
+  // Staged Vendors Review / Approval
+  // ============================================================
+
+  router.get("/staged-vendors", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const status = req.query.status as string | undefined;
+      let vendors;
+      if (status) {
+        vendors = await storage.getStagedVendorsByStatus(status);
+      } else {
+        vendors = await storage.getAllStagedVendors();
+      }
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching staged vendors:", error);
+      res.status(500).json({ error: "Failed to fetch staged vendors" });
+    }
+  });
+
+  router.post("/staged-vendors/:id/approve", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const staged = await storage.getStagedVendor(req.params.id);
+      if (!staged) {
+        return res.status(404).json({ error: "Staged vendor not found" });
+      }
+      if (staged.status !== "staged") {
+        return res.status(400).json({ error: `Cannot approve vendor with status "${staged.status}"` });
+      }
+
+      const overrides = req.body || {};
+      const slug = (overrides.name || staged.name)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "")
+        + "-" + randomUUID().slice(0, 6);
+
+      const newVendor: InsertVendor = {
+        name: overrides.name || staged.name,
+        slug,
+        location: overrides.location || staged.location || "",
+        city: overrides.city || "",
+        phone: overrides.phone || staged.phone || "",
+        email: overrides.email || staged.email || "",
+        website: overrides.website || staged.website || "",
+        category: (staged.categories && staged.categories[0]) || "photographer",
+        categories: staged.categories || ["photographer"],
+        culturalSpecialties: staged.culturalSpecialties || [],
+        preferredWeddingTraditions: staged.preferredWeddingTraditions || [],
+        priceRange: staged.priceRange || "$$$",
+        description: overrides.description || staged.notes || "",
+        claimed: false,
+        isGhostProfile: true,
+        verified: false,
+      };
+
+      const vendor = await storage.createVendor(newVendor);
+
+      await storage.updateStagedVendor(req.params.id, {
+        status: "approved",
+        reviewedAt: new Date(),
+      });
+
+      res.json({ success: true, vendor });
+    } catch (error) {
+      console.error("Error approving staged vendor:", error);
+      res.status(500).json({ error: "Failed to approve staged vendor" });
+    }
+  });
+
+  router.post("/staged-vendors/:id/reject", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const staged = await storage.getStagedVendor(req.params.id);
+      if (!staged) {
+        return res.status(404).json({ error: "Staged vendor not found" });
+      }
+
+      await storage.updateStagedVendor(req.params.id, {
+        status: "rejected",
+        reviewedAt: new Date(),
+      });
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error rejecting staged vendor:", error);
+      res.status(500).json({ error: "Failed to reject staged vendor" });
+    }
+  });
+
+  router.post("/staged-vendors/bulk-approve", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const { ids } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "ids must be a non-empty array" });
+      }
+
+      const results: { id: string; success: boolean; vendorId?: string; error?: string }[] = [];
+      for (const id of ids) {
+        try {
+          const staged = await storage.getStagedVendor(id);
+          if (!staged || staged.status !== "staged") {
+            results.push({ id, success: false, error: staged ? `Status is ${staged.status}` : "Not found" });
+            continue;
+          }
+
+          const slug = staged.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "")
+            + "-" + randomUUID().slice(0, 6);
+
+          const newVendor: InsertVendor = {
+            name: staged.name,
+            slug,
+            location: staged.location || "",
+            city: "",
+            phone: staged.phone || "",
+            email: staged.email || "",
+            website: staged.website || "",
+            category: (staged.categories && staged.categories[0]) || "photographer",
+            categories: staged.categories || ["photographer"],
+            culturalSpecialties: staged.culturalSpecialties || [],
+            preferredWeddingTraditions: staged.preferredWeddingTraditions || [],
+            priceRange: staged.priceRange || "$$$",
+            description: staged.notes || "",
+            claimed: false,
+            isGhostProfile: true,
+            verified: false,
+          };
+
+          const vendor = await storage.createVendor(newVendor);
+          await storage.updateStagedVendor(id, { status: "approved", reviewedAt: new Date() });
+          results.push({ id, success: true, vendorId: vendor.id });
+        } catch (err: any) {
+          results.push({ id, success: false, error: err.message });
+        }
+      }
+
+      res.json({
+        approved: results.filter(r => r.success).length,
+        failed: results.filter(r => !r.success).length,
+        results,
+      });
+    } catch (error) {
+      console.error("Error in bulk approve:", error);
+      res.status(500).json({ error: "Failed to bulk approve" });
+    }
+  });
+
+  router.post("/staged-vendors/bulk-reject", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const { ids } = req.body;
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "ids must be a non-empty array" });
+      }
+
+      let rejected = 0;
+      for (const id of ids) {
+        await storage.updateStagedVendor(id, { status: "rejected", reviewedAt: new Date() });
+        rejected++;
+      }
+
+      res.json({ rejected });
+    } catch (error) {
+      console.error("Error in bulk reject:", error);
+      res.status(500).json({ error: "Failed to bulk reject" });
+    }
+  });
+
+  router.delete("/staged-vendors/:id", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const deleted = await storage.deleteStagedVendor(req.params.id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Staged vendor not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting staged vendor:", error);
+      res.status(500).json({ error: "Failed to delete staged vendor" });
     }
   });
 }

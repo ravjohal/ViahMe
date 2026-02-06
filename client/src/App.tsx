@@ -60,6 +60,7 @@ import AdminCeremonyTemplates from "@/pages/admin-ceremony-templates";
 import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories";
 import AdminFeedback from "@/pages/admin-feedback";
 import AdminUsers from "@/pages/admin-users";
+import AdminVendorDiscovery from "@/pages/admin-vendor-discovery";
 import AiPlanner from "@/pages/ai-planner";
 import { FeedbackButton } from "@/components/feedback-button";
 import SpeechGenerator from "@/pages/speech-generator";
@@ -332,6 +333,11 @@ function Router() {
       <Route path="/admin/users">
         <AdminRoute>
           <AdminUsers />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/vendor-discovery">
+        <AdminRoute>
+          <AdminVendorDiscovery />
         </AdminRoute>
       </Route>
       <Route path="/settings" component={Settings} />
