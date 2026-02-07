@@ -1,20 +1,72 @@
 import { useParams, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Clock, ChevronLeft, ArrowRight } from "lucide-react";
 import { useEffect } from "react";
-import { blogPosts } from "./blog";
+import { staticBlogPosts, type BlogPostDisplay } from "./blog";
 import ReactMarkdown from "react-markdown";
+import type { BlogPost as DbBlogPost } from "@shared/schema";
+
+function formatDbDate(date: string | Date | null): string {
+  if (!date) return "Recently";
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
-  const post = blogPosts.find((p) => p.slug === slug);
+
+  const { data: dbPost, isLoading } = useQuery<DbBlogPost>({
+    queryKey: ["/api/blog-posts", slug],
+    enabled: !!slug,
+  });
+
+  const staticPost = staticBlogPosts.find((p) => p.slug === slug);
+
+  const post: BlogPostDisplay | null = dbPost
+    ? {
+        slug: dbPost.slug,
+        title: dbPost.title,
+        excerpt: dbPost.excerpt,
+        content: dbPost.content,
+        author: dbPost.author,
+        date: formatDbDate(dbPost.publishedAt || dbPost.createdAt),
+        readTime: dbPost.readTime,
+        category: dbPost.category,
+        isFromDb: true,
+      }
+    : staticPost || null;
+
+  const allSlugs = [
+    ...(staticBlogPosts.map(p => ({ slug: p.slug, title: p.title, category: p.category, excerpt: p.excerpt }))),
+  ];
 
   useEffect(() => {
     if (post) {
       document.title = `${post.title} | Viah.me Blog`;
     }
   }, [post]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-pink-50 to-purple-50 dark:from-background dark:via-background dark:to-background">
+        <header className="border-b bg-white/80 dark:bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4">
+            <Skeleton className="h-12 w-24" />
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-3xl mx-auto space-y-4">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -101,11 +153,12 @@ export default function BlogPost() {
           <div className="mt-12">
             <h3 className="text-xl font-display font-bold mb-4">More Articles</h3>
             <div className="grid gap-4">
-              {blogPosts
+              {allSlugs
                 .filter((p) => p.slug !== post.slug)
+                .slice(0, 3)
                 .map((relatedPost) => (
                   <Link key={relatedPost.slug} href={`/blog/${relatedPost.slug}`}>
-                    <div className="p-4 border rounded-lg hover-elevate cursor-pointer bg-white dark:bg-card" data-testid={`link-related-${relatedPost.slug}`}>
+                    <div className="p-4 border rounded-md hover-elevate cursor-pointer bg-white dark:bg-card" data-testid={`link-related-${relatedPost.slug}`}>
                       <Badge variant="secondary" className="mb-2">{relatedPost.category}</Badge>
                       <h4 className="font-semibold text-foreground hover:text-primary transition-colors">
                         {relatedPost.title}

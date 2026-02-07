@@ -342,6 +342,12 @@ import {
   emailTemplates,
   type EmailTemplate,
   type InsertEmailTemplate,
+  blogPosts as blogPostsTable,
+  type BlogPost,
+  type InsertBlogPost,
+  blogSchedulerConfig,
+  type BlogSchedulerConfig,
+  type InsertBlogSchedulerConfig,
 } from "@shared/schema";
 import { randomUUID, randomBytes } from "crypto";
 import bcrypt from "bcrypt";
@@ -446,6 +452,18 @@ export interface IStorage {
   // Email Templates
   getEmailTemplate(templateKey: string): Promise<EmailTemplate | undefined>;
   upsertEmailTemplate(data: InsertEmailTemplate): Promise<EmailTemplate>;
+
+  // Blog Posts
+  getBlogPosts(status?: string): Promise<BlogPost[]>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  getBlogPostById(id: string): Promise<BlogPost | undefined>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: string, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
+  deleteBlogPost(id: string): Promise<boolean>;
+
+  // Blog Scheduler Config
+  getBlogSchedulerConfig(): Promise<BlogSchedulerConfig | undefined>;
+  upsertBlogSchedulerConfig(data: Partial<InsertBlogSchedulerConfig>): Promise<BlogSchedulerConfig>;
 
   // Service Packages
   getServicePackage(id: string): Promise<ServicePackage | undefined>;
@@ -2082,6 +2100,77 @@ export class MemStorage implements IStorage {
     };
     this.emailTemplatesMap.set(data.templateKey, template);
     return template;
+  }
+
+  // Blog Posts
+  private blogPostsMap = new Map<string, BlogPost>();
+  private blogSchedulerConfigData: BlogSchedulerConfig | undefined;
+
+  async getBlogPosts(status?: string): Promise<BlogPost[]> {
+    const all = Array.from(this.blogPostsMap.values());
+    if (status) return all.filter(p => p.status === status);
+    return all.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    return Array.from(this.blogPostsMap.values()).find(p => p.slug === slug);
+  }
+
+  async getBlogPostById(id: string): Promise<BlogPost | undefined> {
+    return this.blogPostsMap.get(id);
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const bp: BlogPost = {
+      id: randomUUID(),
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      author: post.author || "Viah.me Team",
+      category: post.category,
+      readTime: post.readTime || "5 min read",
+      status: post.status || "draft",
+      generatedByAi: post.generatedByAi || false,
+      publishedAt: post.publishedAt || null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.blogPostsMap.set(bp.id, bp);
+    return bp;
+  }
+
+  async updateBlogPost(id: string, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const existing = this.blogPostsMap.get(id);
+    if (!existing) return undefined;
+    const updated = { ...existing, ...data, updatedAt: new Date() };
+    this.blogPostsMap.set(id, updated);
+    return updated;
+  }
+
+  async deleteBlogPost(id: string): Promise<boolean> {
+    return this.blogPostsMap.delete(id);
+  }
+
+  async getBlogSchedulerConfig(): Promise<BlogSchedulerConfig | undefined> {
+    return this.blogSchedulerConfigData;
+  }
+
+  async upsertBlogSchedulerConfig(data: Partial<InsertBlogSchedulerConfig>): Promise<BlogSchedulerConfig> {
+    if (this.blogSchedulerConfigData) {
+      this.blogSchedulerConfigData = { ...this.blogSchedulerConfigData, ...data, updatedAt: new Date() };
+    } else {
+      this.blogSchedulerConfigData = {
+        id: randomUUID(),
+        enabled: data.enabled ?? true,
+        dayOfWeek: data.dayOfWeek ?? 1,
+        hourPst: data.hourPst ?? 8,
+        autoPublish: data.autoPublish ?? false,
+        topicQueue: data.topicQueue ?? [],
+        updatedAt: new Date(),
+      };
+    }
+    return this.blogSchedulerConfigData;
   }
 
   // Service Packages
@@ -5619,6 +5708,72 @@ export class DBStorage implements IStorage {
       bodyHtml: data.bodyHtml,
       ctaText: data.ctaText || 'Claim Your Profile',
       footerHtml: data.footerHtml || null,
+    }).returning();
+    return created;
+  }
+
+  // Blog Posts
+  async getBlogPosts(status?: string): Promise<BlogPost[]> {
+    if (status) {
+      return this.db.select().from(schema.blogPosts)
+        .where(eq(schema.blogPosts.status, status))
+        .orderBy(desc(schema.blogPosts.createdAt));
+    }
+    return this.db.select().from(schema.blogPosts)
+      .orderBy(desc(schema.blogPosts.createdAt));
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const result = await this.db.select().from(schema.blogPosts)
+      .where(eq(schema.blogPosts.slug, slug));
+    return result[0];
+  }
+
+  async getBlogPostById(id: string): Promise<BlogPost | undefined> {
+    const result = await this.db.select().from(schema.blogPosts)
+      .where(eq(schema.blogPosts.id, id));
+    return result[0];
+  }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const [created] = await this.db.insert(schema.blogPosts).values(post).returning();
+    return created;
+  }
+
+  async updateBlogPost(id: string, data: Partial<InsertBlogPost>): Promise<BlogPost | undefined> {
+    const [updated] = await this.db.update(schema.blogPosts)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.blogPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteBlogPost(id: string): Promise<boolean> {
+    const result = await this.db.delete(schema.blogPosts)
+      .where(eq(schema.blogPosts.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getBlogSchedulerConfig(): Promise<BlogSchedulerConfig | undefined> {
+    const result = await this.db.select().from(schema.blogSchedulerConfig);
+    return result[0];
+  }
+
+  async upsertBlogSchedulerConfig(data: Partial<InsertBlogSchedulerConfig>): Promise<BlogSchedulerConfig> {
+    const existing = await this.getBlogSchedulerConfig();
+    if (existing) {
+      const [updated] = await this.db.update(schema.blogSchedulerConfig)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(schema.blogSchedulerConfig.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await this.db.insert(schema.blogSchedulerConfig).values({
+      enabled: data.enabled ?? true,
+      dayOfWeek: data.dayOfWeek ?? 1,
+      hourPst: data.hourPst ?? 8,
+      autoPublish: data.autoPublish ?? false,
+      topicQueue: data.topicQueue ?? [],
     }).returning();
     return created;
   }

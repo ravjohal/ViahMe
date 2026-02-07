@@ -1,11 +1,14 @@
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, ArrowRight, ChevronLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar, Clock, ArrowRight } from "lucide-react";
 import { useEffect } from "react";
+import type { BlogPost as DbBlogPost } from "@shared/schema";
 
-export interface BlogPost {
+export interface BlogPostDisplay {
   slug: string;
   title: string;
   excerpt: string;
@@ -14,10 +17,10 @@ export interface BlogPost {
   date: string;
   readTime: string;
   category: string;
-  image?: string;
+  isFromDb?: boolean;
 }
 
-export const blogPosts: BlogPost[] = [
+export const staticBlogPosts: BlogPostDisplay[] = [
   {
     slug: "budget-5-day-south-asian-wedding-by-ceremony",
     title: "How to Budget a 5-Day South Asian Wedding by Ceremony",
@@ -315,7 +318,7 @@ When your cousin asks "Am I invited to everything?"—you realize the complexity
 ### The Big Celebrations
 **Sangeet**: This is where guest lists start expanding—150-400 guests typically. Friends, extended family, and sometimes colleagues are invited to dance the night away.
 
-**Main Ceremony**: The religious ceremony might have different capacity constraints. A Gurdwara may hold 500 guests comfortably, while an intimate mandap setup might be designed for 200. Religious significance often means the closest family and friends attend.
+**Main Ceremony**: The religious ceremony might have different capacity constraints. A Gurdwara may hold 500 guests comfortably, while an intimate mandap setup might be designed for 200.
 
 **Reception**: Often your largest event with 300-800+ guests. This is where you invite everyone—colleagues, neighbors, parents' friends, and extended community.
 
@@ -325,136 +328,57 @@ When your cousin asks "Am I invited to everything?"—you realize the complexity
 - Immediate family
 - Wedding party members
 - Best friends who've been with you since childhood
-- These guests get invited to everything and often have roles to play
 
 ### Tier 2: Close Network (Major Events)
 - Extended family (aunts, uncles, cousins)
 - Close friends
 - Invited to: Sangeet, Main Ceremony, Reception
-- Sometimes Mehndi for closer connections
 
 ### Tier 3: Extended Network (Select Events)
 - Parents' friends and colleagues
 - Your professional network
 - Distant relatives
-- Neighbors and community members
 - Invited to: Reception only, or Reception + Main Ceremony
-
-## Practical Guest List Management Tips
-
-### Create a Master Spreadsheet (or Use a Tool)
-Your master list should include:
-- Guest name
-- Household grouping (couples, families)
-- Relationship to bride/groom
-- Side (bride's or groom's)
-- Events invited to (checkboxes for each)
-- RSVP status per event
-- Dietary restrictions
-- Contact information
-
-### Set Venue Capacity Limits First
-Before you invite anyone, know your numbers:
-- Mehndi venue: Max 100 guests
-- Sangeet hall: Max 350 guests
-- Ceremony venue: Max 400 guests
-- Reception venue: Max 600 guests
-
-This prevents the awkward situation of inviting 500 people to a venue that holds 300.
-
-### Handle the "Plus One" Question Early
-Decide your policy:
-- Married/engaged couples: Always invited together
-- Serious relationships: Define your threshold (6 months? Living together?)
-- Single friends: Plus one or not?
-
-Be consistent to avoid hurt feelings.
-
-### Communicate Clearly on Invitations
-Your invitations should make clear which events each guest is invited to. Options include:
-- Separate invitation cards for each event
-- One invitation with checkboxes or highlighted events
-- Digital invitations with personalized event lists
-
-### The Family Politics Navigation
-
-**The "Why Wasn't I Invited to Mehndi?" Question**
-Prepare your response: "Mehndi was an intimate ceremony limited to immediate family. We're so excited to celebrate with you at the Sangeet and Reception!"
-
-**Balancing Bride and Groom Sides**
-If parents are contributing equally, guest list splits often follow. A common approach:
-- 40% bride's side
-- 40% groom's side
-- 20% mutual friends and couple's professional network
-
-**The Last-Minute Add Requests**
-Parents will ask to add guests. Build in a 5-10% buffer for these inevitable additions rather than fighting each request.
-
-## RSVP Tracking Across Events
-
-### The Challenge
-Guest A might attend Sangeet and Reception but skip the ceremony. Guest B is coming to everything. Guest C hasn't responded to anything. Multiply this by 400 guests across 5 events.
-
-### The Solution
-Track RSVPs per event, not per invitation. You need to know:
-- Sangeet: 280 confirmed, 45 pending, 25 declined
-- Ceremony: 350 confirmed, 60 pending, 40 declined
-- Reception: 520 confirmed, 80 pending, 0 declined
-
-This gives you accurate headcounts for catering, seating, and vendor planning.
-
-### Set Different RSVP Deadlines
-Earlier events need earlier deadlines:
-- Mehndi/Haldi: 3 weeks before
-- Sangeet: 2 weeks before
-- Wedding/Reception: 10 days before
-
-This gives you time to finalize numbers with vendors.
-
-## Special Considerations
-
-### Out-of-Town Guests
-These guests need extra planning:
-- Hotel room blocks
-- Transportation between venues
-- Clear schedules so they know where to be
-- Perhaps a welcome bag with event details
-
-### Children Policy
-Decide early:
-- All events kid-friendly?
-- Ceremony only for families with children?
-- Reception adults-only with babysitting option?
-
-### Elderly and Mobility Needs
-Track which guests need:
-- Accessible seating
-- Early meal service
-- Transportation assistance
-- Quiet rest areas
-
-## Technology to the Rescue
-
-Modern wedding planning tools can:
-- Track guest lists across multiple events
-- Send event-specific digital invitations
-- Collect RSVPs per event automatically
-- Generate headcounts for each celebration
-- Manage dietary restrictions and special needs
-- Handle household groupings so families RSVP together
-
-Stop juggling spreadsheets with 47 tabs. Purpose-built tools understand that your Sangeet guest list is different from your Reception list—and that Auntie needs vegetarian meals at all events.
 
 ## The Bottom Line
 
 Guest list management for multi-event weddings requires thinking in events, not just names. By categorizing guests into tiers, setting clear capacity limits, and tracking RSVPs per celebration, you'll avoid the chaos that comes from treating a 5-day wedding like a single-day event.
-
-Your guests will appreciate the clarity, your vendors will appreciate accurate counts, and you'll appreciate not having a spreadsheet nightmare the week before your wedding.
     `
   }
 ];
 
+function formatDbDate(date: string | Date | null): string {
+  if (!date) return "Recently";
+  const d = new Date(date);
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function mergePostsForDisplay(dbPosts: DbBlogPost[]): BlogPostDisplay[] {
+  const dbDisplayPosts: BlogPostDisplay[] = dbPosts.map(p => ({
+    slug: p.slug,
+    title: p.title,
+    excerpt: p.excerpt,
+    content: p.content,
+    author: p.author,
+    date: formatDbDate(p.publishedAt || p.createdAt),
+    readTime: p.readTime,
+    category: p.category,
+    isFromDb: true,
+  }));
+
+  const dbSlugs = new Set(dbDisplayPosts.map(p => p.slug));
+  const staticOnly = staticBlogPosts.filter(p => !dbSlugs.has(p.slug));
+
+  return [...dbDisplayPosts, ...staticOnly];
+}
+
 export default function Blog() {
+  const { data: dbPosts = [], isLoading } = useQuery<DbBlogPost[]>({
+    queryKey: ["/api/blog-posts"],
+  });
+
+  const allPosts = mergePostsForDisplay(dbPosts);
+
   useEffect(() => {
     document.title = "Wedding Planning Blog | Viah.me - South Asian Wedding Planning";
   }, []);
@@ -493,40 +417,48 @@ export default function Blog() {
             </p>
           </div>
 
-          <div className="grid gap-8">
-            {blogPosts.map((post) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`}>
-                <Card className="hover-elevate cursor-pointer transition-all" data-testid={`card-blog-${post.slug}`}>
-                  <CardHeader>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary">{post.category}</Badge>
-                    </div>
-                    <CardTitle className="text-2xl font-display hover:text-primary transition-colors">
-                      {post.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground mb-4">{post.excerpt}</p>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-4 h-4" />
-                          {post.date}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {post.readTime}
+          {isLoading ? (
+            <div className="grid gap-8">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="h-48 w-full rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-8">
+              {allPosts.map((post) => (
+                <Link key={post.slug} href={`/blog/${post.slug}`}>
+                  <Card className="hover-elevate cursor-pointer transition-all" data-testid={`card-blog-${post.slug}`}>
+                    <CardHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary">{post.category}</Badge>
+                      </div>
+                      <CardTitle className="text-2xl font-display hover:text-primary transition-colors">
+                        {post.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground mb-4">{post.excerpt}</p>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {post.date}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {post.readTime}
+                          </span>
+                        </div>
+                        <span className="flex items-center gap-1 text-primary font-medium text-sm">
+                          Read more <ArrowRight className="w-4 h-4" />
                         </span>
                       </div>
-                      <span className="flex items-center gap-1 text-primary font-medium text-sm">
-                        Read more <ArrowRight className="w-4 h-4" />
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          )}
 
           <div className="mt-12 text-center">
             <Link href="/onboarding">

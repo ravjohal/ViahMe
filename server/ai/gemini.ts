@@ -2320,3 +2320,117 @@ export async function discoverVendors(
   console.log(`${DV} <<< DONE (${batchNum} chat turns, ${hasPriorHistory ? 'resumed' : 'new'} conversation): Returning ${allVendors.length} vendor(s). Updated history: ${updatedHistory.length} entries. Total time: ${totalMs}ms`);
   return { vendors: allVendors, chatHistory: updatedHistory };
 }
+
+export interface GeneratedBlogPost {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  readTime: string;
+}
+
+const BLOG_SYSTEM_PROMPT = `You are an expert content writer for Viah.me, the premier South Asian wedding planning platform in the United States and Canada.
+
+You write SEO-optimized, culturally authentic blog posts about South Asian weddings. Your audience is engaged couples (primarily Indian, Sikh, Hindu, Muslim, Gujarati, South Indian, and mixed/fusion couples) planning multi-day weddings in the US and Canada.
+
+Your writing style is:
+- Warm, knowledgeable, and approachable
+- Culturally respectful and specific (not generic "Indian wedding" stereotypes)
+- Practical and actionable with real advice
+- SEO-friendly with natural keyword usage
+- Written in Markdown format
+
+Key topics you cover:
+- Multi-day wedding logistics (Mehndi, Sangeet, Haldi, ceremonies, receptions)
+- Tradition-specific planning (Sikh Anand Karaj, Hindu ceremonies, Muslim Nikah, Gujarati Garba, etc.)
+- Budget management for multi-ceremony weddings
+- Vendor selection (culturally-specialized vendors)
+- Guest list management across multiple events
+- Attire and styling for different ceremonies
+- Venue selection for South Asian weddings
+- Food and catering (vegetarian, Jain, halal considerations)
+- Wedding party and family dynamics
+- Modern fusion weddings blending cultures
+- Wedding tech and planning tools
+- Destination considerations (Bay Area, NYC, LA, Chicago, Seattle, Vancouver, Toronto)
+
+Important guidelines:
+- Always acknowledge the diversity within South Asian weddings — avoid lumping all traditions together
+- Include practical tips and actionable advice
+- Reference specific ceremonies and traditions by their proper names
+- Write 800-1200 words per post
+- Use proper Markdown with ## headings, bold text, and bullet points
+- Include a strong introduction and conclusion`;
+
+export async function generateBlogPost(topic?: string, existingTitles: string[] = []): Promise<GeneratedBlogPost> {
+  const fnName = 'generateBlogPost';
+  
+  const userPrompt = topic 
+    ? `Write a blog post about: "${topic}"
+
+Do NOT duplicate any of these existing blog titles:
+${existingTitles.map(t => `- ${t}`).join('\n')}
+
+Return your response as a valid JSON object with these fields:
+- title: A compelling, SEO-optimized title (50-70 characters ideal)
+- slug: URL-friendly slug (lowercase, hyphens, no special characters)
+- excerpt: A 1-2 sentence summary (120-160 characters ideal for meta description)
+- content: The full blog post in Markdown format (800-1200 words)
+- category: One of: "Budget Planning", "Timeline Planning", "Vendor Selection", "Guest Management", "Traditions & Culture", "Attire & Style", "Food & Catering", "Venue Selection", "Wedding Tech", "Real Talk"
+- readTime: Estimated read time like "6 min read"
+
+Return ONLY valid JSON. No markdown code fences.`
+    : `Generate a fresh, unique blog post idea about South Asian wedding planning that would be valuable to couples currently planning their wedding.
+
+Choose a topic that is different from these existing posts:
+${existingTitles.map(t => `- ${t}`).join('\n')}
+
+Pick something timely, practical, and SEO-friendly. Focus on topics that engaged couples actually search for.
+
+Return your response as a valid JSON object with these fields:
+- title: A compelling, SEO-optimized title (50-70 characters ideal)
+- slug: URL-friendly slug (lowercase, hyphens, no special characters)
+- excerpt: A 1-2 sentence summary (120-160 characters ideal for meta description)
+- content: The full blog post in Markdown format (800-1200 words)
+- category: One of: "Budget Planning", "Timeline Planning", "Vendor Selection", "Guest Management", "Traditions & Culture", "Attire & Style", "Food & Catering", "Venue Selection", "Wedding Tech", "Real Talk"
+- readTime: Estimated read time like "6 min read"
+
+Return ONLY valid JSON. No markdown code fences.`;
+
+  logAIRequest(fnName, { topic, existingTitleCount: existingTitles.length });
+
+  const startMs = Date.now();
+  try {
+    const response = await withTimeout(
+      ai.models.generateContent({
+        model: GEMINI_MODEL,
+        config: {
+          systemInstruction: BLOG_SYSTEM_PROMPT,
+          temperature: 0.8,
+          maxOutputTokens: 4096,
+        },
+        contents: userPrompt,
+      }),
+      120000,
+      fnName
+    );
+
+    const text = response.text?.trim() || '';
+    logAIResponse(fnName, text.substring(0, 300), Date.now() - startMs);
+
+    const cleanedText = text.replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '').trim();
+    const parsed = JSON.parse(cleanedText) as GeneratedBlogPost;
+
+    if (!parsed.title || !parsed.slug || !parsed.content || !parsed.excerpt || !parsed.category) {
+      throw new Error('AI response missing required fields');
+    }
+
+    parsed.slug = parsed.slug.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/--+/g, '-');
+
+    return parsed;
+  } catch (error) {
+    logAIError(fnName, error);
+    throw error;
+  }
+}

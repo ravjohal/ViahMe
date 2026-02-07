@@ -14,6 +14,7 @@ import {
   Users,
   Mail,
   Search,
+  PenLine,
 } from "lucide-react";
 
 interface AdminAction {
@@ -73,6 +74,13 @@ const adminActions: AdminAction[] = [
     href: "/admin/vendor-discovery",
     icon: Search,
     category: "vendors",
+  },
+  {
+    title: "Blog Management",
+    description: "Manage AI-generated blog posts, configure weekly auto-generation schedule, and queue topics",
+    href: "/admin/blog",
+    icon: PenLine,
+    category: "content",
   },
 ];
 

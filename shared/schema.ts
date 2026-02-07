@@ -5709,3 +5709,44 @@ export const insertEmailTemplateSchema = createInsertSchema(emailTemplates).omit
 });
 export type InsertEmailTemplate = z.infer<typeof insertEmailTemplateSchema>;
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
+
+export const blogPosts = pgTable("blog_posts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  author: text("author").notNull().default("Viah.me Team"),
+  category: text("category").notNull(),
+  readTime: text("read_time").notNull().default("5 min read"),
+  status: text("status").notNull().default("draft"),
+  generatedByAi: boolean("generated_by_ai").notNull().default(false),
+  publishedAt: timestamp("published_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogPost = typeof blogPosts.$inferSelect;
+
+export const blogSchedulerConfig = pgTable("blog_scheduler_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  enabled: boolean("enabled").notNull().default(true),
+  dayOfWeek: integer("day_of_week").notNull().default(1),
+  hourPst: integer("hour_pst").notNull().default(8),
+  autoPublish: boolean("auto_publish").notNull().default(false),
+  topicQueue: text("topic_queue").array().notNull().default(sql`ARRAY[]::text[]`),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertBlogSchedulerConfigSchema = createInsertSchema(blogSchedulerConfig).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertBlogSchedulerConfig = z.infer<typeof insertBlogSchedulerConfigSchema>;
+export type BlogSchedulerConfig = typeof blogSchedulerConfig.$inferSelect;
