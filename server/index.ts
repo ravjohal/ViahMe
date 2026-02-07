@@ -134,14 +134,22 @@ app.use(express.static(path.join(process.cwd(), "public")));
   log('Task reminder scheduler started');
 
   const vendorDiscoveryScheduler = new VendorDiscoveryScheduler(storage);
-  vendorDiscoveryScheduler.start(60 * 60 * 1000);
-  log('Vendor discovery scheduler started');
+  if (process.env.NODE_ENV === 'production') {
+    vendorDiscoveryScheduler.start(60 * 60 * 1000);
+    log('Vendor discovery scheduler started');
+  } else {
+    log('Vendor discovery scheduler skipped (development mode)');
+  }
   (app as any).vendorDiscoveryScheduler = vendorDiscoveryScheduler;
 
   const blogScheduler = new BlogScheduler(storage);
   setBlogScheduler(blogScheduler);
-  blogScheduler.start();
-  log('Blog scheduler started');
+  if (process.env.NODE_ENV === 'production') {
+    blogScheduler.start();
+    log('Blog scheduler started');
+  } else {
+    log('Blog scheduler skipped (development mode)');
+  }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
