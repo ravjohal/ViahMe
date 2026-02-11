@@ -5542,6 +5542,8 @@ export const discoveryJobs = pgTable("discovery_jobs", {
   totalDiscovered: integer("total_discovered").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   paused: boolean("paused").notNull().default(false),
+  retired: boolean("retired").notNull().default(false),
+  retiredAt: timestamp("retired_at"),
   lastRunAt: timestamp("last_run_at"),
   endDate: timestamp("end_date"),
   notes: text("notes"),
@@ -5552,6 +5554,8 @@ export const discoveryJobs = pgTable("discovery_jobs", {
 export const insertDiscoveryJobSchema = createInsertSchema(discoveryJobs).omit({
   id: true,
   totalDiscovered: true,
+  retired: true,
+  retiredAt: true,
   lastRunAt: true,
   createdAt: true,
   updatedAt: true,
