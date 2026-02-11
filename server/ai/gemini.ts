@@ -2330,7 +2330,35 @@ export interface GeneratedBlogPost {
   readTime: string;
 }
 
-const BLOG_SYSTEM_PROMPT = `You are an expert content writer for Viah.me, the premier South Asian wedding planning platform in the United States and Canada.
+export interface BlogGenerationContext {
+  vendorCategories: string[];
+  metroAreas: string[];
+  vendorCount: number;
+  vendorCityCounts: { city: string; count: number }[];
+}
+
+function buildBlogSystemPrompt(context?: BlogGenerationContext): string {
+  const vendorInfo = context ? `
+
+=== VIAH.ME PLATFORM DATA (USE THIS IN YOUR POSTS) ===
+
+Viah.me currently has ${context.vendorCount.toLocaleString()}+ verified vendors across ${context.metroAreas.length} metro areas.
+
+**Metro areas served:** ${context.metroAreas.join(', ')}
+
+**Top vendor markets by coverage:**
+${context.vendorCityCounts.slice(0, 8).map(c => `- ${c.city}: ${c.count}+ vendors`).join('\n')}
+
+**Vendor categories available:** ${context.vendorCategories.slice(0, 30).join(', ')}
+
+When writing posts:
+- Naturally mention that couples can find these vendor types on Viah.me
+- Reference specific metro areas when discussing regional topics
+- Use actual vendor category names (e.g., "dhol players", "mehndi artists", "garland makers") rather than generic terms
+- Mention Viah.me's vendor database when giving vendor selection advice
+` : '';
+
+  return `You are an expert content writer for Viah.me, the premier South Asian wedding planning platform in the United States and Canada.
 
 You write SEO-optimized, culturally authentic blog posts about South Asian weddings. Your audience is engaged couples (primarily Indian, Sikh, Hindu, Muslim, Gujarati, South Indian, and mixed/fusion couples) planning multi-day weddings in the US and Canada.
 
@@ -2341,6 +2369,30 @@ Your writing style is:
 - SEO-friendly with natural keyword usage
 - Written in Markdown format
 
+=== VIAH.ME APP FEATURES (REFERENCE THESE NATURALLY IN POSTS) ===
+
+Viah.me is purpose-built for multi-day South Asian weddings. When writing, naturally weave in mentions of these features where relevant:
+
+**Wedding Traditions Supported:** Sikh (Anand Karaj), Hindu (North/South), Muslim (Nikah/Walima), Gujarati, South Indian, Ismaili, Mixed/Fusion, and General
+
+**Key Platform Features:**
+- **Ceremony-Based Budget Tracking**: Unlike generic wedding apps, Viah.me lets couples track expenses per ceremony (Sangeet, Mehndi, Anand Karaj, Reception, etc.) with smart recommendations based on tradition, location, and guest count
+- **Multi-Event Timeline**: Drag-and-drop timeline built for 3-5 day celebrations with day-of coordination and vendor tagging
+- **Culturally-Specialized Vendor Directory**: Browse 32+ vendor categories including Dhol players, Mehndi artists, Gurdwara decorators, horse/carriage services, garland makers, and more
+- **Smart Guest Management**: Per-event RSVPs (different guest lists for Mehndi vs. Reception), household grouping, bulk CSV import, and collector links for family members to suggest guests
+- **Ceremony Shopping Lists**: Pre-built shopping templates for each ceremony type (Chunni, Kalire, Sagun items, etc.)
+- **Ritual Role Assignment**: Assign ceremonial micro-roles to guests (who carries Kalire, who does Milni, etc.)
+- **Cultural Info for Guests**: Ceremony explainers, attire guides, and etiquette tips for non-Desi guests
+- **Guest Wedding Website**: Custom website with event schedule, livestream embedding, and travel info
+- **AI Wedding Planner**: Smart chatbot that understands South Asian wedding nuances
+- **Contract E-Signatures**: Digital contract signing with AI-assisted drafting and review
+- **Expense Splitting**: Track who paid (couple, bride's family, groom's family) with settlement summaries
+- **Vendor Comparison Tools**: Side-by-side vendor comparisons with availability calendars
+- **Task Checklist**: Tradition-specific task templates organized by planning phase
+- **Collaborator Access**: Invite partner, family, or planner with role-based permissions
+- **Side-Based Planning**: Bride's side and groom's side can manage their own events while sharing common ones
+- **Multi-Language Support**: Translation support including Punjabi (Gurmukhi script) for invitations
+${vendorInfo}
 Key topics you cover:
 - Multi-day wedding logistics (Mehndi, Sangeet, Haldi, ceremonies, receptions)
 - Tradition-specific planning (Sikh Anand Karaj, Hindu ceremonies, Muslim Nikah, Gujarati Garba, etc.)
@@ -2353,7 +2405,6 @@ Key topics you cover:
 - Wedding party and family dynamics
 - Modern fusion weddings blending cultures
 - Wedding tech and planning tools
-- Destination considerations (Bay Area, NYC, LA, Chicago, Seattle, Vancouver, Toronto)
 
 Important guidelines:
 - Always acknowledge the diversity within South Asian weddings — avoid lumping all traditions together
@@ -2361,26 +2412,34 @@ Important guidelines:
 - Reference specific ceremonies and traditions by their proper names
 - Write 800-1200 words per post
 - Use proper Markdown with ## headings, bold text, and bullet points
-- Include a strong introduction and conclusion`;
+- Include a strong introduction and conclusion
+- Naturally mention Viah.me features where they genuinely help the reader (don't force it, but do include 2-3 organic references per post)
+- When discussing vendor selection, mention that Viah.me has a curated vendor directory for the relevant metro area
+- End posts with a brief CTA encouraging readers to explore Viah.me for their planning needs`;
+}
 
-export async function generateBlogPost(topic?: string, existingTitles: string[] = []): Promise<GeneratedBlogPost> {
+const BLOG_SYSTEM_PROMPT = buildBlogSystemPrompt();
+
+export async function generateBlogPost(topic?: string, existingTitles: string[] = [], context?: BlogGenerationContext): Promise<GeneratedBlogPost> {
   const fnName = 'generateBlogPost';
   
+  const jsonInstructions = `Return your response as a valid JSON object with these fields:
+- title: A compelling, SEO-optimized title (50-70 characters ideal)
+- slug: URL-friendly slug (lowercase, hyphens, no special characters)
+- excerpt: A 1-2 sentence summary (120-160 characters ideal for meta description)
+- content: The full blog post in Markdown format (800-1200 words). Naturally reference Viah.me features and vendor directory where relevant (2-3 organic mentions). End with a brief CTA.
+- category: One of: "Budget Planning", "Timeline Planning", "Vendor Selection", "Guest Management", "Traditions & Culture", "Attire & Style", "Food & Catering", "Venue Selection", "Wedding Tech", "Real Talk"
+- readTime: Estimated read time like "6 min read"
+
+Return ONLY valid JSON. No markdown code fences.`;
+
   const userPrompt = topic 
     ? `Write a blog post about: "${topic}"
 
 Do NOT duplicate any of these existing blog titles:
 ${existingTitles.map(t => `- ${t}`).join('\n')}
 
-Return your response as a valid JSON object with these fields:
-- title: A compelling, SEO-optimized title (50-70 characters ideal)
-- slug: URL-friendly slug (lowercase, hyphens, no special characters)
-- excerpt: A 1-2 sentence summary (120-160 characters ideal for meta description)
-- content: The full blog post in Markdown format (800-1200 words)
-- category: One of: "Budget Planning", "Timeline Planning", "Vendor Selection", "Guest Management", "Traditions & Culture", "Attire & Style", "Food & Catering", "Venue Selection", "Wedding Tech", "Real Talk"
-- readTime: Estimated read time like "6 min read"
-
-Return ONLY valid JSON. No markdown code fences.`
+${jsonInstructions}`
     : `Generate a fresh, unique blog post idea about South Asian wedding planning that would be valuable to couples currently planning their wedding.
 
 Choose a topic that is different from these existing posts:
@@ -2388,17 +2447,11 @@ ${existingTitles.map(t => `- ${t}`).join('\n')}
 
 Pick something timely, practical, and SEO-friendly. Focus on topics that engaged couples actually search for.
 
-Return your response as a valid JSON object with these fields:
-- title: A compelling, SEO-optimized title (50-70 characters ideal)
-- slug: URL-friendly slug (lowercase, hyphens, no special characters)
-- excerpt: A 1-2 sentence summary (120-160 characters ideal for meta description)
-- content: The full blog post in Markdown format (800-1200 words)
-- category: One of: "Budget Planning", "Timeline Planning", "Vendor Selection", "Guest Management", "Traditions & Culture", "Attire & Style", "Food & Catering", "Venue Selection", "Wedding Tech", "Real Talk"
-- readTime: Estimated read time like "6 min read"
+${jsonInstructions}`;
 
-Return ONLY valid JSON. No markdown code fences.`;
+  logAIRequest(fnName, { topic, existingTitleCount: existingTitles.length, hasContext: !!context });
 
-  logAIRequest(fnName, { topic, existingTitleCount: existingTitles.length });
+  const systemPrompt = context ? buildBlogSystemPrompt(context) : BLOG_SYSTEM_PROMPT;
 
   const startMs = Date.now();
   try {
@@ -2406,7 +2459,7 @@ Return ONLY valid JSON. No markdown code fences.`;
       ai.models.generateContent({
         model: GEMINI_MODEL,
         config: {
-          systemInstruction: BLOG_SYSTEM_PROMPT,
+          systemInstruction: systemPrompt,
           temperature: 0.8,
           maxOutputTokens: 4096,
         },

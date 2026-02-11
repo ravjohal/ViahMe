@@ -18,9 +18,10 @@ function formatDbDate(date: string | Date | null): string {
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
+  const isAdminPreview = new URLSearchParams(window.location.search).get('preview') === 'admin';
 
   const { data: dbPost, isLoading } = useQuery<DbBlogPost>({
-    queryKey: ["/api/blog-posts", slug],
+    queryKey: isAdminPreview ? ["/api/admin/blog-posts/preview", slug] : ["/api/blog-posts", slug],
     enabled: !!slug,
   });
 

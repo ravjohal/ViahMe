@@ -56,6 +56,22 @@ router.get("/api/blog-posts/:slug", async (req: Request, res: Response) => {
   }
 });
 
+router.get("/api/admin/blog-posts/preview/:slug", async (req: Request, res: Response) => {
+  if (!(await checkAdminAccess(req))) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  try {
+    const post = await storage.getBlogPostBySlug(req.params.slug);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
+    res.json(post);
+  } catch (error) {
+    console.error("Failed to fetch blog post for preview:", error);
+    res.status(500).json({ error: "Failed to fetch blog post" });
+  }
+});
+
 router.get("/api/admin/blog-posts", async (req: Request, res: Response) => {
   if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });

@@ -380,11 +380,11 @@ function PostsList() {
             </TableCell>
             <TableCell>
               <div className="flex items-center justify-end gap-1">
-                <Link href={`/blog/${post.slug}`} target="_blank">
+                <a href={`/blog/${post.slug}?preview=admin`} target="_blank" rel="noopener noreferrer">
                   <Button variant="ghost" size="icon" data-testid={`button-preview-${post.id}`}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                </Link>
+                </a>
                 {post.status === "draft" ? (
                   <Button
                     variant="ghost"

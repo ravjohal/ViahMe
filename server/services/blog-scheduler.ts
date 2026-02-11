@@ -1,5 +1,5 @@
 import type { IStorage } from '../storage';
-import { generateBlogPost } from '../ai/gemini';
+import { generateBlogPost, type BlogGenerationContext } from '../ai/gemini';
 
 const PREFIX = '[BlogScheduler]';
 
@@ -91,6 +91,46 @@ export class BlogScheduler {
     }
   }
 
+  private async buildContext(): Promise<BlogGenerationContext> {
+    try {
+      const [vendorCategories, metroAreas] = await Promise.all([
+        this.storage.getAllVendorCategories(),
+        this.storage.getAllMetroAreas(),
+      ]);
+
+      const categoryNames = vendorCategories.map(c => c.displayName || c.slug).filter(Boolean);
+      const areaLabels = metroAreas.filter(a => a.isActive).map(a => a.label).filter(Boolean);
+
+      let vendorCount = 0;
+      let vendorCityCounts: { city: string; count: number }[] = [];
+
+      try {
+        const { db } = await import('../db');
+        const { sql } = await import('drizzle-orm');
+        const vendorStats = await db.execute(sql`
+          SELECT city, COUNT(*)::int as count FROM vendors 
+          WHERE is_published = true AND city IS NOT NULL 
+          GROUP BY city ORDER BY count DESC LIMIT 10
+        `);
+        const totalResult = await db.execute(sql`SELECT COUNT(*)::int as total FROM vendors WHERE is_published = true`);
+
+        vendorCount = (totalResult.rows?.[0] as any)?.total || 0;
+        vendorCityCounts = (vendorStats.rows || []).map((r: any) => ({
+          city: r.city as string,
+          count: r.count as number,
+        }));
+      } catch (dbError) {
+        console.warn(`${PREFIX} ${ts()} Could not fetch vendor stats from DB, using category/area data only`);
+      }
+
+      console.log(`${PREFIX} ${ts()} Blog context: ${vendorCount} vendors, ${areaLabels.length} areas, ${categoryNames.length} categories`);
+      return { vendorCategories: categoryNames, metroAreas: areaLabels, vendorCount, vendorCityCounts };
+    } catch (error) {
+      console.error(`${PREFIX} ${ts()} Failed to build blog context, using defaults:`, error);
+      return { vendorCategories: [], metroAreas: [], vendorCount: 0, vendorCityCounts: [] };
+    }
+  }
+
   async generatePost(autoPublish: boolean = false, topicQueue: string[] = []): Promise<string | null> {
     try {
       const existingPosts = await this.storage.getBlogPosts();
@@ -104,8 +144,10 @@ export class BlogScheduler {
         console.log(`${PREFIX} ${ts()} Using queued topic: "${topic}" (${remaining.length} remaining in queue)`);
       }
 
-      console.log(`${PREFIX} ${ts()} Generating blog post${topic ? ` about "${topic}"` : ' (auto-topic)'}...`);
-      const generated = await generateBlogPost(topic, existingTitles);
+      const context = await this.buildContext();
+
+      console.log(`${PREFIX} ${ts()} Generating blog post${topic ? ` about "${topic}"` : ' (auto-topic)'} with platform context...`);
+      const generated = await generateBlogPost(topic, existingTitles, context);
 
       const existingSlug = await this.storage.getBlogPostBySlug(generated.slug);
       if (existingSlug) {
