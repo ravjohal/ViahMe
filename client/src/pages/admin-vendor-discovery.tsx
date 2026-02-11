@@ -58,6 +58,7 @@ import {
   History,
   Timer,
   RotateCcw,
+  Archive,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -109,6 +110,7 @@ export default function AdminVendorDiscovery() {
   const [expandedVendor, setExpandedVendor] = useState<string | null>(null);
   const [discoveryLogs, setDiscoveryLogs] = useState<DiscoveryLogEntry[]>([]);
   const [showLogs, setShowLogs] = useState(false);
+  const [showRetired, setShowRetired] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -271,6 +273,20 @@ export default function AdminVendorDiscovery() {
     },
   });
 
+  const retireJobMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("POST", `/api/admin/discovery-jobs/${id}/retire`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/discovery-jobs"] });
+      toast({ title: "Job retired", description: "This job will no longer run. Its history is preserved." });
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to retire job", description: err.message, variant: "destructive" });
+    },
+  });
+
   const runsQuery = useQuery<DiscoveryRun[]>({
     queryKey: ["/api/admin/discovery-runs"],
     refetchInterval: isPolling ? 3000 : false,
@@ -418,7 +434,9 @@ export default function AdminVendorDiscovery() {
     }
   };
 
-  const jobs = jobsQuery.data || [];
+  const allJobs = jobsQuery.data || [];
+  const jobs = showRetired ? allJobs : allJobs.filter(j => !j.retired);
+  const retiredCount = allJobs.filter(j => j.retired).length;
   const stagedVendors = stagedQuery.data || [];
   const stageableCount = stagedVendors.filter((v) => v.status === "staged").length;
 
@@ -472,6 +490,17 @@ export default function AdminVendorDiscovery() {
                 </Button>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                {retiredCount > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowRetired(!showRetired)}
+                    className={`toggle-elevate ${showRetired ? 'toggle-elevated' : ''}`}
+                    data-testid="button-toggle-retired"
+                  >
+                    <Archive className="mr-2 h-4 w-4" />
+                    {showRetired ? "Hide" : "Show"} Retired ({retiredCount})
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => setBulkDialogOpen(true)} data-testid="button-bulk-create">
                   <Layers className="mr-2 h-4 w-4" />
                   Bulk Create
@@ -557,26 +586,35 @@ export default function AdminVendorDiscovery() {
                 {jobs.map((job) => {
                   const latestRun = runsQuery.data?.find(r => r.jobId === job.id);
                   return (
-                  <Card key={job.id} data-testid={`card-job-${job.id}`}>
+                  <Card key={job.id} data-testid={`card-job-${job.id}`} className={job.retired ? "opacity-60" : ""}>
                     <CardContent className="py-4">
                       <div className="flex items-start justify-between flex-wrap gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-medium" data-testid={`text-job-area-${job.id}`}>{job.area}</span>
                             <Badge variant="outline">{formatSpecialty(job.specialty)}</Badge>
-                            {job.isActive && !job.paused && (
+                            {job.retired ? (
+                              <Badge variant="secondary">
+                                <Archive className="h-3 w-3 mr-1" />
+                                Retired
+                              </Badge>
+                            ) : job.isActive && !job.paused ? (
                               <Badge className="bg-green-600 border-green-600">Active</Badge>
-                            )}
-                            {job.paused && (
+                            ) : job.paused ? (
                               <Badge variant="secondary">Paused</Badge>
-                            )}
-                            {!job.isActive && (
+                            ) : (
                               <Badge variant="destructive">Inactive</Badge>
                             )}
                           </div>
                           <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
                             <span>{job.totalDiscovered} / {job.maxTotal || "\u221E"} discovered</span>
                             <span>{job.countPerRun} per run</span>
+                            {job.retiredAt && (
+                              <span className="flex items-center gap-1">
+                                <Archive className="h-3 w-3" />
+                                Retired: {new Date(job.retiredAt).toLocaleDateString()}
+                              </span>
+                            )}
                             {job.lastRunAt && (
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -611,63 +649,73 @@ export default function AdminVendorDiscovery() {
                           )}
                         </div>
                         <div className="flex items-center gap-1">
-                          {isPolling && activeRunId ? (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => cancelRunMutation.mutate(activeRunId)}
-                              disabled={cancelRunMutation.isPending}
-                              title="Cancel run"
-                              data-testid={`button-cancel-run-${job.id}`}
-                            >
-                              {cancelRunMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4 text-destructive" />}
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => runNowMutation.mutate(job.id)}
-                              disabled={runNowMutation.isPending || isPolling}
-                              title="Run now"
-                              data-testid={`button-run-job-${job.id}`}
-                            >
-                              {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                            </Button>
+                          {!job.retired && (
+                            <>
+                              {isPolling && activeRunId ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => cancelRunMutation.mutate(activeRunId)}
+                                  disabled={cancelRunMutation.isPending}
+                                  title="Cancel run"
+                                  data-testid={`button-cancel-run-${job.id}`}
+                                >
+                                  {cancelRunMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4 text-destructive" />}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => runNowMutation.mutate(job.id)}
+                                  disabled={runNowMutation.isPending || isPolling}
+                                  title="Run now"
+                                  data-testid={`button-run-job-${job.id}`}
+                                >
+                                  {runNowMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => toggleJobMutation.mutate({ id: job.id, paused: !job.paused })}
+                                title={job.paused ? "Resume" : "Pause"}
+                                data-testid={`button-toggle-job-${job.id}`}
+                              >
+                                {job.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  if (confirm("Reset chat history for this job? The next run will start a fresh conversation with the AI.")) {
+                                    resetChatMutation.mutate({ area: job.area, specialty: job.specialty });
+                                  }
+                                }}
+                                title="Reset chat history"
+                                data-testid={`button-reset-chat-${job.id}`}
+                              >
+                                <RotateCcw className="h-4 w-4" />
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => toggleJobMutation.mutate({ id: job.id, paused: !job.paused })}
-                            title={job.paused ? "Resume" : "Pause"}
-                            data-testid={`button-toggle-job-${job.id}`}
-                          >
-                            {job.paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => {
-                              if (confirm("Reset chat history for this job? The next run will start a fresh conversation with the AI.")) {
-                                resetChatMutation.mutate({ area: job.area, specialty: job.specialty });
+                              if (job.retired) {
+                                if (confirm("Permanently delete this retired job and its data?")) {
+                                  deleteJobMutation.mutate(job.id);
+                                }
+                              } else {
+                                if (confirm("Retire this job? It will stop running but its history will be preserved.")) {
+                                  retireJobMutation.mutate(job.id);
+                                }
                               }
                             }}
-                            title="Reset chat history"
-                            data-testid={`button-reset-chat-${job.id}`}
+                            title={job.retired ? "Permanently delete" : "Retire"}
+                            data-testid={`button-retire-job-${job.id}`}
                           >
-                            <RotateCcw className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              if (confirm("Delete this discovery job?")) {
-                                deleteJobMutation.mutate(job.id);
-                              }
-                            }}
-                            title="Delete"
-                            data-testid={`button-delete-job-${job.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
+                            {job.retired ? <Trash2 className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
                           </Button>
                         </div>
                       </div>

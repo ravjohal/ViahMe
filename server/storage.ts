@@ -1587,6 +1587,7 @@ export interface IStorage {
   createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob>;
   updateDiscoveryJob(id: string, job: Partial<DiscoveryJob>): Promise<DiscoveryJob | undefined>;
   deleteDiscoveryJob(id: string): Promise<boolean>;
+  retireDiscoveryJob(id: string): Promise<DiscoveryJob | undefined>;
 
   getStagedVendor(id: string): Promise<StagedVendor | undefined>;
   getStagedVendorsByJob(jobId: string): Promise<StagedVendor[]>;
@@ -5168,6 +5169,7 @@ export class MemStorage implements IStorage {
   async createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob> { throw new Error('MemStorage does not support Discovery Jobs. Use DBStorage.'); }
   async updateDiscoveryJob(id: string, job: Partial<DiscoveryJob>): Promise<DiscoveryJob | undefined> { throw new Error('MemStorage does not support Discovery Jobs. Use DBStorage.'); }
   async deleteDiscoveryJob(id: string): Promise<boolean> { return false; }
+  async retireDiscoveryJob(id: string): Promise<DiscoveryJob | undefined> { return undefined; }
 
   // Staged Vendors (stub methods for MemStorage)
   async getStagedVendor(id: string): Promise<StagedVendor | undefined> { return undefined; }
@@ -14150,7 +14152,7 @@ export class DBStorage implements IStorage {
   }
 
   async getActiveDiscoveryJobs(): Promise<DiscoveryJob[]> {
-    return this.db.select().from(discoveryJobs).where(and(eq(discoveryJobs.isActive, true), eq(discoveryJobs.paused, false)));
+    return this.db.select().from(discoveryJobs).where(and(eq(discoveryJobs.isActive, true), eq(discoveryJobs.paused, false), eq(discoveryJobs.retired, false)));
   }
 
   async createDiscoveryJob(job: InsertDiscoveryJob): Promise<DiscoveryJob> {
@@ -14166,6 +14168,17 @@ export class DBStorage implements IStorage {
   async deleteDiscoveryJob(id: string): Promise<boolean> {
     const result = await this.db.delete(discoveryJobs).where(eq(discoveryJobs.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async retireDiscoveryJob(id: string): Promise<DiscoveryJob | undefined> {
+    const [updated] = await this.db.update(discoveryJobs).set({
+      retired: true,
+      retiredAt: new Date(),
+      isActive: false,
+      paused: false,
+      updatedAt: new Date(),
+    }).where(eq(discoveryJobs.id, id)).returning();
+    return updated;
   }
 
   // Staged Vendors

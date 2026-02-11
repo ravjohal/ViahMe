@@ -965,6 +965,13 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       if (!(await checkAdminAccess(req, storage))) {
         return res.status(401).json({ error: "Admin access required" });
       }
+      const job = await storage.getDiscoveryJob(req.params.id);
+      if (!job) {
+        return res.status(404).json({ error: "Discovery job not found" });
+      }
+      if (!job.retired) {
+        return res.status(400).json({ error: "Only retired jobs can be permanently deleted. Retire the job first." });
+      }
       const deleted = await storage.deleteDiscoveryJob(req.params.id);
       if (!deleted) {
         return res.status(404).json({ error: "Discovery job not found" });
@@ -973,6 +980,22 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     } catch (error) {
       console.error("Error deleting discovery job:", error);
       res.status(500).json({ error: "Failed to delete discovery job" });
+    }
+  });
+
+  router.post("/discovery-jobs/:id/retire", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+      const retired = await storage.retireDiscoveryJob(req.params.id);
+      if (!retired) {
+        return res.status(404).json({ error: "Discovery job not found" });
+      }
+      res.json(retired);
+    } catch (error) {
+      console.error("Error retiring discovery job:", error);
+      res.status(500).json({ error: "Failed to retire discovery job" });
     }
   });
 
