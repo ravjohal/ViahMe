@@ -40,8 +40,14 @@ router.get("/api/blog-posts", async (_req: Request, res: Response) => {
 router.get("/api/blog-posts/:slug", async (req: Request, res: Response) => {
   try {
     const post = await storage.getBlogPostBySlug(req.params.slug);
-    if (!post || post.status !== "published") {
+    if (!post) {
       return res.status(404).json({ error: "Post not found" });
+    }
+    if (post.status !== "published") {
+      const isAdmin = await checkAdminAccess(req);
+      if (!isAdmin) {
+        return res.status(404).json({ error: "Post not found" });
+      }
     }
     res.json(post);
   } catch (error) {

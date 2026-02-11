@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Calendar, Clock, ChevronLeft, ArrowRight } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Calendar, Clock, ChevronLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
 import { staticBlogPosts, type BlogPostDisplay } from "./blog";
 import ReactMarkdown from "react-markdown";
@@ -112,6 +113,15 @@ export default function BlogPost() {
               Back to Blog
             </Button>
           </Link>
+
+          {dbPost && dbPost.status === "draft" && (
+            <Alert className="mb-6" data-testid="alert-draft-preview">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                This post is a <strong>draft</strong> and is only visible to admins. Publish it from the Blog Management page to make it public.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <article>
             <header className="mb-8">
