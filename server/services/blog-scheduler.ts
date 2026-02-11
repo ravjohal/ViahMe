@@ -1,5 +1,5 @@
 import type { IStorage } from '../storage';
-import { generateBlogPost, type BlogGenerationContext } from '../ai/gemini';
+import { generateBlogPost, type BlogGenerationContext, type ExistingPostSummary } from '../ai/gemini';
 
 const PREFIX = '[BlogScheduler]';
 
@@ -134,7 +134,11 @@ export class BlogScheduler {
   async generatePost(autoPublish: boolean = false, topicQueue: string[] = []): Promise<string | null> {
     try {
       const existingPosts = await this.storage.getBlogPosts();
-      const existingTitles = existingPosts.map(p => p.title);
+      const existingPostSummaries: ExistingPostSummary[] = existingPosts.map(p => ({
+        title: p.title,
+        category: p.category,
+        excerpt: p.excerpt,
+      }));
 
       let topic: string | undefined;
       if (topicQueue.length > 0) {
@@ -146,8 +150,8 @@ export class BlogScheduler {
 
       const context = await this.buildContext();
 
-      console.log(`${PREFIX} ${ts()} Generating blog post${topic ? ` about "${topic}"` : ' (auto-topic)'} with platform context...`);
-      const generated = await generateBlogPost(topic, existingTitles, context);
+      console.log(`${PREFIX} ${ts()} Generating blog post${topic ? ` about "${topic}"` : ' (auto-topic)'} with platform context (${existingPostSummaries.length} existing posts)...`);
+      const generated = await generateBlogPost(topic, existingPostSummaries, context);
 
       const existingSlug = await this.storage.getBlogPostBySlug(generated.slug);
       if (existingSlug) {

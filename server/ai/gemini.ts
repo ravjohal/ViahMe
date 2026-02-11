@@ -2420,9 +2420,31 @@ Important guidelines:
 
 const BLOG_SYSTEM_PROMPT = buildBlogSystemPrompt();
 
-export async function generateBlogPost(topic?: string, existingTitles: string[] = [], context?: BlogGenerationContext): Promise<GeneratedBlogPost> {
+export interface ExistingPostSummary {
+  title: string;
+  category: string;
+  excerpt: string;
+}
+
+export async function generateBlogPost(topic?: string, existingPosts: ExistingPostSummary[] = [], context?: BlogGenerationContext): Promise<GeneratedBlogPost> {
   const fnName = 'generateBlogPost';
   
+  const existingPostsList = existingPosts.length > 0
+    ? existingPosts.map(p => `- [${p.category}] "${p.title}" — ${p.excerpt}`).join('\n')
+    : '(No existing posts yet)';
+
+  const categoryCoverage = existingPosts.length > 0
+    ? (() => {
+        const counts: Record<string, number> = {};
+        existingPosts.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
+        return Object.entries(counts).map(([cat, n]) => `${cat}: ${n} post(s)`).join(', ');
+      })()
+    : '';
+
+  const diversityNote = categoryCoverage
+    ? `\n\nCategory coverage so far: ${categoryCoverage}. Prioritize categories with fewer posts to maintain a well-rounded blog.`
+    : '';
+
   const jsonInstructions = `Return your response as a valid JSON object with these fields:
 - title: A compelling, SEO-optimized title (50-70 characters ideal)
 - slug: URL-friendly slug (lowercase, hyphens, no special characters)
@@ -2436,20 +2458,22 @@ Return ONLY valid JSON. No markdown code fences.`;
   const userPrompt = topic 
     ? `Write a blog post about: "${topic}"
 
-Do NOT duplicate any of these existing blog titles:
-${existingTitles.map(t => `- ${t}`).join('\n')}
+Do NOT duplicate or significantly overlap with any of these existing blog posts:
+${existingPostsList}
+${diversityNote}
 
 ${jsonInstructions}`
     : `Generate a fresh, unique blog post idea about South Asian wedding planning that would be valuable to couples currently planning their wedding.
 
-Choose a topic that is different from these existing posts:
-${existingTitles.map(t => `- ${t}`).join('\n')}
+Here are the existing blog posts — do NOT duplicate topics, overlap significantly, or repeat the same angle. Choose a genuinely different subject or a fresh perspective:
+${existingPostsList}
+${diversityNote}
 
-Pick something timely, practical, and SEO-friendly. Focus on topics that engaged couples actually search for.
+Pick something timely, practical, and SEO-friendly. Focus on topics that engaged couples actually search for. Avoid rehashing topics already covered above.
 
 ${jsonInstructions}`;
 
-  logAIRequest(fnName, { topic, existingTitleCount: existingTitles.length, hasContext: !!context });
+  logAIRequest(fnName, { topic, existingPostCount: existingPosts.length, hasContext: !!context });
 
   const systemPrompt = context ? buildBlogSystemPrompt(context) : BLOG_SYSTEM_PROMPT;
 
