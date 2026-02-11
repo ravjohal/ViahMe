@@ -2423,26 +2423,25 @@ const BLOG_SYSTEM_PROMPT = buildBlogSystemPrompt();
 export interface ExistingPostSummary {
   title: string;
   category: string;
-  excerpt: string;
 }
 
 export async function generateBlogPost(topic?: string, existingPosts: ExistingPostSummary[] = [], context?: BlogGenerationContext): Promise<GeneratedBlogPost> {
   const fnName = 'generateBlogPost';
   
   const existingPostsList = existingPosts.length > 0
-    ? existingPosts.map(p => `- [${p.category}] "${p.title}" — ${p.excerpt}`).join('\n')
+    ? existingPosts.map(p => `- [${p.category}] ${p.title}`).join('\n')
     : '(No existing posts yet)';
 
   const categoryCoverage = existingPosts.length > 0
     ? (() => {
         const counts: Record<string, number> = {};
         existingPosts.forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1; });
-        return Object.entries(counts).map(([cat, n]) => `${cat}: ${n} post(s)`).join(', ');
+        return Object.entries(counts).map(([cat, n]) => `${cat}: ${n}`).join(', ');
       })()
     : '';
 
   const diversityNote = categoryCoverage
-    ? `\n\nCategory coverage so far: ${categoryCoverage}. Prioritize categories with fewer posts to maintain a well-rounded blog.`
+    ? `\n\nCategory coverage so far: ${categoryCoverage}. Prioritize underrepresented categories.`
     : '';
 
   const jsonInstructions = `Return your response as a valid JSON object with these fields:

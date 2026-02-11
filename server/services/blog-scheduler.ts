@@ -137,7 +137,6 @@ export class BlogScheduler {
       const existingPostSummaries: ExistingPostSummary[] = existingPosts.map(p => ({
         title: p.title,
         category: p.category,
-        excerpt: p.excerpt,
       }));
 
       let topic: string | undefined;
