@@ -1,6 +1,23 @@
 import { Router, Request, Response } from "express";
-import { storage } from "../storage";
+import { storage, IStorage } from "../storage";
 import { BlogScheduler } from "../services/blog-scheduler";
+
+interface AuthRequest extends Request {
+  session: Request["session"] & { userId?: string };
+}
+
+async function checkAdminAccess(req: Request): Promise<boolean> {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey && adminKey === process.env.ADMIN_API_KEY) {
+    return true;
+  }
+  const authReq = req as AuthRequest;
+  if (authReq.session?.userId) {
+    const user = await storage.getUser(authReq.session.userId);
+    if (user?.isSiteAdmin) return true;
+  }
+  return false;
+}
 
 let blogSchedulerInstance: BlogScheduler | null = null;
 
@@ -34,7 +51,7 @@ router.get("/api/blog-posts/:slug", async (req: Request, res: Response) => {
 });
 
 router.get("/api/admin/blog-posts", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -48,7 +65,7 @@ router.get("/api/admin/blog-posts", async (req: Request, res: Response) => {
 });
 
 router.post("/api/admin/blog-posts", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -61,7 +78,7 @@ router.post("/api/admin/blog-posts", async (req: Request, res: Response) => {
 });
 
 router.put("/api/admin/blog-posts/:id", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -75,7 +92,7 @@ router.put("/api/admin/blog-posts/:id", async (req: Request, res: Response) => {
 });
 
 router.post("/api/admin/blog-posts/:id/publish", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -92,7 +109,7 @@ router.post("/api/admin/blog-posts/:id/publish", async (req: Request, res: Respo
 });
 
 router.post("/api/admin/blog-posts/:id/unpublish", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -109,7 +126,7 @@ router.post("/api/admin/blog-posts/:id/unpublish", async (req: Request, res: Res
 });
 
 router.delete("/api/admin/blog-posts/:id", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -123,7 +140,7 @@ router.delete("/api/admin/blog-posts/:id", async (req: Request, res: Response) =
 });
 
 router.post("/api/admin/blog-posts/generate", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -145,7 +162,7 @@ router.post("/api/admin/blog-posts/generate", async (req: Request, res: Response
 });
 
 router.get("/api/admin/blog-scheduler-config", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
@@ -167,7 +184,7 @@ router.get("/api/admin/blog-scheduler-config", async (req: Request, res: Respons
 });
 
 router.put("/api/admin/blog-scheduler-config", async (req: Request, res: Response) => {
-  if (!(req as any).user?.isSiteAdmin) {
+  if (!(await checkAdminAccess(req))) {
     return res.status(403).json({ error: "Forbidden" });
   }
   try {
