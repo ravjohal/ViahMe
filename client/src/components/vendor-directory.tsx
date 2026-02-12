@@ -256,8 +256,13 @@ export function VendorDirectory({
     const cityCounts: Record<string, Record<string, number>> = {};
 
     const allMetroNames = new Set(Object.keys(metroCityMap).map(n => n.toLowerCase()));
-    const allKnownCities = new Set<string>();
-    Object.values(metroCityMap).forEach(cities => cities.forEach(c => allKnownCities.add(c.toLowerCase())));
+
+    const cityToMetro: Record<string, string> = {};
+    for (const [metroName, cities] of Object.entries(metroCityMap)) {
+      for (const city of cities) {
+        cityToMetro[city.toLowerCase()] = metroName;
+      }
+    }
 
     const metroAliases = new Set([
       'bay area', 'sf bay area', 'sf', 'nyc', 'la', 'dfw', 'dmv', 'gta', 'socal', 'norcal',
@@ -279,6 +284,10 @@ export function VendorDirectory({
             && !metroAliases.has(cleanLower)
             && !allMetroNames.has(cleanLower)
             && cleanCity.length > 2) {
+          const cityBelongsToMetro = cityToMetro[cleanLower];
+          if (cityBelongsToMetro && cityBelongsToMetro !== metro) {
+            return;
+          }
           if (!cityCounts[metro]) cityCounts[metro] = {};
           cityCounts[metro][cleanCity] = (cityCounts[metro][cleanCity] || 0) + 1;
         }
