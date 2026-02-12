@@ -60,6 +60,21 @@ function getBudgetTier(totalBudget: string | null | undefined): string[] {
   return ['$$$$'];
 }
 
+const CITY_NORMALIZATION: Record<string, string> = {
+  'SF Bay Area': 'San Francisco Bay Area',
+  'Bay Area': 'San Francisco Bay Area',
+  'SF': 'San Francisco Bay Area',
+  'Los Angeles / San Francisco Bay Area': 'San Francisco Bay Area',
+  'LA': 'Los Angeles',
+  'NYC': 'New York City',
+  'GTA': 'Toronto',
+};
+
+function normalizeVendorCity(city: string | null | undefined): string | null | undefined {
+  if (!city) return city;
+  return CITY_NORMALIZATION[city] || city;
+}
+
 function detectMetroFromLocation(location: string, metroCityMap: Record<string, string[]>): string | null {
   if (!location) return null;
   const loc = location.toLowerCase();
@@ -75,6 +90,7 @@ function detectMetroFromLocation(location: string, metroCityMap: Record<string, 
 
 function extractCityFromLocation(location: string): string | null {
   if (!location) return null;
+  if (/^serving\s/i.test(location)) return null;
   const match = location.match(/^([^,]+)/);
   if (match) {
     const city = match[1].trim();
@@ -88,8 +104,9 @@ function extractCityFromLocation(location: string): string | null {
 }
 
 function getVendorMetro(vendor: { city?: string | null; location?: string | null }, metroCityMap: Record<string, string[]>): string {
-  if (vendor.city && metroCityMap[vendor.city]) return vendor.city;
-  return detectMetroFromLocation(vendor.location || '', metroCityMap) || vendor.city || 'Other';
+  const normalizedCity = normalizeVendorCity(vendor.city) as string | null | undefined;
+  if (normalizedCity && metroCityMap[normalizedCity]) return normalizedCity;
+  return detectMetroFromLocation(vendor.location || '', metroCityMap) || normalizedCity || 'Other';
 }
 
 // Calculate recommendation score for a vendor based on wedding preferences
