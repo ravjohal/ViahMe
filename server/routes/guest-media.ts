@@ -89,6 +89,21 @@ export async function createGuestMediaRouter(storage: IStorage): Promise<Router>
 export function createPublicGuestMediaRouter(storage: IStorage): Router {
   const router = Router();
 
+  router.get("/upload-settings/:weddingId", async (req, res) => {
+    try {
+      const wedding = await storage.getWedding(req.params.weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      res.json({
+        guestUploadsEnabled: wedding.guestUploadsEnabled ?? false,
+        guestUploadsRequireApproval: wedding.guestUploadsRequireApproval ?? true,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch upload settings" });
+    }
+  });
+
   router.post("/wedding/:slug/upload-url", async (req, res) => {
     try {
       const website = await storage.getWeddingWebsiteBySlug(req.params.slug);
@@ -96,7 +111,8 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding website not found" });
       }
 
-      if (!website.guestUploadsEnabled) {
+      const wedding = await storage.getWedding(website.weddingId);
+      if (!wedding?.guestUploadsEnabled) {
         return res.status(403).json({ error: "Guest uploads are not enabled for this wedding" });
       }
 
@@ -117,7 +133,8 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding website not found" });
       }
 
-      if (!website.guestUploadsEnabled) {
+      const wedding = await storage.getWedding(website.weddingId);
+      if (!wedding?.guestUploadsEnabled) {
         return res.status(403).json({ error: "Guest uploads are not enabled for this wedding" });
       }
 
@@ -130,7 +147,7 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(400).json({ error: "mediaType must be 'photo' or 'video'" });
       }
 
-      const status = website.guestUploadsRequireApproval ? 'pending' : 'approved';
+      const status = wedding.guestUploadsRequireApproval ? 'pending' : 'approved';
 
       const media = await storage.createGuestMedia({
         weddingId: website.weddingId,
@@ -164,8 +181,7 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding not found" });
       }
 
-      const website = await storage.getWeddingWebsiteByWeddingId(wedding.id);
-      if (!website || !website.guestUploadsEnabled) {
+      if (!wedding.guestUploadsEnabled) {
         return res.status(403).json({ error: "Guest uploads are not enabled for this wedding" });
       }
 
@@ -191,8 +207,7 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding not found" });
       }
 
-      const website = await storage.getWeddingWebsiteByWeddingId(wedding.id);
-      if (!website || !website.guestUploadsEnabled) {
+      if (!wedding.guestUploadsEnabled) {
         return res.status(403).json({ error: "Guest uploads are not enabled for this wedding" });
       }
 
@@ -214,7 +229,7 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         }
       }
 
-      const status = website.guestUploadsRequireApproval ? 'pending' : 'approved';
+      const status = wedding.guestUploadsRequireApproval ? 'pending' : 'approved';
 
       const media = await storage.createGuestMedia({
         weddingId: wedding.id,
@@ -243,7 +258,8 @@ export function createPublicGuestMediaRouter(storage: IStorage): Router {
         return res.status(404).json({ error: "Wedding website not found" });
       }
 
-      if (!website.guestUploadsEnabled) {
+      const wedding = await storage.getWedding(website.weddingId);
+      if (!wedding?.guestUploadsEnabled) {
         return res.json([]);
       }
 

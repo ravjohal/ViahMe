@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, CheckCircle, XCircle, Calendar, MapPin, Users, Mail, Sparkles, Clock, AlertTriangle, Shirt, Vote, Send, Lock, Eye, Camera } from "lucide-react";
 import { useState } from "react";
-import type { Household, Guest, Invitation, Event, RitualRoleAssignment, Poll, PollOption, PollVote, WeddingWebsite } from "@shared/schema";
+import type { Household, Guest, Invitation, Event, RitualRoleAssignment, Poll, PollOption, PollVote } from "@shared/schema";
 import { GuestMediaUpload } from "@/components/guest-media-upload";
 
 interface EnrichedRitualRole extends RitualRoleAssignment {
@@ -110,8 +110,8 @@ export default function RsvpPortal() {
     enabled: !!token,
   });
 
-  const { data: websiteConfig } = useQuery<WeddingWebsite>({
-    queryKey: [`/api/wedding-websites/wedding/${household?.weddingId}`],
+  const { data: uploadSettings } = useQuery<{ guestUploadsEnabled: boolean; guestUploadsRequireApproval: boolean }>({
+    queryKey: ['/api/public/guest-media/upload-settings', household?.weddingId],
     enabled: !!household?.weddingId,
   });
 
@@ -809,7 +809,7 @@ export default function RsvpPortal() {
         )}
 
         {/* Guest Photo Uploads */}
-        {websiteConfig?.guestUploadsEnabled && token && (
+        {uploadSettings?.guestUploadsEnabled && token && (
           <GuestMediaUpload
             uploadUrlEndpoint={`/api/public/guest-media/rsvp/${token}/upload-url`}
             mediaEndpoint={`/api/public/guest-media/rsvp/${token}/media`}

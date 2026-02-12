@@ -564,7 +564,7 @@ export default function GuestWebsite() {
         )}
 
         {/* Guest Photo Uploads */}
-        {website.guestUploadsEnabled && (
+        {wedding.guestUploadsEnabled && (
           <>
             <OrnamentalDivider />
             <GuestMediaUpload

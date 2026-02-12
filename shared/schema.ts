@@ -681,6 +681,8 @@ export const weddings = pgTable("weddings", {
   showBucketBudgets: boolean("show_bucket_budgets").default(true), // Budget by category (venue, catering, etc.)
   showCeremonyBudgets: boolean("show_ceremony_budgets").default(true), // Budget by ceremony/event
   status: text("status").notNull().default('planning'), // 'planning' | 'active' | 'completed'
+  guestUploadsEnabled: boolean("guest_uploads_enabled").default(false),
+  guestUploadsRequireApproval: boolean("guest_uploads_require_approval").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   traditionIdx: index("weddings_tradition_idx").on(table.traditionId),

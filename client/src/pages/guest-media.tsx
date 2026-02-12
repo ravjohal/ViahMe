@@ -7,8 +7,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, CheckCircle, XCircle, Loader2, Video, Clock, ImagePlus, Settings } from "lucide-react";
-import type { GuestMedia, WeddingWebsite, Wedding } from "@shared/schema";
+import { Camera, CheckCircle, XCircle, Loader2, Video, Clock, ImagePlus, Settings, Info } from "lucide-react";
+import type { GuestMedia, Wedding } from "@shared/schema";
 import { useState } from "react";
 
 export default function GuestMediaPage() {
@@ -19,11 +19,6 @@ export default function GuestMediaPage() {
     queryKey: ["/api/weddings"],
   });
   const wedding = weddings[0];
-
-  const { data: website, isLoading: loadingWebsite } = useQuery<WeddingWebsite>({
-    queryKey: [`/api/wedding-websites/wedding/${wedding?.id}`],
-    enabled: !!wedding?.id,
-  });
 
   const { data: counts } = useQuery<{ pending: number; approved: number; rejected: number; total: number }>({
     queryKey: ['/api/guest-media', wedding?.id, 'counts'],
@@ -59,13 +54,13 @@ export default function GuestMediaPage() {
 
   const toggleUploadsMutation = useMutation({
     mutationFn: async (enabled: boolean) => {
-      if (!website) throw new Error("No website");
-      return await apiRequest("PATCH", `/api/wedding-websites/${website.id}`, {
+      if (!wedding) throw new Error("No wedding");
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         guestUploadsEnabled: enabled,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
       toast({ title: "Settings updated" });
     },
     onError: () => {
@@ -75,13 +70,13 @@ export default function GuestMediaPage() {
 
   const toggleModerationMutation = useMutation({
     mutationFn: async (requireApproval: boolean) => {
-      if (!website) throw new Error("No website");
-      return await apiRequest("PATCH", `/api/wedding-websites/${website.id}`, {
+      if (!wedding) throw new Error("No wedding");
+      return await apiRequest("PATCH", `/api/weddings/${wedding.id}`, {
         guestUploadsRequireApproval: requireApproval,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wedding-websites/wedding/${wedding?.id}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weddings"] });
       toast({ title: "Settings updated" });
     },
     onError: () => {
@@ -96,7 +91,7 @@ export default function GuestMediaPage() {
     }
   };
 
-  if (loadingWeddings || loadingWebsite) {
+  if (loadingWeddings) {
     return (
       <div className="flex items-center justify-center p-12">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -112,6 +107,9 @@ export default function GuestMediaPage() {
       </div>
     );
   }
+
+  const uploadsEnabled = wedding.guestUploadsEnabled ?? false;
+  const requireApproval = wedding.guestUploadsRequireApproval ?? true;
 
   return (
     <div className="space-y-6 p-6 max-w-6xl mx-auto">
@@ -141,14 +139,14 @@ export default function GuestMediaPage() {
               </p>
             </div>
             <Switch
-              checked={website?.guestUploadsEnabled ?? false}
+              checked={uploadsEnabled}
               onCheckedChange={(checked) => toggleUploadsMutation.mutate(checked)}
               disabled={toggleUploadsMutation.isPending}
               data-testid="switch-uploads-enabled"
             />
           </div>
 
-          {website?.guestUploadsEnabled && (
+          {uploadsEnabled && (
             <div className="flex items-center justify-between gap-4 border-t pt-4">
               <div>
                 <Label className="text-base">Require Approval</Label>
@@ -157,17 +155,26 @@ export default function GuestMediaPage() {
                 </p>
               </div>
               <Switch
-                checked={website?.guestUploadsRequireApproval ?? true}
+                checked={requireApproval}
                 onCheckedChange={(checked) => toggleModerationMutation.mutate(checked)}
                 disabled={toggleModerationMutation.isPending}
                 data-testid="switch-require-approval"
               />
             </div>
           )}
+
+          {uploadsEnabled && (
+            <div className="flex items-start gap-2 border-t pt-4">
+              <Info className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+              <p className="text-sm text-muted-foreground">
+                These settings will automatically apply when you create or update your wedding website. Guests will be able to upload through your website and RSVP portal once the website is published.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {website?.guestUploadsEnabled && (
+      {uploadsEnabled && (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Card>
