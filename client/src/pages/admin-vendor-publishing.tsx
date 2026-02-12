@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { AppHeader } from "@/components/app-header";
@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
@@ -16,6 +17,12 @@ import {
   BarChart3,
   Filter,
   AlertTriangle,
+  Search,
+  Globe,
+  Mail,
+  Phone,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 
 interface PublishStats {
@@ -28,6 +35,39 @@ interface PublishStats {
   byCategory: Array<{ category: string; published: number; unpublished: number }>;
 }
 
+interface PreviewVendor {
+  id: string;
+  name: string;
+  category: string;
+  categories: string[];
+  city: string;
+  location: string;
+  email: string;
+  phone: string;
+  website: string;
+  approvalStatus: string;
+  isPublished: boolean;
+  claimed: boolean;
+}
+
+function buildPublishCriteria(approval: string, city: string, category: string) {
+  const criteria: Record<string, any> = {};
+  if (approval && approval !== "any") criteria.approvalStatus = approval;
+  if (city && city !== "all") criteria.city = city;
+  if (category && category !== "all") criteria.category = category;
+  return criteria;
+}
+
+function buildUnpublishCriteria(city: string, category: string, reason: string) {
+  const criteria: Record<string, any> = {};
+  if (city && city !== "all") criteria.city = city;
+  if (category && category !== "all") criteria.category = category;
+  if (reason === "noEmail") criteria.noEmail = true;
+  if (reason === "noWebsite") criteria.noWebsite = true;
+  if (reason === "noPhone") criteria.noPhone = true;
+  return criteria;
+}
+
 export default function AdminVendorPublishing() {
   const { toast } = useToast();
   const [publishCity, setPublishCity] = useState<string>("");
@@ -37,13 +77,40 @@ export default function AdminVendorPublishing() {
   const [unpublishCategory, setUnpublishCategory] = useState<string>("");
   const [unpublishReason, setUnpublishReason] = useState<string>("");
 
+  const [previewVendors, setPreviewVendors] = useState<PreviewVendor[]>([]);
+  const [previewMode, setPreviewMode] = useState<"publish" | "unpublish" | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const { data: stats, isLoading } = useQuery<PublishStats>({
     queryKey: ["/api/admin/vendors/publish-stats"],
   });
 
+  const loadPreview = useCallback(async (mode: "publish" | "unpublish") => {
+    setPreviewLoading(true);
+    setPreviewMode(mode);
+    setSelectedIds(new Set());
+    try {
+      const criteria = mode === "publish"
+        ? buildPublishCriteria(publishApproval, publishCity, publishCategory)
+        : buildUnpublishCriteria(unpublishCity, unpublishCategory, unpublishReason);
+
+      const res = await apiRequest("POST", "/api/admin/vendors/preview-filter", { criteria, mode });
+      const data = await res.json();
+      setPreviewVendors(data.vendors || []);
+      const allIds = new Set((data.vendors || []).map((v: PreviewVendor) => v.id));
+      setSelectedIds(allIds);
+    } catch {
+      toast({ title: "Error", description: "Failed to load preview", variant: "destructive" });
+      setPreviewVendors([]);
+    } finally {
+      setPreviewLoading(false);
+    }
+  }, [publishApproval, publishCity, publishCategory, unpublishCity, unpublishCategory, unpublishReason, toast]);
+
   const bulkPublishMutation = useMutation({
-    mutationFn: async (criteria: Record<string, any>) => {
-      const res = await apiRequest("POST", "/api/admin/vendors/bulk-publish", { criteria });
+    mutationFn: async (ids: string[]) => {
+      const res = await apiRequest("POST", "/api/admin/vendors/bulk-publish", { ids });
       return res.json();
     },
     onSuccess: (data) => {
@@ -53,6 +120,9 @@ export default function AdminVendorPublishing() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/publish-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      setPreviewVendors([]);
+      setPreviewMode(null);
+      setSelectedIds(new Set());
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -60,8 +130,8 @@ export default function AdminVendorPublishing() {
   });
 
   const bulkUnpublishMutation = useMutation({
-    mutationFn: async (criteria: Record<string, any>) => {
-      const res = await apiRequest("POST", "/api/admin/vendors/bulk-unpublish", { criteria });
+    mutationFn: async (ids: string[]) => {
+      const res = await apiRequest("POST", "/api/admin/vendors/bulk-unpublish", { ids });
       return res.json();
     },
     onSuccess: (data) => {
@@ -71,28 +141,43 @@ export default function AdminVendorPublishing() {
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/publish-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/vendors"] });
+      setPreviewVendors([]);
+      setPreviewMode(null);
+      setSelectedIds(new Set());
     },
     onError: (err: any) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
 
-  const handleBulkPublish = () => {
-    const criteria: Record<string, any> = {};
-    if (publishApproval && publishApproval !== "any") criteria.approvalStatus = publishApproval;
-    if (publishCity && publishCity !== "all") criteria.city = publishCity;
-    if (publishCategory && publishCategory !== "all") criteria.category = publishCategory;
-    bulkPublishMutation.mutate(criteria);
+  const handleExecute = () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) {
+      toast({ title: "No vendors selected", description: "Select at least one vendor to proceed.", variant: "destructive" });
+      return;
+    }
+    if (previewMode === "publish") {
+      bulkPublishMutation.mutate(ids);
+    } else {
+      bulkUnpublishMutation.mutate(ids);
+    }
   };
 
-  const handleBulkUnpublish = () => {
-    const criteria: Record<string, any> = {};
-    if (unpublishCity && unpublishCity !== "all") criteria.city = unpublishCity;
-    if (unpublishCategory && unpublishCategory !== "all") criteria.category = unpublishCategory;
-    if (unpublishReason === "noEmail") criteria.noEmail = true;
-    if (unpublishReason === "noWebsite") criteria.noWebsite = true;
-    if (unpublishReason === "noPhone") criteria.noPhone = true;
-    bulkUnpublishMutation.mutate(criteria);
+  const toggleVendor = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === previewVendors.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(previewVendors.map(v => v.id)));
+    }
   };
 
   if (isLoading) {
@@ -108,6 +193,7 @@ export default function AdminVendorPublishing() {
 
   const cities = stats?.byCity || [];
   const categories = stats?.byCategory || [];
+  const isMutating = bulkPublishMutation.isPending || bulkUnpublishMutation.isPending;
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,6 +249,25 @@ export default function AdminVendorPublishing() {
           </Card>
         </div>
 
+        {(stats?.approvedUnpublished || 0) > 0 && (
+          <Card className="mb-8 border-amber-200 dark:border-amber-800">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-medium">
+                    {stats?.approvedUnpublished} approved vendor(s) are not published
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    These vendors have been approved but are not visible to couples. Use the
+                    Bulk Publish filters below with "Approved" status to preview and publish them.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-6 lg:grid-cols-2 mb-8">
           <Card>
             <CardHeader>
@@ -173,7 +278,7 @@ export default function AdminVendorPublishing() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Make matching unpublished vendors visible to couples.
+                Find unpublished vendors matching your criteria and publish them.
               </p>
 
               <div className="space-y-3">
@@ -227,17 +332,18 @@ export default function AdminVendorPublishing() {
               </div>
 
               <Button
-                onClick={handleBulkPublish}
-                disabled={bulkPublishMutation.isPending}
+                onClick={() => loadPreview("publish")}
+                disabled={previewLoading}
+                variant="outline"
                 className="w-full"
-                data-testid="button-bulk-publish"
+                data-testid="button-preview-publish"
               >
-                {bulkPublishMutation.isPending ? (
+                {previewLoading && previewMode === "publish" ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <Eye className="w-4 h-4 mr-2" />
+                  <Search className="w-4 h-4 mr-2" />
                 )}
-                Publish Matching Vendors
+                Preview Matching Vendors
               </Button>
             </CardContent>
           </Card>
@@ -251,7 +357,7 @@ export default function AdminVendorPublishing() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Hide matching published vendors from couples.
+                Find published vendors matching your criteria and hide them.
               </p>
 
               <div className="space-y-3">
@@ -306,38 +412,141 @@ export default function AdminVendorPublishing() {
               </div>
 
               <Button
-                onClick={handleBulkUnpublish}
-                disabled={bulkUnpublishMutation.isPending}
+                onClick={() => loadPreview("unpublish")}
+                disabled={previewLoading}
                 variant="outline"
                 className="w-full"
-                data-testid="button-bulk-unpublish"
+                data-testid="button-preview-unpublish"
               >
-                {bulkUnpublishMutation.isPending ? (
+                {previewLoading && previewMode === "unpublish" ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <EyeOff className="w-4 h-4 mr-2" />
+                  <Search className="w-4 h-4 mr-2" />
                 )}
-                Unpublish Matching Vendors
+                Preview Matching Vendors
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {(stats?.approvedUnpublished || 0) > 0 && (
-          <Card className="mb-8 border-amber-200 dark:border-amber-800">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-medium">
-                    {stats?.approvedUnpublished} approved vendor(s) are not published
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    These vendors have been approved but are not visible to couples. You can use the
-                    Bulk Publish tool above with "Approved" status to publish them all at once.
-                  </p>
+        {previewMode && (
+          <Card className="mb-8">
+            <CardHeader>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <CardTitle className="flex items-center gap-2">
+                  {previewMode === "publish" ? (
+                    <Eye className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <EyeOff className="w-5 h-5 text-amber-600" />
+                  )}
+                  {previewMode === "publish" ? "Vendors to Publish" : "Vendors to Unpublish"}
+                  <Badge variant="secondary">{previewVendors.length} found</Badge>
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  {previewVendors.length > 0 && (
+                    <>
+                      <Badge variant="outline">{selectedIds.size} selected</Badge>
+                      <Button
+                        onClick={handleExecute}
+                        disabled={isMutating || selectedIds.size === 0}
+                        size="sm"
+                        data-testid="button-execute-action"
+                      >
+                        {isMutating ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : previewMode === "publish" ? (
+                          <Eye className="w-4 h-4 mr-2" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 mr-2" />
+                        )}
+                        {previewMode === "publish" ? `Publish ${selectedIds.size}` : `Unpublish ${selectedIds.size}`}
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    onClick={() => { setPreviewMode(null); setPreviewVendors([]); setSelectedIds(new Set()); }}
+                    variant="ghost"
+                    size="sm"
+                    data-testid="button-close-preview"
+                  >
+                    Close
+                  </Button>
                 </div>
               </div>
+            </CardHeader>
+            <CardContent>
+              {previewLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : previewVendors.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">
+                  No vendors match the selected criteria.
+                </p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-3 pb-3 border-b">
+                    <Checkbox
+                      checked={selectedIds.size === previewVendors.length}
+                      onCheckedChange={toggleAll}
+                      data-testid="checkbox-select-all"
+                    />
+                    <span className="text-sm font-medium">Select All</span>
+                  </div>
+                  <div className="max-h-[500px] overflow-y-auto space-y-1">
+                    {previewVendors.map((vendor) => (
+                      <div
+                        key={vendor.id}
+                        className="flex items-center gap-3 py-2 px-2 rounded-md hover-elevate"
+                        data-testid={`row-vendor-${vendor.id}`}
+                      >
+                        <Checkbox
+                          checked={selectedIds.has(vendor.id)}
+                          onCheckedChange={() => toggleVendor(vendor.id)}
+                          data-testid={`checkbox-vendor-${vendor.id}`}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm truncate">{vendor.name}</span>
+                            <Badge variant="secondary" className="text-xs">{vendor.category}</Badge>
+                            {vendor.claimed && (
+                              <Badge variant="outline" className="text-xs">Claimed</Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            <span>{vendor.city || vendor.location || "No location"}</span>
+                            <span className="flex items-center gap-0.5">
+                              <Mail className="w-3 h-3" />
+                              {vendor.email === "Yes" ? (
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <XCircle className="w-3 h-3 text-muted-foreground/50" />
+                              )}
+                            </span>
+                            <span className="flex items-center gap-0.5">
+                              <Phone className="w-3 h-3" />
+                              {vendor.phone === "Yes" ? (
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <XCircle className="w-3 h-3 text-muted-foreground/50" />
+                              )}
+                            </span>
+                            <span className="flex items-center gap-0.5">
+                              <Globe className="w-3 h-3" />
+                              {vendor.website === "Yes" ? (
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              ) : (
+                                <XCircle className="w-3 h-3 text-muted-foreground/50" />
+                              )}
+                            </span>
+                            <span>Status: {vendor.approvalStatus}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         )}

@@ -1438,6 +1438,65 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.post("/vendors/preview-filter", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { criteria, mode } = req.body;
+      if (!criteria || !mode || !["publish", "unpublish"].includes(mode)) {
+        return res.status(400).json({ error: "Provide 'criteria' and 'mode' ('publish' or 'unpublish')" });
+      }
+
+      const allVendors = await storage.getAllVendors();
+      let matched: typeof allVendors = [];
+
+      if (mode === "publish") {
+        matched = allVendors.filter(v => {
+          if (v.isPublished) return false;
+          if (criteria.approvalStatus && v.approvalStatus !== criteria.approvalStatus) return false;
+          if (criteria.city && v.city !== criteria.city) return false;
+          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
+          if (criteria.websiteVerified && !v.website) return false;
+          return true;
+        });
+      } else {
+        matched = allVendors.filter(v => {
+          if (!v.isPublished) return false;
+          if (criteria.city && v.city !== criteria.city) return false;
+          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
+          if (criteria.noEmail && !v.email) return true;
+          if (criteria.noWebsite && !v.website) return true;
+          if (criteria.noPhone && !v.phone) return true;
+          return !criteria.noEmail && !criteria.noWebsite && !criteria.noPhone;
+        });
+      }
+
+      const preview = matched.map(v => ({
+        id: v.id,
+        name: v.name,
+        category: v.category,
+        categories: v.categories,
+        city: v.city,
+        location: v.location,
+        email: v.email ? "Yes" : "No",
+        phone: v.phone ? "Yes" : "No",
+        website: v.website ? "Yes" : "No",
+        approvalStatus: v.approvalStatus,
+        isPublished: v.isPublished,
+        claimed: v.claimed,
+      }));
+
+      res.json({ total: preview.length, vendors: preview });
+    } catch (error) {
+      console.error("Error previewing vendor filter:", error);
+      res.status(500).json({ error: "Failed to preview filter" });
+    }
+  });
+
   router.post("/vendors/bulk-publish", async (req: Request, res: Response) => {
     try {
       if (!(await checkAdminAccess(req, storage))) {
