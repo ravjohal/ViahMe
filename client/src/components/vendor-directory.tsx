@@ -289,9 +289,31 @@ export function VendorDirectory({
       'national', 'international', 'usa', 'us', 'worldwide', 'united states',
     ]);
 
+    const knownCityNames = new Set<string>();
+    for (const cities of Object.values(metroCityMap)) {
+      for (const city of cities) {
+        knownCityNames.add(city);
+      }
+    }
+
     vendors.forEach(vendor => {
       const metro = getVendorMetro(vendor, metroCityMap);
       metroCounts[metro] = (metroCounts[metro] || 0) + 1;
+
+      const loc = (vendor.location || '').toLowerCase();
+      if (!loc) return;
+
+      for (const cityName of knownCityNames) {
+        const cityLower = cityName.toLowerCase();
+        if (!loc.includes(cityLower)) continue;
+        if (metroAliases.has(cityLower) || allMetroNames.has(cityLower)) continue;
+        if (cityName === metro) continue;
+        const cityBelongsToMetro = cityToMetro[cityLower];
+        if (cityBelongsToMetro && cityBelongsToMetro !== metro) continue;
+        if (!cityCounts[metro]) cityCounts[metro] = {};
+        cityCounts[metro][cityName] = (cityCounts[metro][cityName] || 0) + 1;
+        break;
+      }
 
       const extractedCity = extractCityFromLocation(vendor.location || '');
       if (extractedCity) {
@@ -300,6 +322,7 @@ export function VendorDirectory({
         if (cleanCity && cleanCity !== metro && !/^\d/.test(cleanCity)
             && !metroAliases.has(cleanLower)
             && !allMetroNames.has(cleanLower)
+            && !knownCityNames.has(cleanCity)
             && cleanCity.length > 2) {
           const cityBelongsToMetro = cityToMetro[cleanLower];
           if (cityBelongsToMetro && cityBelongsToMetro !== metro) {
