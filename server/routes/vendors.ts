@@ -13,13 +13,8 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
     try {
       const { category, location, includeUnpublished, includeAllApproval, page, pageSize } = req.query;
 
-      // Check if user is authenticated
-      const sessionToken = req.cookies?.session;
-      let isAuthenticated = false;
-      if (sessionToken) {
-        const session = await storage.getSession(sessionToken);
-        isAuthenticated = !!session;
-      }
+      // Check if user is authenticated via express-session
+      const isAuthenticated = !!(req.session as any)?.userId;
 
       let vendors = await storage.getAllVendors();
 
