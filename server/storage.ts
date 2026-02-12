@@ -275,6 +275,7 @@ import {
   type InsertVendorCategory,
   DEFAULT_VENDOR_CATEGORIES,
   DEFAULT_METRO_AREAS,
+  DEFAULT_METRO_CITIES,
   pricingRegions,
   type PricingRegion,
   type InsertPricingRegion,
@@ -1322,6 +1323,7 @@ export interface IStorage {
   updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined>;
   deleteMetroArea(id: string): Promise<boolean>;
   seedMetroAreas(): Promise<MetroArea[]>;
+  seedMetroCities(): Promise<number>;
   getMetroCityByName(cityName: string): Promise<{ metroAreaId: string; cityName: string; metroValue: string } | undefined>;
   createMetroCity(data: { metroAreaId: string; cityName: string }): Promise<MetroCity>;
 
@@ -5058,6 +5060,7 @@ export class MemStorage implements IStorage {
   async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async deleteMetroArea(id: string): Promise<boolean> { return false; }
   async seedMetroAreas(): Promise<MetroArea[]> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
+  async seedMetroCities(): Promise<number> { throw new Error('MemStorage does not support Metro Cities. Use DBStorage.'); }
   async getMetroCityByName(cityName: string): Promise<{ metroAreaId: string; cityName: string; metroValue: string } | undefined> { return undefined; }
   async createMetroCity(data: { metroAreaId: string; cityName: string }): Promise<MetroCity> { throw new Error('MemStorage does not support Metro Cities. Use DBStorage.'); }
 
@@ -12358,6 +12361,26 @@ export class DBStorage implements IStorage {
       seeded.push(area);
     }
     return seeded;
+  }
+
+  async seedMetroCities(): Promise<number> {
+    const existingCities = await this.db.select().from(schema.metroCities);
+    if (existingCities.length > 0) return existingCities.length;
+
+    const allAreas = await this.getAllMetroAreas();
+    const slugToId: Record<string, string> = {};
+    for (const area of allAreas) {
+      slugToId[area.slug] = area.id;
+    }
+
+    let seededCount = 0;
+    for (const cityData of DEFAULT_METRO_CITIES) {
+      const metroAreaId = slugToId[cityData.metroSlug];
+      if (!metroAreaId) continue;
+      await this.createMetroCity({ metroAreaId, cityName: cityData.cityName });
+      seededCount++;
+    }
+    return seededCount;
   }
 
   // Pricing Regions (database-driven city pricing multipliers)

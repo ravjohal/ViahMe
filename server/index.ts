@@ -128,6 +128,16 @@ app.use(express.static(path.join(process.cwd(), "public")));
     log(`Metro areas auto-seed skipped: ${(e as Error).message}`);
   }
 
+  // Auto-seed metro cities if table is empty
+  try {
+    const seededCities = await storage.seedMetroCities();
+    if (seededCities > 0) {
+      log(`Auto-seeded ${seededCities} metro cities`);
+    }
+  } catch (e) {
+    log(`Metro cities auto-seed skipped: ${(e as Error).message}`);
+  }
+
   // Load metro-city mapping from database into the shared utility
   try {
     const { loadMetroCityMapping } = await import("./utils/metro-detection");
