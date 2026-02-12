@@ -255,6 +255,18 @@ export function VendorDirectory({
     const metroCounts: Record<string, number> = {};
     const cityCounts: Record<string, Record<string, number>> = {};
 
+    const allMetroNames = new Set(Object.keys(metroCityMap).map(n => n.toLowerCase()));
+    const allKnownCities = new Set<string>();
+    Object.values(metroCityMap).forEach(cities => cities.forEach(c => allKnownCities.add(c.toLowerCase())));
+
+    const metroAliases = new Set([
+      'bay area', 'sf bay area', 'sf', 'nyc', 'la', 'dfw', 'dmv', 'gta', 'socal', 'norcal',
+      'ca', 'california', 'texas', 'florida', 'new york', 'illinois', 'georgia', 'washington',
+      'british columbia', 'ontario', 'northern california', 'southern california',
+      'central valley', 'orange county', 'lower mainland', 'long island',
+      'national', 'international', 'usa', 'us', 'worldwide', 'united states',
+    ]);
+
     vendors.forEach(vendor => {
       const metro = getVendorMetro(vendor, metroCityMap);
       metroCounts[metro] = (metroCounts[metro] || 0) + 1;
@@ -262,7 +274,11 @@ export function VendorDirectory({
       const extractedCity = extractCityFromLocation(vendor.location || '');
       if (extractedCity) {
         const cleanCity = extractedCity.replace(/\s+(BC|ON|CA|NY|NJ|IL|WA|TX|MA|GA|PA|MI|AZ|FL|DC)$/i, '').trim();
-        if (cleanCity && cleanCity !== metro && !/^\d/.test(cleanCity)) {
+        const cleanLower = cleanCity.toLowerCase();
+        if (cleanCity && cleanCity !== metro && !/^\d/.test(cleanCity)
+            && !metroAliases.has(cleanLower)
+            && !allMetroNames.has(cleanLower)
+            && cleanCity.length > 2) {
           if (!cityCounts[metro]) cityCounts[metro] = {};
           cityCounts[metro][cleanCity] = (cityCounts[metro][cleanCity] || 0) + 1;
         }
@@ -286,7 +302,7 @@ export function VendorDirectory({
           .sort((a, b) => b[1] - a[1])
           .slice(0, 15);
         for (const [city, cityCount] of sortedCities) {
-          items.push({ value: `city:${metro}:${city}`, label: `  ${city} (${cityCount})`, type: 'city', metro, count: cityCount });
+          items.push({ value: `city:${metro}:${city}`, label: city, type: 'city', metro, count: cityCount });
         }
       }
     }
@@ -522,10 +538,15 @@ export function VendorDirectory({
                   <SelectItem
                     key={item.value}
                     value={item.value}
-                    className={item.type === 'city' ? 'pl-8 text-sm text-muted-foreground' : item.type === 'metro' ? 'font-semibold' : ''}
+                    className={item.type === 'city' ? 'pl-10 text-sm' : item.type === 'metro' ? 'font-semibold' : ''}
                     data-testid={`select-area-${item.value}`}
                   >
-                    {item.label}
+                    {item.type === 'city' ? (
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <span className="text-xs">&#x2514;</span>
+                        {item.label} ({item.count})
+                      </span>
+                    ) : item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
