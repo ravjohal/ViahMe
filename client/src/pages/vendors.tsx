@@ -52,7 +52,7 @@ export default function Vendors() {
   const vendorQueryKey = "/api/vendors";
     
   const { data: vendorsData, isLoading: vendorsLoading } = useQuery<
-    Vendor[] | { data: Vendor[]; page: number; pageSize: number; total: number; totalPages: number }
+    Vendor[] | { data: Vendor[]; page: number; pageSize: number; total: number; totalPages: number; totalInSystem?: number; limitedPreview?: boolean }
   >({
     queryKey: [vendorQueryKey],
   });
@@ -60,22 +60,30 @@ export default function Vendors() {
   // Normalize vendor data for both paginated and non-paginated responses
   const vendors: Vendor[] = useMemo(() => {
     if (!vendorsData) return [];
-    // Check if it's a paginated response
     if ('data' in vendorsData && Array.isArray(vendorsData.data)) {
       return vendorsData.data;
     }
-    // Non-paginated response (array)
     return vendorsData as Vendor[];
+  }, [vendorsData]);
+
+  const totalInSystem = useMemo(() => {
+    if (!vendorsData || !('totalInSystem' in vendorsData)) return null;
+    return (vendorsData as any).totalInSystem as number;
+  }, [vendorsData]);
+
+  const isLimitedPreview = useMemo(() => {
+    if (!vendorsData || !('limitedPreview' in vendorsData)) return false;
+    return (vendorsData as any).limitedPreview as boolean;
   }, [vendorsData]);
 
   // Pagination info for non-logged-in users
   const vendorPagination = useMemo(() => {
-    if (!vendorsData || !('data' in vendorsData)) return null;
+    if (!vendorsData || !('data' in vendorsData) || !('page' in vendorsData)) return null;
     return {
-      page: vendorsData.page,
-      pageSize: vendorsData.pageSize,
-      total: vendorsData.total,
-      totalPages: vendorsData.totalPages,
+      page: (vendorsData as any).page,
+      pageSize: (vendorsData as any).pageSize,
+      total: (vendorsData as any).total,
+      totalPages: (vendorsData as any).totalPages,
     };
   }, [vendorsData]);
 
@@ -717,6 +725,7 @@ export default function Vendors() {
             events={events}
             serverPagination={vendorPagination}
             onServerPageChange={setVendorPage}
+            totalInSystem={totalInSystem}
           />
         )}
       </main>

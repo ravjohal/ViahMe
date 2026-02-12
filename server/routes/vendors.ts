@@ -41,6 +41,8 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         );
       }
 
+      const totalInSystem = vendors.length;
+
       // For unauthenticated users, limit to 3 vendors per metro area
       if (!isAuthenticated) {
         const VENDORS_PER_METRO_UNAUTHENTICATED = 3;
@@ -76,11 +78,16 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
           total,
           totalPages,
           limitedPreview: !isAuthenticated,
+          totalInSystem: !isAuthenticated ? totalInSystem : undefined,
         });
       }
 
       // Default: return all vendors (backward compatible)
-      res.json(vendors);
+      if (!isAuthenticated) {
+        res.json({ data: vendors, totalInSystem, limitedPreview: true });
+      } else {
+        res.json(vendors);
+      }
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch vendors" });
     }

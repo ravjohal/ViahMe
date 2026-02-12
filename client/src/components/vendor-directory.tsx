@@ -10,7 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin, Plus, Globe, Mail, Phone, CheckCircle2 } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, GitCompare, X, Info, MapPin, Plus, Globe, Mail, Phone, CheckCircle2, Lock, Users } from "lucide-react";
+import { Link } from "wouter";
 import { SiInstagram } from "react-icons/si";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -45,6 +46,7 @@ interface VendorDirectoryProps {
   onViewBookings?: (vendorId: string) => void;
   serverPagination?: ServerPaginationInfo | null;
   onServerPageChange?: (page: number) => void;
+  totalInSystem?: number | null;
 }
 
 // Map budget amounts to price range tiers
@@ -223,6 +225,7 @@ export function VendorDirectory({
   onViewBookings,
   serverPagination,
   onServerPageChange,
+  totalInSystem,
 }: VendorDirectoryProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -379,6 +382,32 @@ export function VendorDirectory({
           </Button>
         )}
       </div>
+
+      {!isLoggedIn && totalInSystem && totalInSystem > vendors.length && (
+        <Card className="p-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-800" data-testid="card-vendor-preview-banner">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/50">
+                <Users className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  You're previewing a sample. We have <span className="font-bold text-orange-600 dark:text-orange-400">{totalInSystem.toLocaleString()}+</span> verified vendors across all metro areas.
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sign up free to browse the full directory, save favorites, and request quotes.
+                </p>
+              </div>
+            </div>
+            <Link href="/onboarding">
+              <Button size="sm" className="whitespace-nowrap bg-orange-600 text-white border-orange-600" data-testid="button-signup-vendor-banner">
+                <Lock className="w-3.5 h-3.5 mr-1.5" />
+                Unlock All Vendors
+              </Button>
+            </Link>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-6">
         <div className="space-y-4">
