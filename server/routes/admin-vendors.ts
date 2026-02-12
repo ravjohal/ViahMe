@@ -1207,6 +1207,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         claimed: false,
         isGhostProfile: true,
         verified: false,
+        isPublished: true,
+        approvalStatus: 'approved',
       };
 
       const vendor = await storage.createVendor(newVendor);
@@ -1287,6 +1289,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             claimed: false,
             isGhostProfile: true,
             verified: false,
+            isPublished: true,
+            approvalStatus: 'approved',
           };
 
           const vendor = await storage.createVendor(newVendor);
@@ -1431,6 +1435,139 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     } catch (error) {
       console.error("Error fixing vendor data:", error);
       res.status(500).json({ error: "Failed to fix vendor data" });
+    }
+  });
+
+  router.post("/vendors/bulk-publish", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { ids, criteria } = req.body;
+
+      const allVendors = await storage.getAllVendors();
+      let targetVendors: typeof allVendors = [];
+
+      if (Array.isArray(ids) && ids.length > 0) {
+        const idSet = new Set(ids);
+        targetVendors = allVendors.filter(v => idSet.has(v.id) && !v.isPublished);
+      } else if (criteria) {
+        targetVendors = allVendors.filter(v => {
+          if (v.isPublished) return false;
+          if (criteria.approvalStatus && v.approvalStatus !== criteria.approvalStatus) return false;
+          if (criteria.city && v.city !== criteria.city) return false;
+          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
+          if (criteria.websiteVerified && !v.website) return false;
+          return true;
+        });
+      } else {
+        return res.status(400).json({ error: "Provide 'ids' array or 'criteria' object" });
+      }
+
+      let publishedCount = 0;
+      for (const vendor of targetVendors) {
+        await storage.updateVendor(vendor.id, { isPublished: true } as any);
+        publishedCount++;
+      }
+
+      res.json({
+        published: publishedCount,
+        total: targetVendors.length,
+      });
+    } catch (error) {
+      console.error("Error bulk publishing vendors:", error);
+      res.status(500).json({ error: "Failed to bulk publish vendors" });
+    }
+  });
+
+  router.post("/vendors/bulk-unpublish", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const { ids, criteria } = req.body;
+
+      const allVendors = await storage.getAllVendors();
+      let targetVendors: typeof allVendors = [];
+
+      if (Array.isArray(ids) && ids.length > 0) {
+        const idSet = new Set(ids);
+        targetVendors = allVendors.filter(v => idSet.has(v.id) && v.isPublished);
+      } else if (criteria) {
+        targetVendors = allVendors.filter(v => {
+          if (!v.isPublished) return false;
+          if (criteria.city && v.city !== criteria.city) return false;
+          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
+          if (criteria.noEmail && !v.email) return true;
+          if (criteria.noWebsite && !v.website) return true;
+          if (criteria.noPhone && !v.phone) return true;
+          return !criteria.noEmail && !criteria.noWebsite && !criteria.noPhone;
+        });
+      } else {
+        return res.status(400).json({ error: "Provide 'ids' array or 'criteria' object" });
+      }
+
+      let unpublishedCount = 0;
+      for (const vendor of targetVendors) {
+        await storage.updateVendor(vendor.id, { isPublished: false } as any);
+        unpublishedCount++;
+      }
+
+      res.json({
+        unpublished: unpublishedCount,
+        total: targetVendors.length,
+      });
+    } catch (error) {
+      console.error("Error bulk unpublishing vendors:", error);
+      res.status(500).json({ error: "Failed to bulk unpublish vendors" });
+    }
+  });
+
+  router.get("/vendors/publish-stats", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const allVendors = await storage.getAllVendors();
+      const published = allVendors.filter(v => v.isPublished);
+      const unpublished = allVendors.filter(v => !v.isPublished);
+      const approved = allVendors.filter(v => v.approvalStatus === 'approved');
+      const approvedUnpublished = approved.filter(v => !v.isPublished);
+
+      const byCity: Record<string, { published: number; unpublished: number }> = {};
+      const byCategory: Record<string, { published: number; unpublished: number }> = {};
+
+      for (const v of allVendors) {
+        const city = v.city || 'Unknown';
+        if (!byCity[city]) byCity[city] = { published: 0, unpublished: 0 };
+        byCity[city][v.isPublished ? 'published' : 'unpublished']++;
+
+        const cat = v.category || 'Unknown';
+        if (!byCategory[cat]) byCategory[cat] = { published: 0, unpublished: 0 };
+        byCategory[cat][v.isPublished ? 'published' : 'unpublished']++;
+      }
+
+      res.json({
+        total: allVendors.length,
+        published: published.length,
+        unpublished: unpublished.length,
+        approved: approved.length,
+        approvedUnpublished: approvedUnpublished.length,
+        byCity: Object.entries(byCity)
+          .map(([city, counts]) => ({ city, ...counts }))
+          .sort((a, b) => (b.published + b.unpublished) - (a.published + a.unpublished)),
+        byCategory: Object.entries(byCategory)
+          .map(([category, counts]) => ({ category, ...counts }))
+          .sort((a, b) => (b.published + b.unpublished) - (a.published + a.unpublished)),
+      });
+    } catch (error) {
+      console.error("Error fetching publish stats:", error);
+      res.status(500).json({ error: "Failed to fetch publish stats" });
     }
   });
 

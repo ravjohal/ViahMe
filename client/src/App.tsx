@@ -61,6 +61,7 @@ import AdminBudgetBucketCategories from "@/pages/admin-budget-bucket-categories"
 import AdminFeedback from "@/pages/admin-feedback";
 import AdminUsers from "@/pages/admin-users";
 import AdminVendorDiscovery from "@/pages/admin-vendor-discovery";
+import AdminVendorPublishing from "@/pages/admin-vendor-publishing";
 import AdminBlog from "@/pages/admin-blog";
 import AiPlanner from "@/pages/ai-planner";
 import { FeedbackButton } from "@/components/feedback-button";
@@ -351,6 +352,11 @@ function Router() {
       <Route path="/admin/users">
         <AdminRoute>
           <AdminUsers />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/vendor-publishing">
+        <AdminRoute>
+          <AdminVendorPublishing />
         </AdminRoute>
       </Route>
       <Route path="/admin/vendor-discovery">

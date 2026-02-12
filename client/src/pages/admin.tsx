@@ -15,6 +15,7 @@ import {
   Mail,
   Search,
   PenLine,
+  Eye,
 } from "lucide-react";
 
 interface AdminAction {
@@ -73,6 +74,13 @@ const adminActions: AdminAction[] = [
     description: "Configure AI-powered automated vendor discovery jobs and review staged vendors before publishing",
     href: "/admin/vendor-discovery",
     icon: Search,
+    category: "vendors",
+  },
+  {
+    title: "Vendor Publishing",
+    description: "Bulk publish or unpublish vendors by metro area, category, or data quality criteria",
+    href: "/admin/vendor-publishing",
+    icon: Eye,
     category: "vendors",
   },
   {
