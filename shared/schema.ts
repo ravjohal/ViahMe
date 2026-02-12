@@ -2252,8 +2252,6 @@ export const weddingWebsites = pgTable("wedding_websites", {
   faqInfo: text("faq_info"), // Common questions answered
   registryLinks: jsonb("registry_links"), // Array of {name, url} objects
   primaryColor: text("primary_color").default('#f97316'), // Theme color (default orange)
-  guestUploadsEnabled: boolean("guest_uploads_enabled").default(false),
-  guestUploadsRequireApproval: boolean("guest_uploads_require_approval").default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
