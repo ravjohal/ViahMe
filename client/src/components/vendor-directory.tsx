@@ -59,27 +59,62 @@ function getBudgetTier(totalBudget: string | null | undefined): string[] {
   return ['$$$$'];
 }
 
-// Map wedding location to vendor city format (normalizes variations)
+const METRO_CITY_MAP: Record<string, string[]> = {
+  "San Francisco Bay Area": ["San Jose", "San Francisco", "Oakland", "Fremont", "Sunnyvale", "Mountain View", "Palo Alto", "Santa Clara", "Hayward", "Milpitas", "Dublin", "Livermore", "San Ramon", "Campbell", "Tracy", "Lathrop", "Newark", "Union City", "Cupertino", "Redwood City", "San Mateo", "Daly City", "South San Francisco", "Pleasanton", "Walnut Creek", "Concord", "Antioch", "San Leandro", "Vallejo", "Berkeley", "Richmond", "El Sobrante", "Manteca", "Stockton", "Modesto", "Northern California"],
+  "Sacramento": ["Sacramento", "Roseville", "Elk Grove", "Folsom", "Rancho Cordova", "Davis", "Woodland", "Yuba City", "Marysville", "Citrus Heights", "Rocklin", "Lincoln"],
+  "Fresno": ["Fresno", "Clovis", "Selma", "Visalia", "Hanford", "Madera", "Central Valley", "Lodi", "Merced", "Turlock"],
+  "Los Angeles": ["Los Angeles", "Anaheim", "Buena Park", "Artesia", "Fullerton", "Riverside", "North Hollywood", "Pacoima", "Jurupa Valley", "Walnut", "Cerritos", "Downey", "Long Beach", "Pasadena", "Glendale", "Burbank", "Torrance", "Irvine", "Santa Ana", "Ontario", "Pomona", "Corona", "Moreno Valley", "Fontana", "Rancho Cucamonga", "San Bernardino", "Orange County", "Southern California"],
+  "Vancouver": ["Vancouver", "Surrey", "Burnaby", "Langley", "Abbotsford", "Delta", "Richmond", "New Westminster", "Coquitlam", "Port Coquitlam", "Port Moody", "Maple Ridge", "Mission", "North Vancouver", "West Vancouver", "White Rock", "Chilliwack", "Kelowna", "Kamloops", "Vernon", "Pemberton", "Newton", "Lower Mainland"],
+  "Toronto": ["Toronto", "Brampton", "Mississauga", "Hamilton", "Markham", "Vaughan", "Oakville", "Burlington", "Milton", "Ajax", "Pickering", "Whitby", "Oshawa", "Scarborough", "Etobicoke", "North York"],
+  "New York City": ["New York", "Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island", "Jersey City", "Edison", "Perth Amboy", "Hoboken", "Newark", "Morrisville", "Long Island", "Woodside", "Jackson Heights", "Floral Park"],
+  "Chicago": ["Chicago", "Schaumburg", "Naperville", "Aurora", "Elgin", "Joliet", "Bolingbrook"],
+  "Seattle": ["Seattle", "Bellevue", "Redmond", "Kirkland", "Renton", "Kent", "Tacoma", "Everett", "Bothell", "Woodinville"],
+  "Dallas": ["Dallas", "Fort Worth", "Plano", "Irving", "Frisco", "Arlington", "Garland", "Richardson", "McKinney", "Carrollton"],
+  "Houston": ["Houston", "Sugar Land", "Katy", "The Woodlands", "Pearland", "League City", "Missouri City", "Stafford"],
+  "Boston": ["Boston", "Cambridge", "Somerville", "Brookline", "Newton", "Framingham", "Waltham", "Quincy"],
+  "Washington DC": ["Washington", "Arlington", "Alexandria", "Fairfax", "Reston", "Bethesda", "Silver Spring", "Rockville", "McLean"],
+  "Atlanta": ["Atlanta", "Decatur", "Marietta", "Roswell", "Alpharetta", "Johns Creek", "Duluth", "Lawrenceville", "Norcross"],
+  "Philadelphia": ["Philadelphia", "Cherry Hill", "King of Prussia", "Plymouth Meeting", "Conshohocken"],
+  "Detroit": ["Detroit", "Dearborn", "Troy", "Novi", "Farmington Hills", "Canton", "Ann Arbor"],
+  "Phoenix": ["Phoenix", "Scottsdale", "Tempe", "Mesa", "Chandler", "Gilbert"],
+  "Miami": ["Miami", "Fort Lauderdale", "Hollywood", "Coral Gables", "Hialeah"],
+};
+
+function detectMetroFromLocation(location: string): string | null {
+  if (!location) return null;
+  const loc = location.toLowerCase();
+  for (const [metroName, cities] of Object.entries(METRO_CITY_MAP)) {
+    for (const city of cities) {
+      if (loc.includes(city.toLowerCase())) return metroName;
+    }
+  }
+  if (loc.includes(", bc") || loc.includes("british columbia")) return "Vancouver";
+  if (loc.includes(", on") || loc.includes("ontario")) return "Toronto";
+  return null;
+}
+
+function extractCityFromLocation(location: string): string | null {
+  if (!location) return null;
+  const match = location.match(/^([^,]+)/);
+  if (match) {
+    const city = match[1].trim();
+    if (/^\d/.test(city)) {
+      const parts = location.split(",");
+      if (parts.length >= 2) return parts[parts.length - 2].trim().replace(/\s+\w{2,3}\s+\w{3}\s+\w{3}$/, '').trim();
+    }
+    return city;
+  }
+  return null;
+}
+
+function getVendorMetro(vendor: { city?: string | null; location?: string | null }): string {
+  if (vendor.city && METRO_CITY_MAP[vendor.city]) return vendor.city;
+  return detectMetroFromLocation(vendor.location || '') || vendor.city || 'Other';
+}
+
 function normalizeCity(location: string | undefined): string {
   if (!location) return '';
-  const loc = location.toLowerCase();
-  // Merge all Bay Area variations: "Bay Area", "SF Bay Area", "San Francisco Bay Area"
-  if (loc.includes('bay area') || loc.includes('san francisco') || loc.includes('san jose') || loc.includes('oakland') || loc === 'sf bay area') {
-    return 'San Francisco Bay Area';
-  }
-  // Sacramento Metro area includes Sacramento, Elk Grove, Roseville, Folsom, Rancho Cordova, etc.
-  if (loc.includes('sacramento') || loc.includes('elk grove') || loc.includes('roseville') || loc.includes('folsom') || loc.includes('rancho cordova') || loc.includes('davis') || loc.includes('woodland')) {
-    return 'Sacramento Metro';
-  }
-  if (loc.includes('new york') || loc.includes('nyc') || loc.includes('manhattan')) {
-    return 'New York City';
-  }
-  if (loc.includes('los angeles') || loc === 'la' || loc.includes('socal')) {
-    return 'Los Angeles';
-  }
-  if (loc.includes('chicago')) return 'Chicago';
-  if (loc.includes('seattle')) return 'Seattle';
-  return location;
+  return detectMetroFromLocation(location) || location;
 }
 
 // Calculate recommendation score for a vendor based on wedding preferences
@@ -108,12 +143,11 @@ function calculateRecommendationScore(
   
   if (!wedding) return score;
   
-  // City match bonus (strongest signal)
-  const coupleCity = normalizeCity(wedding.location);
-  if (coupleCity && vendor.city === coupleCity) {
+  const coupleMetro = detectMetroFromLocation(wedding.location || '');
+  const vendorMetro = getVendorMetro(vendor);
+  if (coupleMetro && vendorMetro === coupleMetro) {
     score += 20;
-  } else if (vendor.city === 'San Francisco Bay Area' || vendor.city === 'Los Angeles') {
-    // Major metro areas get a small bonus even if not exact match
+  } else if (vendorMetro === 'San Francisco Bay Area' || vendorMetro === 'Los Angeles') {
     score += 5;
   }
   
@@ -242,31 +276,59 @@ export function VendorDirectory({
   const [currentPage, setCurrentPage] = useState(1);
   const VENDORS_PER_PAGE = 10;
 
-  // Calculate available cities first (with normalization to merge duplicates)
-  const availableCities = useMemo(() => {
-    const citySet = new Set<string>();
+  const metroAreaDropdown = useMemo(() => {
+    const metroCounts: Record<string, number> = {};
+    const cityCounts: Record<string, Record<string, number>> = {};
+
     vendors.forEach(vendor => {
-      if (vendor.city) {
-        // Normalize city names to merge duplicates like "Bay Area", "SF Bay Area" -> "San Francisco Bay Area"
-        const normalized = normalizeCity(vendor.city);
-        citySet.add(normalized);
+      const metro = getVendorMetro(vendor);
+      metroCounts[metro] = (metroCounts[metro] || 0) + 1;
+
+      const extractedCity = extractCityFromLocation(vendor.location || '');
+      if (extractedCity) {
+        const cleanCity = extractedCity.replace(/\s+(BC|ON|CA|NY|NJ|IL|WA|TX|MA|GA|PA|MI|AZ|FL|DC)$/i, '').trim();
+        if (cleanCity && cleanCity !== metro && !/^\d/.test(cleanCity)) {
+          if (!cityCounts[metro]) cityCounts[metro] = {};
+          cityCounts[metro][cleanCity] = (cityCounts[metro][cleanCity] || 0) + 1;
+        }
       }
     });
-    const cities = Array.from(citySet).sort();
-    return [
-      { value: "all", label: "All Cities" },
-      ...cities.map(city => ({ value: city, label: city }))
-    ];
+
+    type DropdownItem = { value: string; label: string; type: 'all' | 'metro' | 'city'; metro?: string; count?: number };
+    const items: DropdownItem[] = [{ value: "all", label: "All Areas", type: 'all' }];
+
+    const sortedMetros = Object.entries(metroCounts)
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1]);
+
+    for (const [metro, count] of sortedMetros) {
+      items.push({ value: `metro:${metro}`, label: `${metro} (${count})`, type: 'metro', count });
+
+      const cities = cityCounts[metro];
+      if (cities) {
+        const sortedCities = Object.entries(cities)
+          .filter(([, c]) => c >= 2)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 15);
+        for (const [city, cityCount] of sortedCities) {
+          items.push({ value: `city:${metro}:${city}`, label: `  ${city} (${cityCount})`, type: 'city', metro, count: cityCount });
+        }
+      }
+    }
+
+    return items;
   }, [vendors]);
 
-  // Check if wedding location exists in available vendor cities
+  const availableCities = metroAreaDropdown;
+
   const weddingCityInVendorList = useMemo(() => {
     if (!wedding?.location) return null;
-    const normalizedWeddingLocation = normalizeCity(wedding.location);
-    return availableCities.find(c => 
-      c.value !== "all" && 
-      (c.value === wedding.location || normalizeCity(c.value) === normalizedWeddingLocation)
-    )?.value || null;
+    const detectedMetro = detectMetroFromLocation(wedding.location);
+    if (detectedMetro) {
+      const match = availableCities.find(c => c.value === `metro:${detectedMetro}`);
+      if (match) return match.value;
+    }
+    return null;
   }, [wedding?.location, availableCities]);
 
   // Initialize city filter - only auto-set if wedding location has vendors
@@ -313,8 +375,20 @@ export function VendorDirectory({
 
     const matchesCat = matchesCategory(vendor, categoryFilter);
     const matchesPrice = priceFilter === "all" || vendor.priceRange === priceFilter;
-    // Compare normalized city names to handle variations like "Bay Area" vs "San Francisco Bay Area"
-    const matchesCity = cityFilter === "all" || normalizeCity(vendor.city || '') === cityFilter;
+
+    let matchesCity = true;
+    if (cityFilter !== "all") {
+      const vendorMetro = getVendorMetro(vendor);
+      if (cityFilter.startsWith("metro:")) {
+        const selectedMetro = cityFilter.replace("metro:", "");
+        matchesCity = vendorMetro === selectedMetro;
+      } else if (cityFilter.startsWith("city:")) {
+        const parts = cityFilter.split(":");
+        const selectedMetro = parts[1];
+        const selectedCity = parts.slice(2).join(":");
+        matchesCity = vendorMetro === selectedMetro && (vendor.location || '').toLowerCase().includes(selectedCity.toLowerCase());
+      }
+    }
     
     // Contact/availability filters - ignore contact filters if not logged in
     const hasAnyContact = !!(vendor.phone || vendor.email || vendor.website || vendor.instagram || vendor.facebook || vendor.twitter);
@@ -465,13 +539,18 @@ export function VendorDirectory({
 
             <Select value={cityFilter} onValueChange={setCityFilter}>
               <SelectTrigger data-testid="select-city-filter" className="h-12">
-                <Filter className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Filter by city" />
+                <MapPin className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter by area" />
               </SelectTrigger>
-              <SelectContent>
-                {availableCities.map((city) => (
-                  <SelectItem key={city.value} value={city.value}>
-                    {city.label}
+              <SelectContent className="max-h-80">
+                {metroAreaDropdown.map((item) => (
+                  <SelectItem
+                    key={item.value}
+                    value={item.value}
+                    className={item.type === 'city' ? 'pl-8 text-sm text-muted-foreground' : item.type === 'metro' ? 'font-semibold' : ''}
+                    data-testid={`select-area-${item.value}`}
+                  >
+                    {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -698,7 +777,7 @@ export function VendorDirectory({
         <VendorCategoryGuide
           category={categoryFilter}
           categoryLabel={VENDOR_CATEGORIES.find(c => c.value === categoryFilter)?.label || categoryFilter}
-          userCity={wedding?.location ?? (cityFilter !== "all" ? cityFilter : "San Francisco Bay Area")}
+          userCity={wedding?.location ?? (cityFilter !== "all" ? cityFilter.replace(/^(metro|city):/, '').split(':')[0] : "San Francisco Bay Area")}
           onClose={() => setShowCategoryGuide(false)}
         />
       )}

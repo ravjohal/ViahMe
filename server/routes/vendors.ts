@@ -8,7 +8,48 @@ import { ensureVendorAccess } from "./middleware";
 import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../email";
 import { detectVendorDuplicates } from "../services/duplicate-detector";
 
+import { METRO_CITY_MAP, detectMetroFromLocation, extractCityFromLocation } from "../utils/metro-detection";
+
 export async function registerVendorRoutes(router: Router, storage: IStorage) {
+  router.get("/metro-city-stats", async (req, res) => {
+    try {
+      const allVendors = await storage.getAllVendors();
+      const published = allVendors.filter(v => v.approvalStatus === 'approved' && v.isPublished);
+
+      const stats: Record<string, { total: number; cities: Record<string, number> }> = {};
+
+      for (const vendor of published) {
+        const metro = vendor.city || detectMetroFromLocation(vendor.location || '') || 'Other';
+        if (!stats[metro]) stats[metro] = { total: 0, cities: {} };
+        stats[metro].total++;
+
+        const extractedCity = extractCityFromLocation(vendor.location || '');
+        if (extractedCity) {
+          const cleanCity = extractedCity.replace(/\s+(BC|ON|CA|NY|NJ|IL|WA|TX|MA|GA|PA|MI|AZ|FL|DC)$/i, '').trim();
+          if (cleanCity && cleanCity !== metro) {
+            stats[metro].cities[cleanCity] = (stats[metro].cities[cleanCity] || 0) + 1;
+          }
+        }
+      }
+
+      const result = Object.entries(stats)
+        .map(([metro, data]) => ({
+          metro,
+          total: data.total,
+          cities: Object.entries(data.cities)
+            .map(([city, count]) => ({ city, count }))
+            .filter(c => c.count >= 2)
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 20),
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
+
   router.get("/", async (req, res) => {
     try {
       const { category, location, includeUnpublished, includeAllApproval, page, pageSize } = req.query;
@@ -25,6 +66,14 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       if (includeUnpublished !== "true") {
         vendors = vendors.filter((v) => v.isPublished === true);
       }
+
+      vendors = vendors.map(v => {
+        if (!v.city || !METRO_CITY_MAP[v.city]) {
+          const detected = detectMetroFromLocation(v.location || '');
+          if (detected) return { ...v, city: detected };
+        }
+        return v;
+      });
 
       if (category && typeof category === "string") {
         vendors = vendors.filter((v) => v.categories?.includes(category));
@@ -44,7 +93,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         const vendorsByMetro = new Map<string, typeof vendors>();
         
         for (const vendor of vendors) {
-          const metro = vendor.city || vendor.location || 'Other';
+          const metro = vendor.city || 'Other';
           if (!vendorsByMetro.has(metro)) {
             vendorsByMetro.set(metro, []);
           }

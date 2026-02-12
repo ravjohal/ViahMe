@@ -6,6 +6,7 @@ import { z } from "zod";
 import { coupleSubmitVendorSchema, insertDiscoveryJobSchema, type InsertVendor } from "@shared/schema";
 import { discoverVendors, type DiscoveredVendor } from "../ai/gemini";
 import { VendorDiscoveryScheduler } from "../services/vendor-discovery-scheduler";
+import { METRO_CITY_MAP, detectMetroFromLocation, extractCityFromLocation } from "../utils/metro-detection";
 
 async function requireAdminAuth(req: Request, storage: IStorage): Promise<{ userId: string; isAdmin: boolean } | null> {
   const authReq = req as AuthRequest;
@@ -1388,6 +1389,87 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     } catch (error) {
       console.error("Error saving email template:", error);
       res.status(500).json({ error: "Failed to save email template" });
+    }
+  });
+
+  router.post("/vendors/fix-data", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+
+      const allVendors = await storage.getAllVendors();
+      const unpublished = allVendors.filter(v => v.approvalStatus === 'approved' && !v.isPublished);
+      const missingCity = allVendors.filter(v => v.approvalStatus === 'approved' && !v.city);
+      const wrongCity = allVendors.filter(v => v.approvalStatus === 'approved' && v.city && !METRO_CITY_MAP[v.city]);
+
+      let publishedCount = 0;
+      let cityFixedCount = 0;
+      const unmapped: string[] = [];
+
+      for (const vendor of unpublished) {
+        await storage.updateVendor(vendor.id, { isPublished: true } as any);
+        publishedCount++;
+      }
+
+      for (const vendor of [...missingCity, ...wrongCity]) {
+        const detectedMetro = detectMetroFromLocation(vendor.location || '');
+        if (detectedMetro) {
+          await storage.updateVendor(vendor.id, { city: detectedMetro } as any);
+          cityFixedCount++;
+        } else if (vendor.location) {
+          unmapped.push(`${vendor.name}: ${vendor.location}`);
+        }
+      }
+
+      res.json({
+        published: publishedCount,
+        cityFixed: cityFixedCount,
+        totalUnmapped: unmapped.length,
+        unmappedSamples: unmapped.slice(0, 20),
+      });
+    } catch (error) {
+      console.error("Error fixing vendor data:", error);
+      res.status(500).json({ error: "Failed to fix vendor data" });
+    }
+  });
+
+  router.get("/vendors/metro-city-stats", async (req: Request, res: Response) => {
+    try {
+      const allVendors = await storage.getAllVendors();
+      const published = allVendors.filter(v => v.approvalStatus === 'approved' && v.isPublished);
+
+      const stats: Record<string, { total: number; cities: Record<string, number> }> = {};
+
+      for (const vendor of published) {
+        const metro = vendor.city || detectMetroFromLocation(vendor.location || '') || 'Other';
+        if (!stats[metro]) {
+          stats[metro] = { total: 0, cities: {} };
+        }
+        stats[metro].total++;
+
+        const extractedCity = extractCityFromLocation(vendor.location || '');
+        if (extractedCity) {
+          const cleanCity = extractedCity.replace(/\s+(BC|ON|CA|NY|NJ|IL|WA|TX|MA|GA|PA|MI|AZ|FL|DC)$/i, '').trim();
+          stats[metro].cities[cleanCity] = (stats[metro].cities[cleanCity] || 0) + 1;
+        }
+      }
+
+      const result = Object.entries(stats)
+        .map(([metro, data]) => ({
+          metro,
+          total: data.total,
+          cities: Object.entries(data.cities)
+            .map(([city, count]) => ({ city, count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 30),
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching metro city stats:", error);
+      res.status(500).json({ error: "Failed to fetch stats" });
     }
   });
 }

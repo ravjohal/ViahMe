@@ -151,6 +151,36 @@ app.use(express.static(path.join(process.cwd(), "public")));
     log('Blog scheduler skipped (development mode)');
   }
 
+  (async function fixVendorData() {
+    try {
+      const { detectMetroFromLocation, METRO_CITY_MAP } = await import("./utils/metro-detection");
+      const allVendors = await storage.getAllVendors();
+      let published = 0, cityFixed = 0;
+      for (const v of allVendors) {
+        const updates: Record<string, any> = {};
+        if (v.approvalStatus === 'approved' && !v.isPublished) {
+          updates.isPublished = true;
+          published++;
+        }
+        if (v.approvalStatus === 'approved' && !v.city) {
+          const metro = detectMetroFromLocation(v.location || '');
+          if (metro) {
+            updates.city = metro;
+            cityFixed++;
+          }
+        }
+        if (Object.keys(updates).length > 0) {
+          await storage.updateVendor(v.id, updates as any);
+        }
+      }
+      if (published > 0 || cityFixed > 0) {
+        log(`Vendor data fix: published ${published}, city assigned ${cityFixed}`);
+      }
+    } catch (e) {
+      console.error("Vendor data fix error:", e);
+    }
+  })();
+
   // ALWAYS serve the app on the port specified in the environment variable PORT
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
