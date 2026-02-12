@@ -1452,12 +1452,23 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       const allVendors = await storage.getAllVendors();
       let matched: typeof allVendors = [];
 
+      const matchCity = (v: any) => {
+        if (!criteria.city) return true;
+        if (criteria.city === "Unknown") return !v.city;
+        return v.city === criteria.city;
+      };
+      const matchCategory = (v: any) => {
+        if (!criteria.category) return true;
+        if (criteria.category === "Unknown") return !v.category;
+        return v.category === criteria.category || (v.categories || []).includes(criteria.category);
+      };
+
       if (mode === "publish") {
         matched = allVendors.filter(v => {
           if (v.isPublished) return false;
           if (criteria.approvalStatus && v.approvalStatus !== criteria.approvalStatus) return false;
-          if (criteria.city && v.city !== criteria.city) return false;
-          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (!matchCity(v)) return false;
+          if (!matchCategory(v)) return false;
           if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
           if (criteria.websiteVerified && !v.website) return false;
           return true;
@@ -1465,8 +1476,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       } else {
         matched = allVendors.filter(v => {
           if (!v.isPublished) return false;
-          if (criteria.city && v.city !== criteria.city) return false;
-          if (criteria.category && v.category !== criteria.category && !(v.categories || []).includes(criteria.category)) return false;
+          if (!matchCity(v)) return false;
+          if (!matchCategory(v)) return false;
           if (criteria.claimed !== undefined && v.claimed !== criteria.claimed) return false;
           if (criteria.noEmail && !v.email) return true;
           if (criteria.noWebsite && !v.website) return true;
