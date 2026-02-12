@@ -36,6 +36,16 @@ export function registerMetroAreasRoutes(app: Router, storage: IStorage) {
     }
   });
 
+  router.get("/city-mapping", async (_req, res) => {
+    try {
+      const mapping = await storage.getMetroCityMapping();
+      res.json(mapping);
+    } catch (error) {
+      console.error("Error fetching metro city mapping:", error);
+      res.status(500).json({ error: "Failed to fetch metro city mapping" });
+    }
+  });
+
   // GET /api/metro-areas/:id - Get a single metro area by ID
   router.get("/:id", async (req, res) => {
     try {

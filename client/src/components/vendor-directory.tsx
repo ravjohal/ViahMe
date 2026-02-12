@@ -15,6 +15,7 @@ import { Link } from "wouter";
 import { SiInstagram } from "react-icons/si";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useQuery } from "@tanstack/react-query";
 import type { Vendor, Wedding, Event } from "@shared/schema";
 import { VendorCard } from "./vendor-card";
 import { VendorCategoryGuide } from "./vendor-category-guide";
@@ -59,31 +60,10 @@ function getBudgetTier(totalBudget: string | null | undefined): string[] {
   return ['$$$$'];
 }
 
-const METRO_CITY_MAP: Record<string, string[]> = {
-  "San Francisco Bay Area": ["San Jose", "San Francisco", "Oakland", "Fremont", "Sunnyvale", "Mountain View", "Palo Alto", "Santa Clara", "Hayward", "Milpitas", "Dublin", "Livermore", "San Ramon", "Campbell", "Tracy", "Lathrop", "Newark", "Union City", "Cupertino", "Redwood City", "San Mateo", "Daly City", "South San Francisco", "Pleasanton", "Walnut Creek", "Concord", "Antioch", "San Leandro", "Vallejo", "Berkeley", "Richmond", "El Sobrante", "Manteca", "Stockton", "Modesto", "Northern California"],
-  "Sacramento": ["Sacramento", "Roseville", "Elk Grove", "Folsom", "Rancho Cordova", "Davis", "Woodland", "Yuba City", "Marysville", "Citrus Heights", "Rocklin", "Lincoln"],
-  "Fresno": ["Fresno", "Clovis", "Selma", "Visalia", "Hanford", "Madera", "Central Valley", "Lodi", "Merced", "Turlock"],
-  "Los Angeles": ["Los Angeles", "Anaheim", "Buena Park", "Artesia", "Fullerton", "Riverside", "North Hollywood", "Pacoima", "Jurupa Valley", "Walnut", "Cerritos", "Downey", "Long Beach", "Pasadena", "Glendale", "Burbank", "Torrance", "Irvine", "Santa Ana", "Ontario", "Pomona", "Corona", "Moreno Valley", "Fontana", "Rancho Cucamonga", "San Bernardino", "Orange County", "Southern California"],
-  "Vancouver": ["Vancouver", "Surrey", "Burnaby", "Langley", "Abbotsford", "Delta", "Richmond", "New Westminster", "Coquitlam", "Port Coquitlam", "Port Moody", "Maple Ridge", "Mission", "North Vancouver", "West Vancouver", "White Rock", "Chilliwack", "Kelowna", "Kamloops", "Vernon", "Pemberton", "Newton", "Lower Mainland"],
-  "Toronto": ["Toronto", "Brampton", "Mississauga", "Hamilton", "Markham", "Vaughan", "Oakville", "Burlington", "Milton", "Ajax", "Pickering", "Whitby", "Oshawa", "Scarborough", "Etobicoke", "North York"],
-  "New York City": ["New York", "Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island", "Jersey City", "Edison", "Perth Amboy", "Hoboken", "Newark", "Morrisville", "Long Island", "Woodside", "Jackson Heights", "Floral Park"],
-  "Chicago": ["Chicago", "Schaumburg", "Naperville", "Aurora", "Elgin", "Joliet", "Bolingbrook"],
-  "Seattle": ["Seattle", "Bellevue", "Redmond", "Kirkland", "Renton", "Kent", "Tacoma", "Everett", "Bothell", "Woodinville"],
-  "Dallas": ["Dallas", "Fort Worth", "Plano", "Irving", "Frisco", "Arlington", "Garland", "Richardson", "McKinney", "Carrollton"],
-  "Houston": ["Houston", "Sugar Land", "Katy", "The Woodlands", "Pearland", "League City", "Missouri City", "Stafford"],
-  "Boston": ["Boston", "Cambridge", "Somerville", "Brookline", "Newton", "Framingham", "Waltham", "Quincy"],
-  "Washington DC": ["Washington", "Arlington", "Alexandria", "Fairfax", "Reston", "Bethesda", "Silver Spring", "Rockville", "McLean"],
-  "Atlanta": ["Atlanta", "Decatur", "Marietta", "Roswell", "Alpharetta", "Johns Creek", "Duluth", "Lawrenceville", "Norcross"],
-  "Philadelphia": ["Philadelphia", "Cherry Hill", "King of Prussia", "Plymouth Meeting", "Conshohocken"],
-  "Detroit": ["Detroit", "Dearborn", "Troy", "Novi", "Farmington Hills", "Canton", "Ann Arbor"],
-  "Phoenix": ["Phoenix", "Scottsdale", "Tempe", "Mesa", "Chandler", "Gilbert"],
-  "Miami": ["Miami", "Fort Lauderdale", "Hollywood", "Coral Gables", "Hialeah"],
-};
-
-function detectMetroFromLocation(location: string): string | null {
+function detectMetroFromLocation(location: string, metroCityMap: Record<string, string[]>): string | null {
   if (!location) return null;
   const loc = location.toLowerCase();
-  for (const [metroName, cities] of Object.entries(METRO_CITY_MAP)) {
+  for (const [metroName, cities] of Object.entries(metroCityMap)) {
     for (const city of cities) {
       if (loc.includes(city.toLowerCase())) return metroName;
     }
@@ -107,34 +87,25 @@ function extractCityFromLocation(location: string): string | null {
   return null;
 }
 
-function getVendorMetro(vendor: { city?: string | null; location?: string | null }): string {
-  if (vendor.city && METRO_CITY_MAP[vendor.city]) return vendor.city;
-  return detectMetroFromLocation(vendor.location || '') || vendor.city || 'Other';
-}
-
-function normalizeCity(location: string | undefined): string {
-  if (!location) return '';
-  return detectMetroFromLocation(location) || location;
+function getVendorMetro(vendor: { city?: string | null; location?: string | null }, metroCityMap: Record<string, string[]>): string {
+  if (vendor.city && metroCityMap[vendor.city]) return vendor.city;
+  return detectMetroFromLocation(vendor.location || '', metroCityMap) || vendor.city || 'Other';
 }
 
 // Calculate recommendation score for a vendor based on wedding preferences
 function calculateRecommendationScore(
   vendor: Vendor, 
-  wedding: Wedding | null | undefined
+  wedding: Wedding | null | undefined,
+  metroCityMap: Record<string, string[]>
 ): number {
   let score = 0;
   
-  // Base score for published vendors
   if (vendor.isPublished) score += 10;
-  
-  // Featured bonus (manual curation)
   if (vendor.featured) score += 15;
   
-  // Rating score (0-25 points based on rating)
   const rating = vendor.rating ? parseFloat(vendor.rating.toString()) : 0;
-  score += rating * 5; // 5.0 rating = 25 points
+  score += rating * 5;
   
-  // Review count bonus (social proof)
   const reviewCount = vendor.reviewCount || 0;
   if (reviewCount >= 100) score += 10;
   else if (reviewCount >= 50) score += 7;
@@ -143,8 +114,8 @@ function calculateRecommendationScore(
   
   if (!wedding) return score;
   
-  const coupleMetro = detectMetroFromLocation(wedding.location || '');
-  const vendorMetro = getVendorMetro(vendor);
+  const coupleMetro = detectMetroFromLocation(wedding.location || '', metroCityMap);
+  const vendorMetro = getVendorMetro(vendor, metroCityMap);
   if (coupleMetro && vendorMetro === coupleMetro) {
     score += 20;
   } else if (vendorMetro === 'San Francisco Bay Area' || vendorMetro === 'Los Angeles') {
@@ -266,7 +237,6 @@ export function VendorDirectory({
   const [priceFilter, setPriceFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   
-  // Contact/availability filters
   const [filterHasContact, setFilterHasContact] = useState(false);
   const [filterBookable, setFilterBookable] = useState(false);
   const [filterHasInstagram, setFilterHasInstagram] = useState(false);
@@ -276,12 +246,17 @@ export function VendorDirectory({
   const [currentPage, setCurrentPage] = useState(1);
   const VENDORS_PER_PAGE = 10;
 
+  const { data: metroCityMap = {} } = useQuery<Record<string, string[]>>({
+    queryKey: ['/api/metro-areas/city-mapping'],
+    staleTime: 1000 * 60 * 60,
+  });
+
   const metroAreaDropdown = useMemo(() => {
     const metroCounts: Record<string, number> = {};
     const cityCounts: Record<string, Record<string, number>> = {};
 
     vendors.forEach(vendor => {
-      const metro = getVendorMetro(vendor);
+      const metro = getVendorMetro(vendor, metroCityMap);
       metroCounts[metro] = (metroCounts[metro] || 0) + 1;
 
       const extractedCity = extractCityFromLocation(vendor.location || '');
@@ -317,19 +292,19 @@ export function VendorDirectory({
     }
 
     return items;
-  }, [vendors]);
+  }, [vendors, metroCityMap]);
 
   const availableCities = metroAreaDropdown;
 
   const weddingCityInVendorList = useMemo(() => {
     if (!wedding?.location) return null;
-    const detectedMetro = detectMetroFromLocation(wedding.location);
+    const detectedMetro = detectMetroFromLocation(wedding.location, metroCityMap);
     if (detectedMetro) {
       const match = availableCities.find(c => c.value === `metro:${detectedMetro}`);
       if (match) return match.value;
     }
     return null;
-  }, [wedding?.location, availableCities]);
+  }, [wedding?.location, availableCities, metroCityMap]);
 
   // Initialize city filter - only auto-set if wedding location has vendors
   const [cityFilter, setCityFilter] = useState("all");
@@ -378,7 +353,7 @@ export function VendorDirectory({
 
     let matchesCity = true;
     if (cityFilter !== "all") {
-      const vendorMetro = getVendorMetro(vendor);
+      const vendorMetro = getVendorMetro(vendor, metroCityMap);
       if (cityFilter.startsWith("metro:")) {
         const selectedMetro = cityFilter.replace("metro:", "");
         matchesCity = vendorMetro === selectedMetro;
@@ -406,9 +381,9 @@ export function VendorDirectory({
   const vendorsWithScores = useMemo(() => {
     return filteredVendors.map(vendor => ({
       vendor,
-      score: calculateRecommendationScore(vendor, wedding)
+      score: calculateRecommendationScore(vendor, wedding, metroCityMap)
     }));
-  }, [filteredVendors, wedding]);
+  }, [filteredVendors, wedding, metroCityMap]);
 
   const sortedVendors = useMemo(() => {
     return [...vendorsWithScores]

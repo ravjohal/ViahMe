@@ -243,6 +243,20 @@ export const insertMetroAreaSchema = createInsertSchema(metroAreas).omit({
 export type InsertMetroArea = z.infer<typeof insertMetroAreaSchema>;
 export type MetroArea = typeof metroAreas.$inferSelect;
 
+export const metroCities = pgTable("metro_cities", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  metroAreaId: varchar("metro_area_id").notNull().references(() => metroAreas.id),
+  cityName: varchar("city_name").notNull(),
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertMetroCitySchema = createInsertSchema(metroCities).omit({
+  id: true,
+});
+
+export type InsertMetroCity = z.infer<typeof insertMetroCitySchema>;
+export type MetroCity = typeof metroCities.$inferSelect;
+
 // Default metro areas for seeding
 export const DEFAULT_METRO_AREAS: Array<{
   slug: string;
@@ -255,13 +269,13 @@ export const DEFAULT_METRO_AREAS: Array<{
   displayOrder: number;
 }> = [
   { slug: "sf_bay_area", value: "San Francisco Bay Area", label: "San Francisco Bay Area", state: "CA", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 1 },
-  { slug: "sacramento", value: "Sacramento Metro", label: "Sacramento Metro Area", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 2 },
-  { slug: "fresno", value: "Fresno Metro", label: "Fresno / Central Valley", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 3 },
+  { slug: "sacramento", value: "Sacramento", label: "Sacramento Metro Area", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 2 },
+  { slug: "fresno", value: "Fresno", label: "Fresno / Central Valley", state: "CA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 3 },
   { slug: "los_angeles", value: "Los Angeles", label: "Los Angeles Metro", state: "CA", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 4 },
   { slug: "nyc", value: "New York City", label: "New York City Metro", state: "NY", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 5 },
   { slug: "chicago", value: "Chicago", label: "Chicago Metro", state: "IL", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 6 },
   { slug: "houston", value: "Houston", label: "Houston Metro", state: "TX", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 7 },
-  { slug: "dallas", value: "Dallas-Fort Worth", label: "Dallas-Fort Worth Metro", state: "TX", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 8 },
+  { slug: "dallas", value: "Dallas", label: "Dallas-Fort Worth Metro", state: "TX", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 8 },
   { slug: "dc", value: "Washington DC", label: "Washington DC Metro", state: "DC", country: "US", desiPopulation: "high", hasVendorCoverage: true, displayOrder: 9 },
   { slug: "seattle", value: "Seattle", label: "Seattle Metro", state: "WA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 10 },
   { slug: "atlanta", value: "Atlanta", label: "Atlanta Metro", state: "GA", country: "US", desiPopulation: "medium", hasVendorCoverage: true, displayOrder: 11 },

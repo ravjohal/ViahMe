@@ -1316,6 +1316,7 @@ export interface IStorage {
   getMetroAreaByValue(value: string): Promise<MetroArea | undefined>;
   getAllMetroAreas(): Promise<MetroArea[]>;
   getActiveMetroAreas(): Promise<MetroArea[]>;
+  getMetroCityMapping(): Promise<Record<string, string[]>>;
   createMetroArea(area: InsertMetroArea): Promise<MetroArea>;
   updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined>;
   deleteMetroArea(id: string): Promise<boolean>;
@@ -5049,6 +5050,7 @@ export class MemStorage implements IStorage {
   async getMetroAreaByValue(value: string): Promise<MetroArea | undefined> { return undefined; }
   async getAllMetroAreas(): Promise<MetroArea[]> { return []; }
   async getActiveMetroAreas(): Promise<MetroArea[]> { return []; }
+  async getMetroCityMapping(): Promise<Record<string, string[]>> { return {}; }
   async createMetroArea(area: InsertMetroArea): Promise<MetroArea> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async deleteMetroArea(id: string): Promise<boolean> { return false; }
@@ -12458,6 +12460,26 @@ export class DBStorage implements IStorage {
       .from(schema.metroAreas)
       .where(eq(schema.metroAreas.isActive, true))
       .orderBy(sql`${schema.metroAreas.displayOrder} ASC, ${schema.metroAreas.label} ASC`);
+  }
+
+  async getMetroCityMapping(): Promise<Record<string, string[]>> {
+    const rows = await this.db
+      .select({
+        metroValue: schema.metroAreas.value,
+        cityName: schema.metroCities.cityName,
+      })
+      .from(schema.metroCities)
+      .innerJoin(schema.metroAreas, eq(schema.metroCities.metroAreaId, schema.metroAreas.id))
+      .where(eq(schema.metroCities.isActive, true));
+
+    const mapping: Record<string, string[]> = {};
+    for (const row of rows) {
+      if (!mapping[row.metroValue]) {
+        mapping[row.metroValue] = [];
+      }
+      mapping[row.metroValue].push(row.cityName);
+    }
+    return mapping;
   }
 
   async createMetroArea(area: InsertMetroArea): Promise<MetroArea> {

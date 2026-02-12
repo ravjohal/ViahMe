@@ -128,6 +128,14 @@ app.use(express.static(path.join(process.cwd(), "public")));
     log(`Metro areas auto-seed skipped: ${(e as Error).message}`);
   }
 
+  // Load metro-city mapping from database into the shared utility
+  try {
+    const { loadMetroCityMapping } = await import("./utils/metro-detection");
+    await loadMetroCityMapping(storage);
+  } catch (e) {
+    log(`Metro city mapping load skipped: ${(e as Error).message}`);
+  }
+
   // Initialize task reminder scheduler (checks every hour)
   const taskReminderScheduler = new TaskReminderScheduler(storage);
   taskReminderScheduler.start(60 * 60 * 1000);
