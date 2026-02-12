@@ -286,7 +286,16 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         }
       }
 
-      const updatedVendor = await storage.updateVendor(req.params.id, req.body);
+      const updateData = { ...req.body };
+      if (updateData.areasServed && Array.isArray(updateData.areasServed)) {
+        const { resolveAreasServed } = await import("../utils/metro-resolver");
+        updateData.areasServed = await resolveAreasServed(storage, updateData.areasServed, updateData.customCity);
+        if (updateData.areasServed.length > 0) {
+          updateData.city = updateData.areasServed[0];
+        }
+      }
+      delete updateData.customCity;
+      const updatedVendor = await storage.updateVendor(req.params.id, updateData);
       res.json(updatedVendor);
     } catch (error) {
       res.status(500).json({ error: "Failed to update vendor" });
@@ -619,11 +628,14 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         }
       }
       
+      const { resolveAreasServed } = await import("../utils/metro-resolver");
+      const resolvedAreas = await resolveAreasServed(storage, validatedData.areasServed);
+      
       const vendorData: InsertVendor = {
         name: validatedData.name,
         categories: validatedData.categories,
-        city: validatedData.areasServed[0] || 'San Francisco Bay Area', // Use first area for legacy field
-        areasServed: validatedData.areasServed,
+        city: resolvedAreas[0] || 'San Francisco Bay Area',
+        areasServed: resolvedAreas,
         location: validatedData.location || null,
         priceRange: validatedData.priceRange,
         culturalSpecialties: validatedData.culturalSpecialties && validatedData.culturalSpecialties.length > 0 

@@ -94,38 +94,13 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
         const body = req.body as any;
         const businessName = body.businessName || data.email.split('@')[0];
         
-        // Process areasServed - replace "Other" with customCity if provided
-        let processedAreasServed = body.areasServed || [];
-        if (processedAreasServed.includes('Other') && body.customCity?.trim()) {
-          const customCityName = body.customCity.trim();
-          
-          // Check if city exists in metro_areas, create if not
-          const allAreas = await storage.getAllMetroAreas();
-          const existingArea = allAreas.find(
-            (area: any) => area.value.toLowerCase() === customCityName.toLowerCase() ||
-                    area.label.toLowerCase() === customCityName.toLowerCase()
-          );
-          
-          if (!existingArea) {
-            // Create new metro area
-            const slug = customCityName
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .replace(/\s+/g, '_');
-            await storage.createMetroArea({
-              slug,
-              value: customCityName,
-              label: customCityName,
-              isActive: true,
-              displayOrder: 999,
-            });
-          }
-          
-          // Replace "Other" with the actual city name
-          processedAreasServed = processedAreasServed.map((area: string) => 
-            area === 'Other' ? customCityName : area
-          );
-        }
+        // Process areasServed - resolve "Other" with customCity via metro_cities source of truth
+        const { resolveAreasServed } = await import("./utils/metro-resolver");
+        let processedAreasServed = await resolveAreasServed(
+          storage,
+          body.areasServed || [],
+          body.customCity
+        );
         
         // Accept full profile data from wizard if provided
         await storage.createVendor({

@@ -75,6 +75,13 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
     try {
       const updateData: any = { ...req.body };
       
+      if (updateData.location === "Other" && updateData.customCity?.trim()) {
+        const { resolveCustomCity } = await import("../utils/metro-resolver");
+        const resolved = await resolveCustomCity(storage, updateData.customCity.trim());
+        updateData.location = resolved.metroValue;
+      }
+      delete updateData.customCity;
+      
       if (updateData.weddingDate && typeof updateData.weddingDate === 'string') {
         updateData.weddingDate = new Date(updateData.weddingDate);
       }
@@ -98,7 +105,14 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
 
   router.post("/", async (req, res) => {
     try {
-      const validatedData = insertWeddingSchema.parse(req.body);
+      const { resolveCustomCity } = await import("../utils/metro-resolver");
+      const rawData = { ...req.body };
+      if (rawData.location === "Other" && rawData.customCity?.trim()) {
+        const resolved = await resolveCustomCity(storage, rawData.customCity.trim());
+        rawData.location = resolved.metroValue;
+      }
+      delete rawData.customCity;
+      const validatedData = insertWeddingSchema.parse(rawData);
       const wedding = await storage.createWedding(validatedData);
 
       const { CEREMONY_CATALOG } = await import("../../shared/ceremonies");

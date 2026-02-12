@@ -311,6 +311,7 @@ import {
   type InsertVendorTaskCategory,
   type MetroArea,
   type InsertMetroArea,
+  type MetroCity,
   aiChatMessages,
   type AiChatMessage,
   type InsertAiChatMessage,
@@ -1321,6 +1322,8 @@ export interface IStorage {
   updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined>;
   deleteMetroArea(id: string): Promise<boolean>;
   seedMetroAreas(): Promise<MetroArea[]>;
+  getMetroCityByName(cityName: string): Promise<{ metroAreaId: string; cityName: string; metroValue: string } | undefined>;
+  createMetroCity(data: { metroAreaId: string; cityName: string }): Promise<MetroCity>;
 
   // Favour Categories (database-driven favour/gift types)
   getFavourCategory(id: string): Promise<FavourCategory | undefined>;
@@ -5055,6 +5058,8 @@ export class MemStorage implements IStorage {
   async updateMetroArea(id: string, area: Partial<InsertMetroArea>): Promise<MetroArea | undefined> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
   async deleteMetroArea(id: string): Promise<boolean> { return false; }
   async seedMetroAreas(): Promise<MetroArea[]> { throw new Error('MemStorage does not support Metro Areas. Use DBStorage.'); }
+  async getMetroCityByName(cityName: string): Promise<{ metroAreaId: string; cityName: string; metroValue: string } | undefined> { return undefined; }
+  async createMetroCity(data: { metroAreaId: string; cityName: string }): Promise<MetroCity> { throw new Error('MemStorage does not support Metro Cities. Use DBStorage.'); }
 
   // Favour Categories (database-driven) - stub methods for MemStorage
   async getFavourCategory(id: string): Promise<FavourCategory | undefined> { return undefined; }
@@ -12501,6 +12506,35 @@ export class DBStorage implements IStorage {
     await this.db.delete(schema.metroAreas)
       .where(eq(schema.metroAreas.id, id));
     return true;
+  }
+
+  async getMetroCityByName(cityName: string): Promise<{ metroAreaId: string; cityName: string; metroValue: string } | undefined> {
+    const result = await this.db
+      .select({
+        metroAreaId: schema.metroCities.metroAreaId,
+        cityName: schema.metroCities.cityName,
+        metroValue: schema.metroAreas.value,
+      })
+      .from(schema.metroCities)
+      .innerJoin(schema.metroAreas, eq(schema.metroCities.metroAreaId, schema.metroAreas.id))
+      .where(sql`lower(${schema.metroCities.cityName}) = lower(${cityName})`)
+      .limit(1);
+    return result[0];
+  }
+
+  async createMetroCity(data: { metroAreaId: string; cityName: string }): Promise<MetroCity> {
+    const existing = await this.getMetroCityByName(data.cityName);
+    if (existing) {
+      const result = await this.db.select()
+        .from(schema.metroCities)
+        .where(sql`lower(${schema.metroCities.cityName}) = lower(${data.cityName})`)
+        .limit(1);
+      return result[0];
+    }
+    const result = await this.db.insert(schema.metroCities)
+      .values({ metroAreaId: data.metroAreaId, cityName: data.cityName, isActive: true })
+      .returning();
+    return result[0];
   }
 
   // Favour Categories (database-driven)
