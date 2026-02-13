@@ -646,7 +646,6 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
-  // Get unclaimed vendors with email for bulk invitation
   router.get("/vendors/unclaimed-with-email", async (req: Request, res: Response) => {
     try {
       const auth = await requireAdminAuth(req, storage);
