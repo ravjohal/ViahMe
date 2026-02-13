@@ -757,14 +757,20 @@ export default function Budget() {
   const spentBySide = useMemo(() => {
     const sideTotals = { bride: 0, groom: 0, mutual: 0 };
     
-    Object.entries(expensesByEvent).forEach(([eventId, data]) => {
-      if (eventId === "unassigned") {
-        sideTotals.mutual += data.total;
-      } else if (data.event) {
-        // Treat undefined/null side as "mutual" for backward compatibility
-        const side = (data.event.side as "bride" | "groom" | "mutual") || "mutual";
-        sideTotals[side] += data.total;
-      }
+    Object.entries(expensesByEvent).forEach(([, data]) => {
+      data.expenses.forEach((expense) => {
+        const amount = (expense as any).allocatedAmount != null
+          ? parseFloat((expense as any).allocatedAmount?.toString() || "0")
+          : parseFloat(expense.amount?.toString() || "0");
+        const paidBy = expense.paidById;
+        if (paidBy === "me" || paidBy === "bride" || paidBy === "bride-parents") {
+          sideTotals.bride += amount;
+        } else if (paidBy === "partner" || paidBy === "groom" || paidBy === "groom-parents") {
+          sideTotals.groom += amount;
+        } else {
+          sideTotals.mutual += amount;
+        }
+      });
     });
     
     return sideTotals;
