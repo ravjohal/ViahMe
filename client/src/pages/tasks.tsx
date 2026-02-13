@@ -346,16 +346,16 @@ export default function TasksPage() {
   });
 
   const bulkCompleteMutation = useMutation({
-    mutationFn: async (taskIds: string[]) => {
-      const res = await apiRequest("POST", "/api/tasks/bulk-update", { taskIds, weddingId: wedding?.id, data: { completed: true } });
+    mutationFn: async ({ taskIds, completed }: { taskIds: string[]; completed: boolean }) => {
+      const res = await apiRequest("POST", "/api/tasks/bulk-update", { taskIds, weddingId: wedding?.id, data: { completed } });
       return res.json();
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
       setSelectedTasks(new Set());
       toast({
-        title: "Tasks completed",
-        description: `${data.updated} task${data.updated === 1 ? '' : 's'} marked as completed.`,
+        title: variables.completed ? "Tasks completed" : "Tasks reopened",
+        description: `${data.updated} task${data.updated === 1 ? '' : 's'} marked as ${variables.completed ? 'completed' : 'incomplete'}.`,
       });
     },
     onError: () => {
@@ -1143,29 +1143,47 @@ export default function TasksPage() {
           </div>
           {filteredSelectedIds.length > 0 && (
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const incompleteIds = filteredSelectedIds.filter(
-                    id => !tasks.find(t => t.id === id)?.completed
-                  );
-                  if (incompleteIds.length === 0) {
-                    toast({ title: "Already completed", description: "All selected tasks are already marked as completed." });
-                    return;
-                  }
-                  bulkCompleteMutation.mutate(incompleteIds);
-                }}
-                disabled={bulkCompleteMutation.isPending}
-                data-testid="button-bulk-complete"
-              >
-                {bulkCompleteMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                )}
-                Mark Completed
-              </Button>
+              {(() => {
+                const selectedCompleted = filteredSelectedIds.filter(id => tasks.find(t => t.id === id)?.completed);
+                const selectedIncomplete = filteredSelectedIds.filter(id => !tasks.find(t => t.id === id)?.completed);
+                const allCompleted = selectedCompleted.length === filteredSelectedIds.length;
+                return (
+                  <>
+                    {selectedIncomplete.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => bulkCompleteMutation.mutate({ taskIds: selectedIncomplete, completed: true })}
+                        disabled={bulkCompleteMutation.isPending}
+                        data-testid="button-bulk-complete"
+                      >
+                        {bulkCompleteMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                        )}
+                        Mark Completed{!allCompleted && selectedCompleted.length > 0 ? ` (${selectedIncomplete.length})` : ""}
+                      </Button>
+                    )}
+                    {selectedCompleted.length > 0 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => bulkCompleteMutation.mutate({ taskIds: selectedCompleted, completed: false })}
+                        disabled={bulkCompleteMutation.isPending}
+                        data-testid="button-bulk-incomplete"
+                      >
+                        {bulkCompleteMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Circle className="w-4 h-4 mr-2" />
+                        )}
+                        Mark Incomplete{!allCompleted && selectedIncomplete.length > 0 ? ` (${selectedCompleted.length})` : ""}
+                      </Button>
+                    )}
+                  </>
+                );
+              })()}
               <Button
                 variant="outline"
                 size="sm"
