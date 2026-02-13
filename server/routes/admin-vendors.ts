@@ -38,64 +38,65 @@ function checkAdminAccess(req: Request, storage: IStorage): Promise<boolean> {
 export async function registerAdminVendorRoutes(router: Router, storage: IStorage) {
   router.get("/vendors/unclaimed", async (req: Request, res: Response) => {
     try {
-      const authReq = req as AuthRequest;
-      if (!authReq.session?.userId) {
-        return res.status(401).json({ error: "Not authenticated" });
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth) {
+        return res.status(401).json({ error: "Authentication required" });
       }
-      
-      const user = await storage.getUser(authReq.session.userId);
-      if (!user || user.role !== "couple") {
-        return res.status(403).json({ error: "Access denied. Admin features are for platform operators only." });
+      if (!auth.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
       }
       
       const searchQuery = (req.query.search as string || "").trim().toLowerCase();
-      
-      if (searchQuery.length < 2) {
-        return res.json([]);
-      }
+      const page = parseInt(req.query.page as string || "1", 10);
+      const limit = parseInt(req.query.limit as string || "50", 10);
       
       const allVendors = await storage.getAllVendors();
       let unclaimedVendors = allVendors
-        .filter(v => v.claimed === false)
-        .filter(v => v.email || v.phone)
-        .filter(v => 
+        .filter(v => v.claimed === false);
+      
+      const totalUnclaimed = unclaimedVendors.length;
+      const withEmail = unclaimedVendors.filter(v => v.email).length;
+      const withPhone = unclaimedVendors.filter(v => v.phone).length;
+      const pendingInvites = unclaimedVendors.filter(v => v.claimToken && v.claimTokenExpires && new Date(v.claimTokenExpires) > new Date()).length;
+      
+      if (searchQuery) {
+        unclaimedVendors = unclaimedVendors.filter(v => 
           v.name.toLowerCase().includes(searchQuery) ||
           (v.location && v.location.toLowerCase().includes(searchQuery)) ||
-          (v.category && v.category.toLowerCase().includes(searchQuery))
+          (v.city && v.city.toLowerCase().includes(searchQuery)) ||
+          (v.category && v.category.toLowerCase().includes(searchQuery)) ||
+          (v.categories && v.categories.some(c => c.toLowerCase().includes(searchQuery))) ||
+          (v.email && v.email.toLowerCase().includes(searchQuery)) ||
+          (v.phone && v.phone.includes(searchQuery))
         );
+      }
       
-      const maskEmail = (email: string | null): string | null => {
-        if (!email) return null;
-        const [local, domain] = email.split('@');
-        if (!domain) return '***@***.***';
-        const maskedLocal = local.length > 2 ? local[0] + '*'.repeat(local.length - 2) + local[local.length - 1] : '***';
-        return `${maskedLocal}@${domain}`;
-      };
+      unclaimedVendors.sort((a, b) => {
+        const aHasContact = (a.email || a.phone) ? 1 : 0;
+        const bHasContact = (b.email || b.phone) ? 1 : 0;
+        if (bHasContact !== aHasContact) return bHasContact - aHasContact;
+        return a.name.localeCompare(b.name);
+      });
       
-      const maskPhone = (phone: string | null): string | null => {
-        if (!phone) return null;
-        const digits = phone.replace(/\D/g, '');
-        if (digits.length < 4) return '***-***-****';
-        return `***-***-${digits.slice(-4)}`;
-      };
+      const totalFiltered = unclaimedVendors.length;
+      const offset = (page - 1) * limit;
+      const paginatedVendors = unclaimedVendors.slice(offset, offset + limit);
       
-      const maskedVendors = unclaimedVendors.slice(0, 20).map(v => ({
-        id: v.id,
-        name: v.name,
-        category: v.category,
-        categories: v.categories,
-        location: v.location,
-        city: v.city,
-        priceRange: v.priceRange,
-        rating: v.rating,
-        claimed: v.claimed,
-        email: maskEmail(v.email),
-        phone: maskPhone(v.phone),
-        hasEmail: !!v.email,
-        hasPhone: !!v.phone,
-      }));
-      
-      res.json(maskedVendors);
+      res.json({
+        vendors: paginatedVendors,
+        pagination: {
+          page,
+          limit,
+          totalFiltered,
+          totalPages: Math.ceil(totalFiltered / limit),
+        },
+        stats: {
+          totalUnclaimed,
+          withEmail,
+          withPhone,
+          pendingInvites,
+        },
+      });
     } catch (error) {
       console.error("Error fetching unclaimed vendors:", error);
       res.status(500).json({ error: "Failed to fetch unclaimed vendors" });

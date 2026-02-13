@@ -54,7 +54,6 @@ import type { Vendor, VendorClaimStaging } from "@shared/schema";
 export default function AdminVendorClaims() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
   const [claimSearchQuery, setClaimSearchQuery] = useState("");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<VendorClaimStaging | null>(null);
@@ -68,11 +67,32 @@ export default function AdminVendorClaims() {
   const [sendDenialEmail, setSendDenialEmail] = useState(true);
   const [activeTab, setActiveTab] = useState("approval");
   const [historySearchQuery, setHistorySearchQuery] = useState("");
+  const [unclaimedSearch, setUnclaimedSearch] = useState("");
+  const [unclaimedPage, setUnclaimedPage] = useState(1);
 
-  const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/admin/vendors/unclaimed"],
-    enabled: !!user,
+  interface UnclaimedResponse {
+    vendors: Vendor[];
+    pagination: { page: number; limit: number; totalFiltered: number; totalPages: number };
+    stats: { totalUnclaimed: number; withEmail: number; withPhone: number; pendingInvites: number };
+  }
+
+  const { data: unclaimedData, isLoading } = useQuery<UnclaimedResponse>({
+    queryKey: ["/api/admin/vendors/unclaimed", unclaimedSearch, unclaimedPage],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set("page", String(unclaimedPage));
+      params.set("limit", "50");
+      if (unclaimedSearch) params.set("search", unclaimedSearch);
+      const res = await fetch(`/api/admin/vendors/unclaimed?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+    enabled: !!user && user.isSiteAdmin,
   });
+
+  const vendors = unclaimedData?.vendors ?? [];
+  const unclaimedStats = unclaimedData?.stats;
+  const unclaimedPagination = unclaimedData?.pagination;
 
   const { data: pendingClaims = [], isLoading: isLoadingClaims } = useQuery<VendorClaimStaging[]>({
     queryKey: ["/api/admin/vendor-claims"],
@@ -293,22 +313,10 @@ export default function AdminVendorClaims() {
       .join(" ");
   };
 
-  const filteredVendors = vendors.filter(v => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    const categoryMatch = v.categories?.some(cat => cat.toLowerCase().includes(query)) || false;
-    return (
-      v.name.toLowerCase().includes(query) ||
-      v.location.toLowerCase().includes(query) ||
-      categoryMatch ||
-      v.email?.toLowerCase().includes(query) ||
-      v.phone?.includes(query)
-    );
-  });
-
-  const vendorsWithEmail = vendors.filter(v => v.email);
-  const vendorsWithPhone = vendors.filter(v => v.phone);
-  const vendorsWithPendingToken = vendors.filter(v => v.claimToken && v.claimTokenExpires && new Date(v.claimTokenExpires) > new Date());
+  const vendorsWithEmail = unclaimedStats?.withEmail ?? 0;
+  const vendorsWithPhone = unclaimedStats?.withPhone ?? 0;
+  const vendorsWithPendingToken = unclaimedStats?.pendingInvites ?? 0;
+  const totalUnclaimed = unclaimedStats?.totalUnclaimed ?? 0;
 
   if (!user) {
     return (
@@ -370,7 +378,7 @@ export default function AdminVendorClaims() {
                     <Building2 className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{vendors.length}</p>
+                    <p className="text-2xl font-bold">{totalUnclaimed}</p>
                     <p className="text-sm text-muted-foreground">Unclaimed Profiles</p>
                   </div>
                 </div>
@@ -383,7 +391,7 @@ export default function AdminVendorClaims() {
                     <Mail className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{vendorsWithEmail.length}</p>
+                    <p className="text-2xl font-bold">{vendorsWithEmail}</p>
                     <p className="text-sm text-muted-foreground">With Email</p>
                   </div>
                 </div>
@@ -396,7 +404,7 @@ export default function AdminVendorClaims() {
                     <Clock className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{vendorsWithPendingToken.length}</p>
+                    <p className="text-2xl font-bold">{vendorsWithPendingToken}</p>
                     <p className="text-sm text-muted-foreground">Pending Invites</p>
                   </div>
                 </div>
@@ -820,8 +828,8 @@ export default function AdminVendorClaims() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search by name, location, category, email, or phone..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      value={unclaimedSearch}
+                      onChange={(e) => { setUnclaimedSearch(e.target.value); setUnclaimedPage(1); }}
                       className="pl-10"
                       data-testid="input-search-vendors"
                     />
@@ -833,12 +841,12 @@ export default function AdminVendorClaims() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
-                  ) : filteredVendors.length === 0 ? (
+                  ) : vendors.length === 0 ? (
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        {searchQuery 
-                          ? `No unclaimed vendors found matching "${searchQuery}"`
+                        {unclaimedSearch 
+                          ? `No unclaimed vendors found matching "${unclaimedSearch}"`
                           : "No unclaimed vendor profiles found."
                         }
                       </AlertDescription>
@@ -858,7 +866,7 @@ export default function AdminVendorClaims() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredVendors.map((vendor) => {
+                          {vendors.map((vendor) => {
                             const hasPendingInvite = vendor.claimToken && vendor.claimTokenExpires && new Date(vendor.claimTokenExpires) > new Date();
                             const hasContact = vendor.email || vendor.phone;
                             
@@ -936,10 +944,37 @@ export default function AdminVendorClaims() {
                     </div>
                   )}
 
-                  {filteredVendors.length > 0 && (
-                    <p className="text-sm text-muted-foreground text-center">
-                      Showing {filteredVendors.length} of {vendors.length} unclaimed vendors
-                    </p>
+                  {unclaimedPagination && unclaimedPagination.totalFiltered > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {((unclaimedPagination.page - 1) * unclaimedPagination.limit) + 1}–{Math.min(unclaimedPagination.page * unclaimedPagination.limit, unclaimedPagination.totalFiltered)} of {unclaimedPagination.totalFiltered} vendors
+                      </p>
+                      {unclaimedPagination.totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={unclaimedPage <= 1}
+                            onClick={() => setUnclaimedPage(p => Math.max(1, p - 1))}
+                            data-testid="button-prev-page"
+                          >
+                            Previous
+                          </Button>
+                          <span className="text-sm text-muted-foreground">
+                            Page {unclaimedPagination.page} of {unclaimedPagination.totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={unclaimedPage >= unclaimedPagination.totalPages}
+                            onClick={() => setUnclaimedPage(p => p + 1)}
+                            data-testid="button-next-page"
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
