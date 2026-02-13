@@ -4,7 +4,6 @@ import type { IStorage } from "../storage";
 import { insertWeddingSchema } from "@shared/schema";
 
 import type { CeremonyDefinition } from "@shared/ceremonies";
-import { getTasksForTradition, calculateDueDate as calculateTaskDueDate } from "../task-templates";
 import { calculateEventDate as calculateEventDateFromShared } from "@shared/ceremony-dates";
 
 // Determine the side for a ceremony using the canonical ceremony catalog
@@ -389,33 +388,7 @@ export async function registerWeddingRoutes(router: Router, storage: IStorage) {
       // Budget categories start at $0 - couples can choose to use ceremony estimates or set their own values
       // The couple's total budget is stored but not auto-allocated to categories
 
-      if (wedding.tradition) {
-        // Use in-memory task templates with comprehensive Sikh wedding checklist
-        const templates = getTasksForTradition(wedding.tradition);
-        
-        for (const template of templates) {
-          let dueDate: Date | undefined = undefined;
-          
-          if (wedding.weddingDate && template.daysBeforeWedding) {
-            dueDate = calculateTaskDueDate(new Date(wedding.weddingDate), template.daysBeforeWedding);
-          }
-          
-          await storage.createTask({
-            weddingId: wedding.id,
-            title: template.task, // In-memory templates use 'task' field
-            description: template.description,
-            category: template.category,
-            priority: (template.priority as 'high' | 'medium' | 'low') || 'medium',
-            dueDate: dueDate,
-            phase: template.phase,
-            completed: false,
-            isAiRecommended: true,
-            aiCategory: template.ceremony || template.category,
-            aiReason: `Auto-generated task for ${wedding.tradition} wedding tradition`,
-            linkTo: template.linkTo, // Smart link for task completion
-          });
-        }
-      }
+      // Tasks are NOT auto-created during onboarding — couples opt-in from the Tasks page
 
       res.json(wedding);
     } catch (error) {

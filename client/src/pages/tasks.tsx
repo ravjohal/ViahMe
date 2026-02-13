@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock, ExternalLink, Layers, FolderOpen } from "lucide-react";
+import { Plus, Calendar, CheckCircle2, Circle, AlertCircle, Trash2, Filter, Bell, BellOff, Mail, MessageSquare, User, Send, Sparkles, Lightbulb, X, ChevronDown, ChevronUp, Wand2, MessageCircle, List, Clock, ExternalLink, Layers, FolderOpen, ListChecks, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -284,6 +284,27 @@ export default function TasksPage() {
       toast({
         title: "Task updated",
         description: "Your task has been updated successfully.",
+      });
+    },
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: async (weddingId: string) => {
+      const res = await apiRequest("POST", `/api/tasks/generate/${weddingId}`);
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+      toast({
+        title: "Checklist created",
+        description: `${data.count} tasks have been added based on your ${wedding?.tradition} wedding tradition.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Could not generate tasks",
+        description: "Please try again or add tasks manually.",
+        variant: "destructive",
       });
     },
   });
@@ -1041,21 +1062,54 @@ export default function TasksPage() {
             ))}
           </div>
         ) : filteredTasks.length === 0 ? (
-          <div className="text-center py-12">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="font-semibold text-lg mb-2">No Tasks Found</h3>
-            <p className="text-muted-foreground mb-4">
-              {tasks.length === 0
-                ? "Start building your wedding checklist"
-                : "No tasks match the selected filters"}
-            </p>
-            {tasks.length === 0 && (
+          tasks.length === 0 && wedding?.tradition ? (
+            <div className="text-center py-16 px-4">
+              <ListChecks className="w-16 h-16 mx-auto mb-5 text-primary/60" />
+              <h3 className="font-semibold text-xl mb-2">Your Wedding Checklist</h3>
+              <p className="text-muted-foreground mb-2 max-w-md mx-auto">
+                We have a curated checklist tailored to your <span className="font-medium text-foreground">{wedding.tradition}</span> wedding tradition — from booking the venue to the final day-of details.
+              </p>
+              <p className="text-muted-foreground mb-6 text-sm max-w-md mx-auto">
+                You can always add, edit, or remove tasks later.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <Button
+                  onClick={() => generateMutation.mutate(wedding.id)}
+                  disabled={generateMutation.isPending}
+                  data-testid="button-generate-tasks"
+                >
+                  {generateMutation.isPending ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="w-4 h-4 mr-2" />
+                  )}
+                  {generateMutation.isPending ? "Creating tasks..." : "Generate My Checklist"}
+                </Button>
+                <Button variant="outline" onClick={() => setDialogOpen(true)} data-testid="button-add-first-task">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Start from Scratch
+                </Button>
+              </div>
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <ListChecks className="w-16 h-16 mx-auto mb-5 text-muted-foreground" />
+              <h3 className="font-semibold text-xl mb-2">Your Wedding Checklist</h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Start building your wedding checklist by adding your first task.
+              </p>
               <Button onClick={() => setDialogOpen(true)} data-testid="button-add-first-task">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Your First Task
               </Button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Filter className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="font-semibold text-lg mb-2">No Tasks Match Filters</h3>
+              <p className="text-muted-foreground">Try adjusting your filters to see more tasks.</p>
+            </div>
+          )
         ) : viewMode === "timeline" ? (
           <div className="space-y-4">
             {TIMELINE_PERIODS.map((period) => {

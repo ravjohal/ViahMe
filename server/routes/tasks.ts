@@ -1,6 +1,7 @@
 import { Router } from "express";
 import type { IStorage } from "../storage";
 import { insertTaskSchema } from "@shared/schema";
+import { getTasksForTradition, calculateDueDate } from "../task-templates";
 
 export async function registerTaskRoutes(router: Router, storage: IStorage) {
   // ============================================================================
@@ -50,6 +51,55 @@ export async function registerTaskRoutes(router: Router, storage: IStorage) {
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete task" });
+    }
+  });
+
+  router.post("/generate/:weddingId", async (req, res) => {
+    try {
+      const weddingId = req.params.weddingId;
+      const wedding = await storage.getWedding(weddingId);
+      if (!wedding) {
+        return res.status(404).json({ error: "Wedding not found" });
+      }
+      if (!wedding.tradition) {
+        return res.status(400).json({ error: "No tradition set for this wedding" });
+      }
+
+      const existingTasks = await storage.getTasksByWedding(weddingId);
+      if (existingTasks.length > 0) {
+        return res.status(400).json({ error: "Tasks already exist for this wedding" });
+      }
+
+      const templates = getTasksForTradition(wedding.tradition);
+      const created = [];
+
+      for (const template of templates) {
+        let dueDate: Date | undefined = undefined;
+        if (wedding.weddingDate && template.daysBeforeWedding) {
+          dueDate = calculateDueDate(new Date(wedding.weddingDate), template.daysBeforeWedding);
+        }
+
+        const task = await storage.createTask({
+          weddingId,
+          title: template.task,
+          description: template.description,
+          category: template.category,
+          priority: (template.priority as 'high' | 'medium' | 'low') || 'medium',
+          dueDate,
+          phase: template.phase,
+          completed: false,
+          isAiRecommended: true,
+          aiCategory: template.ceremony || template.category,
+          aiReason: `Generated task for ${wedding.tradition} wedding tradition`,
+          linkTo: template.linkTo,
+        });
+        created.push(task);
+      }
+
+      res.json({ count: created.length, tasks: created });
+    } catch (error) {
+      console.error("Error generating tasks:", error);
+      res.status(500).json({ error: "Failed to generate tasks" });
     }
   });
 
