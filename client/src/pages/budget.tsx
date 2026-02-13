@@ -1513,10 +1513,9 @@ export default function Budget() {
         {/* Budget Summary Card - conditionally rendered based on showBudgetOverview preference */}
         {wedding?.showBudgetOverview !== false && (
         <Card className="p-6 mb-6" data-testid="card-budget-summary">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-            <div className="flex flex-wrap items-center gap-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <div>
-                <p className="text-sm text-muted-foreground">Target Budget</p>
                 <button 
                   onClick={() => setEditBudgetOpen(true)}
                   className="text-3xl font-bold font-mono hover:text-primary transition-colors"
@@ -1524,57 +1523,8 @@ export default function Budget() {
                 >
                   ${total.toLocaleString()}
                 </button>
+                <p className="text-sm text-muted-foreground">Total Budget</p>
               </div>
-              {/* By Ceremonies metric - only show when showCeremonyBudgets is enabled */}
-              {wedding?.showCeremonyBudgets !== false && (
-              <>
-              <div className="h-12 w-px bg-border hidden sm:block" />
-              <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  By Ceremonies
-                </p>
-                <p className="text-2xl font-bold font-mono" data-testid="text-ceremonies-total">
-                  ${totalByCeremonies.toLocaleString()}
-                </p>
-              </div>
-              </>
-              )}
-              {wedding.budgetTrackingMode !== "ceremony" && totalByCategories > 0 && (
-                <>
-                  <div className="h-12 w-px bg-border hidden sm:block" />
-                  <div>
-                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                      <DollarSign className="w-3 h-3" />
-                      By Categories
-                    </p>
-                    <p className="text-2xl font-bold font-mono" data-testid="text-categories-total">
-                      ${totalByCategories.toLocaleString()}
-                    </p>
-                  </div>
-                </>
-              )}
-              <div className="h-12 w-px bg-border hidden sm:block" />
-              <div>
-                <p className="text-sm text-muted-foreground">Spent</p>
-                <p className="text-2xl font-bold font-mono" data-testid="text-total-spent">
-                  ${totalSpent.toLocaleString()}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Unallocated budget badges - only show when showCeremonyBudgets is enabled since unallocatedBudget is derived from ceremony totals */}
-              {wedding?.showCeremonyBudgets !== false && unallocatedBudget > 0 && (
-                <Badge variant="outline" className="px-3 py-1.5 text-base font-mono bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-700 dark:text-emerald-300" data-testid="badge-unallocated">
-                  ${unallocatedBudget.toLocaleString()} left to plan
-                </Badge>
-              )}
-              {wedding?.showCeremonyBudgets !== false && unallocatedBudget < 0 && (
-                <Badge variant="destructive" className="px-3 py-1.5 text-base font-mono" data-testid="badge-over-allocated">
-                  ${Math.abs(unallocatedBudget).toLocaleString()} over target
-                </Badge>
-              )}
-              {/* Category/Ceremony mismatch badge - only show when tracking by category and showCeremonyBudgets is enabled */}
               {wedding.budgetTrackingMode !== "ceremony" && wedding?.showCeremonyBudgets !== false && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
                 <Badge variant="outline" className="px-3 py-1.5 text-sm font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300" data-testid="badge-allocation-mismatch">
                   <AlertTriangle className="w-3 h-3 mr-1" />
@@ -1584,33 +1534,67 @@ export default function Budget() {
                   }
                 </Badge>
               )}
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Remaining vs Target</p>
-                <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`} data-testid="text-remaining">
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-2xl font-bold font-mono" data-testid="text-ceremonies-total">
+                  ${(wedding?.showCeremonyBudgets !== false ? totalByCeremonies : totalByCategories).toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground">Planned</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold font-mono" data-testid="text-total-spent">
+                  ${totalSpent.toLocaleString()}
+                </p>
+                <p className="text-sm text-muted-foreground">Spent</p>
+              </div>
+              <div>
+                <p className={`text-2xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`} data-testid="text-remaining">
                   {remainingBudget < 0 ? "-" : ""}${Math.abs(remainingBudget).toLocaleString()}
                 </p>
+                <p className="text-sm text-muted-foreground">
+                  {totalSpent > 0 ? "Left to Spend" : "Unspent"}
+                </p>
               </div>
-              {wedding?.showCeremonyBudgets !== false && totalByCeremonies > 0 && totalByCeremonies !== total && (
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Remaining vs Planned</p>
-                  <p className={`text-2xl font-bold font-mono ${(totalByCeremonies - totalSpent) < 0 ? "text-destructive" : "text-blue-600"}`} data-testid="text-remaining-planned">
-                    {(totalByCeremonies - totalSpent) < 0 ? "-" : ""}${Math.abs(totalByCeremonies - totalSpent).toLocaleString()}
+              {wedding?.showCeremonyBudgets !== false && unallocatedBudget !== 0 && totalByCeremonies > 0 && (
+                <div>
+                  <p className={`text-2xl font-bold font-mono ${unallocatedBudget < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`} data-testid="badge-unallocated">
+                    {unallocatedBudget < 0 ? "-" : ""}${Math.abs(unallocatedBudget).toLocaleString()}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {unallocatedBudget > 0 ? "Not Yet Planned" : "Over Budget"}
                   </p>
                 </div>
               )}
             </div>
-          </div>
-          <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
-          <div className="flex justify-between items-center mt-2">
-            <p className="text-sm text-muted-foreground">
-              {spentPercentage.toFixed(0)}% of budget spent
-            </p>
-            {/* Ceremony budget percentage - only show when showCeremonyBudgets is enabled */}
-            {wedding?.showCeremonyBudgets !== false && totalByCeremonies > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {((totalSpent / totalByCeremonies) * 100).toFixed(0)}% of ceremony budgets spent
-              </p>
-            )}
+
+            <div className="space-y-2">
+              {totalSpent > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs text-muted-foreground">Spent</p>
+                    <p className="text-xs font-mono text-muted-foreground">{spentPercentage.toFixed(0)}%</p>
+                  </div>
+                  <Progress value={Math.min(spentPercentage, 100)} className="h-3" />
+                </div>
+              )}
+              {wedding?.showCeremonyBudgets !== false && totalByCeremonies > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-xs text-muted-foreground">Planned</p>
+                    <p className="text-xs font-mono text-muted-foreground">{total > 0 ? ((totalByCeremonies / total) * 100).toFixed(0) : 0}%</p>
+                  </div>
+                  <Progress value={total > 0 ? Math.min((totalByCeremonies / total) * 100, 100) : 0} className="h-2 opacity-50" />
+                </div>
+              )}
+              {totalSpent === 0 && (wedding?.showCeremonyBudgets === false || totalByCeremonies === 0) && (
+                <div>
+                  <Progress value={0} className="h-3" />
+                  <p className="text-sm text-muted-foreground mt-1">No expenses tracked yet</p>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
         )}
