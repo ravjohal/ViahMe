@@ -27,6 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   FileText,
   Settings,
@@ -41,6 +47,7 @@ import {
   AlertCircle,
   Calendar,
   Save,
+  Pencil,
   X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -151,18 +158,6 @@ function SchedulerSettings() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <Label>Auto-Publish</Label>
-            <p className="text-sm text-muted-foreground">Publish posts immediately, or keep as drafts for review</p>
-          </div>
-          <Switch
-            checked={config.autoPublish}
-            onCheckedChange={(autoPublish) => updateMutation.mutate({ autoPublish })}
-            data-testid="switch-auto-publish"
-          />
-        </div>
-
         <div className="space-y-3">
           <Label>Topic Queue</Label>
           <p className="text-sm text-muted-foreground">
@@ -266,8 +261,84 @@ function GenerateButton() {
   );
 }
 
+function PostEditor({ post, onClose }: { post: BlogPost; onClose: () => void }) {
+  const { toast } = useToast();
+  const [title, setTitle] = useState(post.title);
+  const [slug, setSlug] = useState(post.slug);
+  const [excerpt, setExcerpt] = useState(post.excerpt);
+  const [content, setContent] = useState(post.content);
+  const [category, setCategory] = useState(post.category);
+  const [readTime, setReadTime] = useState(post.readTime);
+  const [author, setAuthor] = useState(post.author);
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const res = await apiRequest("PUT", `/api/admin/blog-posts/${post.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/blog-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/blog-posts"] });
+      toast({ title: "Post updated" });
+      onClose();
+    },
+    onError: (err: Error) => {
+      toast({ title: "Failed to save", description: err.message, variant: "destructive" });
+    },
+  });
+
+  const handleSave = () => {
+    updateMutation.mutate({ title, slug, excerpt, content, category, readTime, author });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Title</Label>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} data-testid="input-edit-title" />
+        </div>
+        <div className="space-y-2">
+          <Label>Slug</Label>
+          <Input value={slug} onChange={(e) => setSlug(e.target.value)} data-testid="input-edit-slug" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div className="space-y-2">
+          <Label>Category</Label>
+          <Input value={category} onChange={(e) => setCategory(e.target.value)} data-testid="input-edit-category" />
+        </div>
+        <div className="space-y-2">
+          <Label>Read Time</Label>
+          <Input value={readTime} onChange={(e) => setReadTime(e.target.value)} data-testid="input-edit-readtime" />
+        </div>
+        <div className="space-y-2">
+          <Label>Author</Label>
+          <Input value={author} onChange={(e) => setAuthor(e.target.value)} data-testid="input-edit-author" />
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Excerpt</Label>
+        <Textarea value={excerpt} onChange={(e) => setExcerpt(e.target.value)} rows={2} data-testid="input-edit-excerpt" />
+      </div>
+      <div className="space-y-2">
+        <Label>Content (Markdown)</Label>
+        <Textarea value={content} onChange={(e) => setContent(e.target.value)} rows={16} className="font-mono text-sm" data-testid="input-edit-content" />
+      </div>
+      <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" onClick={onClose} data-testid="button-edit-cancel">Cancel</Button>
+        <Button onClick={handleSave} disabled={updateMutation.isPending} data-testid="button-edit-save">
+          {updateMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function PostsList() {
   const { toast } = useToast();
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
 
   const { data: posts = [], isLoading } = useQuery<BlogPost[]>({
     queryKey: ["/api/admin/blog-posts"],
@@ -328,6 +399,7 @@ function PostsList() {
   }
 
   return (
+    <>
     <Table>
       <TableHeader>
         <TableRow>
@@ -380,6 +452,14 @@ function PostsList() {
             </TableCell>
             <TableCell>
               <div className="flex items-center justify-end gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditingPost(post)}
+                  data-testid={`button-edit-${post.id}`}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
                 <a href={`/blog/${post.slug}?preview=admin`} target="_blank" rel="noopener noreferrer">
                   <Button variant="ghost" size="icon" data-testid={`button-preview-${post.id}`}>
                     <Eye className="h-4 w-4" />
@@ -425,6 +505,21 @@ function PostsList() {
         ))}
       </TableBody>
     </Table>
+
+    <Dialog open={!!editingPost} onOpenChange={(open) => !open && setEditingPost(null)}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Pencil className="h-5 w-5" />
+            Edit Blog Post
+          </DialogTitle>
+        </DialogHeader>
+        {editingPost && (
+          <PostEditor post={editingPost} onClose={() => setEditingPost(null)} />
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
 

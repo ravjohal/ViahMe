@@ -83,7 +83,7 @@ export class BlogScheduler {
       this.isRunning = true;
 
       console.log(`${PREFIX} ${ts()} Triggering weekly blog generation...`);
-      await this.generatePost(config.autoPublish, config.topicQueue);
+      await this.generatePost(false, config.topicQueue);
       this.isRunning = false;
     } catch (error) {
       this.isRunning = false;
