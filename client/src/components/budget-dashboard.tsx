@@ -85,15 +85,13 @@ export function BudgetDashboard({
         </div>
 
         <div className="space-y-2">
-          {totalSpent > 0 && (
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <p className="text-xs text-muted-foreground">Spent</p>
-                <p className="text-xs font-mono text-muted-foreground">{spentPercentage.toFixed(0)}%</p>
-              </div>
-              <Progress value={Math.min(spentPercentage, 100)} className="h-2" />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs text-muted-foreground">Spent</p>
+              <p className="text-xs font-mono text-muted-foreground">{spentPercentage.toFixed(0)}%</p>
             </div>
-          )}
+            <Progress value={Math.min(spentPercentage, 100)} className="h-2" />
+          </div>
           {allocated > 0 && (
             <div>
               <div className="flex items-center justify-between mb-1">
@@ -101,12 +99,6 @@ export function BudgetDashboard({
                 <p className="text-xs font-mono text-muted-foreground">{allocatedPercentage.toFixed(0)}%</p>
               </div>
               <Progress value={Math.min(allocatedPercentage, 100)} className="h-1.5 opacity-50" />
-            </div>
-          )}
-          {totalSpent === 0 && allocated === 0 && (
-            <div>
-              <Progress value={0} className="h-2" />
-              <p className="text-xs text-muted-foreground mt-1">No expenses tracked yet</p>
             </div>
           )}
         </div>
