@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { DollarSign, Calendar, AlertTriangle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { BudgetCategory } from "@shared/schema";
 
 interface BudgetDashboardProps {
@@ -31,7 +31,11 @@ export function BudgetDashboard({
 
   const remainingBudget = total - totalSpent;
   const spentPercentage = total > 0 ? (totalSpent / total) * 100 : 0;
-  const unallocatedBudget = total - totalByCeremonies;
+  const allocated = showCeremonyBudgets ? totalByCeremonies : totalByCategories;
+  const allocatedPercentage = total > 0 ? (allocated / total) * 100 : 0;
+  const unallocated = total - allocated;
+
+  const hasMismatch = budgetTrackingMode !== "ceremony" && showCeremonyBudgets && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100;
 
   return (
     <Card 
@@ -39,84 +43,85 @@ export function BudgetDashboard({
       onClick={onNavigate}
       data-testid="card-budget-summary-dashboard"
     >
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <div className="flex flex-wrap items-center gap-4 md:gap-6">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
-            <p className="text-xs md:text-sm text-muted-foreground">Target Budget</p>
-            <p className="text-xl md:text-2xl font-bold font-mono">
+            <p className="text-2xl md:text-3xl font-bold font-mono">
               ${total.toLocaleString()}
             </p>
+            <p className="text-xs text-muted-foreground">Total Budget</p>
           </div>
-          
-          {showCeremonyBudgets && totalByCeremonies > 0 && (
-            <>
-              <div className="h-10 w-px bg-border hidden sm:block" />
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  By Ceremonies
-                </p>
-                <p className="text-lg md:text-xl font-bold font-mono">
-                  ${totalByCeremonies.toLocaleString()}
-                </p>
-              </div>
-            </>
+          {hasMismatch && (
+            <Badge variant="outline" className="px-2 py-1 text-xs font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300">
+              <AlertTriangle className="w-3 h-3 mr-1" />
+              Category / Ceremony mismatch
+            </Badge>
           )}
-          
-          {budgetTrackingMode !== "ceremony" && totalByCategories > 0 && (
-            <>
-              <div className="h-10 w-px bg-border hidden sm:block" />
-              <div>
-                <p className="text-xs md:text-sm text-muted-foreground flex items-center gap-1">
-                  <DollarSign className="w-3 h-3" />
-                  By Categories
-                </p>
-                <p className="text-lg md:text-xl font-bold font-mono">
-                  ${totalByCategories.toLocaleString()}
-                </p>
-              </div>
-            </>
-          )}
-          
-          <div className="h-10 w-px bg-border hidden sm:block" />
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 md:gap-6">
           <div>
-            <p className="text-xs md:text-sm text-muted-foreground">Spent</p>
+            <p className="text-lg md:text-xl font-bold font-mono">
+              ${allocated.toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Planned
+            </p>
+          </div>
+          <div>
             <p className="text-lg md:text-xl font-bold font-mono">
               ${totalSpent.toLocaleString()}
             </p>
+            <p className="text-xs text-muted-foreground">Spent</p>
           </div>
-        </div>
-        
-        <div className="flex flex-wrap items-center gap-3">
-          {showCeremonyBudgets && unallocatedBudget > 0 && totalByCeremonies > 0 && (
-            <Badge variant="outline" className="px-2 py-1 text-xs font-mono bg-emerald-50 dark:bg-emerald-900/20 border-emerald-300 text-emerald-700 dark:text-emerald-300">
-              ${unallocatedBudget.toLocaleString()} left to plan
-            </Badge>
-          )}
-          {showCeremonyBudgets && unallocatedBudget < 0 && totalByCeremonies > 0 && (
-            <Badge variant="destructive" className="px-2 py-1 text-xs font-mono">
-              ${Math.abs(unallocatedBudget).toLocaleString()} over target
-            </Badge>
-          )}
-          {budgetTrackingMode !== "ceremony" && showCeremonyBudgets && totalByCategories > 0 && totalByCeremonies > 0 && Math.abs(totalByCategories - totalByCeremonies) > 100 && (
-            <Badge variant="outline" className="px-2 py-1 text-xs font-mono bg-orange-50 dark:bg-orange-900/20 border-orange-300 text-orange-700 dark:text-orange-300">
-              <AlertTriangle className="w-3 h-3 mr-1" />
-              Mismatch
-            </Badge>
-          )}
-          <div className="text-right">
-            <p className="text-xs md:text-sm text-muted-foreground">Remaining</p>
-            <p className={`text-lg md:text-xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600"}`}>
+          <div>
+            <p className={`text-lg md:text-xl font-bold font-mono ${remainingBudget < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
               {remainingBudget < 0 ? "-" : ""}${Math.abs(remainingBudget).toLocaleString()}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {totalSpent > 0 ? "Left to Spend" : "Unspent"}
             </p>
           </div>
         </div>
+
+        <div className="space-y-2">
+          {totalSpent > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground">Spent</p>
+                <p className="text-xs font-mono text-muted-foreground">{spentPercentage.toFixed(0)}%</p>
+              </div>
+              <Progress value={Math.min(spentPercentage, 100)} className="h-2" />
+            </div>
+          )}
+          {allocated > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs text-muted-foreground">Planned</p>
+                <p className="text-xs font-mono text-muted-foreground">{allocatedPercentage.toFixed(0)}%</p>
+              </div>
+              <Progress value={Math.min(allocatedPercentage, 100)} className="h-1.5 opacity-50" />
+            </div>
+          )}
+          {totalSpent === 0 && allocated === 0 && (
+            <div>
+              <Progress value={0} className="h-2" />
+              <p className="text-xs text-muted-foreground mt-1">No expenses tracked yet</p>
+            </div>
+          )}
+        </div>
+
+        {unallocated > 0 && allocated > 0 && (
+          <p className="text-xs text-muted-foreground">
+            ${unallocated.toLocaleString()} not yet assigned to {showCeremonyBudgets ? "ceremonies" : "categories"}
+          </p>
+        )}
+        {unallocated < 0 && allocated > 0 && (
+          <p className="text-xs text-destructive font-medium">
+            ${Math.abs(unallocated).toLocaleString()} over your total budget
+          </p>
+        )}
       </div>
-      
-      <Progress value={Math.min(spentPercentage, 100)} className="h-2" />
-      <p className="text-xs text-muted-foreground mt-2">
-        {spentPercentage.toFixed(0)}% of budget spent
-      </p>
     </Card>
   );
 }
