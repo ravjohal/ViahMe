@@ -54,6 +54,67 @@ export async function registerTaskRoutes(router: Router, storage: IStorage) {
     }
   });
 
+  router.post("/bulk-delete", async (req, res) => {
+    try {
+      const { taskIds, weddingId } = req.body;
+      if (!weddingId) {
+        return res.status(400).json({ error: "weddingId is required" });
+      }
+      if (!Array.isArray(taskIds) || taskIds.length === 0) {
+        return res.status(400).json({ error: "taskIds must be a non-empty array" });
+      }
+      const weddingTasks = await storage.getTasksByWedding(weddingId);
+      const weddingTaskIds = new Set(weddingTasks.map(t => t.id));
+      const validIds = taskIds.filter((id: string) => weddingTaskIds.has(id));
+      let deleted = 0;
+      for (const id of validIds) {
+        const success = await storage.deleteTask(id);
+        if (success) deleted++;
+      }
+      res.json({ deleted });
+    } catch (error) {
+      console.error("Error bulk deleting tasks:", error);
+      res.status(500).json({ error: "Failed to bulk delete tasks" });
+    }
+  });
+
+  router.post("/bulk-update", async (req, res) => {
+    try {
+      const { taskIds, weddingId, data } = req.body;
+      if (!weddingId) {
+        return res.status(400).json({ error: "weddingId is required" });
+      }
+      if (!Array.isArray(taskIds) || taskIds.length === 0) {
+        return res.status(400).json({ error: "taskIds must be a non-empty array" });
+      }
+      if (!data || typeof data !== 'object') {
+        return res.status(400).json({ error: "data must be an object" });
+      }
+      const allowedFields = ['completed', 'priority', 'dueDate', 'category', 'assignedToId', 'assignedToName'];
+      const sanitizedData: Record<string, any> = {};
+      for (const key of Object.keys(data)) {
+        if (allowedFields.includes(key)) {
+          sanitizedData[key] = data[key];
+        }
+      }
+      if (Object.keys(sanitizedData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+      const weddingTasks = await storage.getTasksByWedding(weddingId);
+      const weddingTaskIds = new Set(weddingTasks.map(t => t.id));
+      const validIds = taskIds.filter((id: string) => weddingTaskIds.has(id));
+      let updated = 0;
+      for (const id of validIds) {
+        const task = await storage.updateTask(id, sanitizedData);
+        if (task) updated++;
+      }
+      res.json({ updated });
+    } catch (error) {
+      console.error("Error bulk updating tasks:", error);
+      res.status(500).json({ error: "Failed to bulk update tasks" });
+    }
+  });
+
   router.post("/generate/:weddingId", async (req, res) => {
     try {
       const weddingId = req.params.weddingId;

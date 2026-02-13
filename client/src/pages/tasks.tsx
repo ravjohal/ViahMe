@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import type { Task, Event, WeddingRoleAssignment, TaskComment } from "@shared/schema";
@@ -215,6 +215,7 @@ export default function TasksPage() {
   const [newComment, setNewComment] = useState<{ [taskId: string]: string }>({});
   const [expandedPeriods, setExpandedPeriods] = useState<Set<string>>(new Set(TIMELINE_PERIODS.map(p => p.key)));
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   
   const toggleCategoryExpanded = (periodKey: string, category: string) => {
     const key = `${periodKey}:${category}`;
@@ -318,6 +319,50 @@ export default function TasksPage() {
       toast({
         title: "Task deleted",
         description: "The task has been removed from your checklist.",
+      });
+    },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (taskIds: string[]) => {
+      const res = await apiRequest("POST", "/api/tasks/bulk-delete", { taskIds, weddingId: wedding?.id });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+      setSelectedTasks(new Set());
+      toast({
+        title: "Tasks deleted",
+        description: `${data.deleted} task${data.deleted === 1 ? '' : 's'} removed from your checklist.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete tasks. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const bulkCompleteMutation = useMutation({
+    mutationFn: async (taskIds: string[]) => {
+      const res = await apiRequest("POST", "/api/tasks/bulk-update", { taskIds, weddingId: wedding?.id, data: { completed: true } });
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", wedding?.id] });
+      setSelectedTasks(new Set());
+      toast({
+        title: "Tasks completed",
+        description: `${data.updated} task${data.updated === 1 ? '' : 's'} marked as completed.`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update tasks. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -513,6 +558,26 @@ export default function TasksPage() {
       completed: false,
     });
   };
+
+  useEffect(() => {
+    setSelectedTasks(new Set());
+  }, [filterPriority, filterCompleted, filterEvent, filterAssignee, filterCategory, viewMode]);
+
+  const filteredSelectedIds = useMemo(() => {
+    const filteredIds = new Set(filteredTasks.map(t => t.id));
+    return Array.from(selectedTasks).filter(id => filteredIds.has(id));
+  }, [selectedTasks, filteredTasks]);
+
+  const allFilteredSelected = filteredTasks.length > 0 && filteredTasks.every(t => selectedTasks.has(t.id));
+  const someFilteredSelected = filteredTasks.some(t => selectedTasks.has(t.id));
+  const selectAllRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const el = selectAllRef.current;
+    if (el) {
+      (el as any).indeterminate = someFilteredSelected && !allFilteredSelected;
+    }
+  }, [someFilteredSelected, allFilteredSelected]);
 
   const toggleComplete = (task: Task) => {
     updateMutation.mutate({
@@ -1054,6 +1119,76 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {filteredTasks.length > 0 && (
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              ref={selectAllRef}
+              checked={allFilteredSelected}
+              onCheckedChange={(checked) => {
+                if (checked) {
+                  setSelectedTasks(new Set(filteredTasks.map(t => t.id)));
+                } else {
+                  setSelectedTasks(new Set());
+                }
+              }}
+              data-testid="checkbox-select-all"
+            />
+            <span className="text-sm text-muted-foreground">
+              {filteredSelectedIds.length > 0
+                ? `${filteredSelectedIds.length} of ${filteredTasks.length} selected`
+                : `Select all ${filteredTasks.length} tasks`}
+            </span>
+          </div>
+          {filteredSelectedIds.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const incompleteIds = filteredSelectedIds.filter(
+                    id => !tasks.find(t => t.id === id)?.completed
+                  );
+                  if (incompleteIds.length === 0) {
+                    toast({ title: "Already completed", description: "All selected tasks are already marked as completed." });
+                    return;
+                  }
+                  bulkCompleteMutation.mutate(incompleteIds);
+                }}
+                disabled={bulkCompleteMutation.isPending}
+                data-testid="button-bulk-complete"
+              >
+                {bulkCompleteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                Mark Completed
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (confirm(`Delete ${filteredSelectedIds.length} selected task${filteredSelectedIds.length === 1 ? '' : 's'}? This cannot be undone.`)) {
+                    bulkDeleteMutation.mutate(filteredSelectedIds);
+                  }
+                }}
+                disabled={bulkDeleteMutation.isPending}
+                className="text-destructive hover:text-destructive"
+                data-testid="button-bulk-delete"
+              >
+                {bulkDeleteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Delete
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       <Card className="p-6">
         {tasksLoading ? (
           <div className="space-y-4">
@@ -1212,11 +1347,23 @@ export default function TasksPage() {
                                       <div
                                         key={task.id}
                                         className={`p-3 rounded-lg border transition-all hover-elevate ${
-                                          task.completed ? "bg-muted/30 opacity-60" : "bg-card"
-                                        }`}
+                                          task.completed ? "bg-muted/30 opacity-60" : ""
+                                        } ${selectedTasks.has(task.id) ? "ring-1 ring-primary/40" : "bg-card"}`}
                                         data-testid={`task-item-${task.id}`}
                                       >
                                         <div className="flex items-start gap-3">
+                                          <Checkbox
+                                            checked={selectedTasks.has(task.id)}
+                                            onCheckedChange={(checked) => {
+                                              setSelectedTasks(prev => {
+                                                const next = new Set(prev);
+                                                if (checked) { next.add(task.id); } else { next.delete(task.id); }
+                                                return next;
+                                              });
+                                            }}
+                                            className="mt-0.5"
+                                            data-testid={`checkbox-select-task-${task.id}`}
+                                          />
                                           <Checkbox
                                             checked={task.completed || false}
                                             onCheckedChange={() => toggleComplete(task)}
@@ -1317,11 +1464,23 @@ export default function TasksPage() {
                             <div
                               key={task.id}
                               className={`p-3 rounded-lg border transition-all hover-elevate ${
-                                task.completed ? "bg-muted/30 opacity-60" : "bg-card"
-                              }`}
+                                task.completed ? "bg-muted/30 opacity-60" : ""
+                              } ${selectedTasks.has(task.id) ? "ring-1 ring-primary/40" : "bg-card"}`}
                               data-testid={`task-item-${task.id}`}
                             >
                               <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={selectedTasks.has(task.id)}
+                                  onCheckedChange={(checked) => {
+                                    setSelectedTasks(prev => {
+                                      const next = new Set(prev);
+                                      if (checked) { next.add(task.id); } else { next.delete(task.id); }
+                                      return next;
+                                    });
+                                  }}
+                                  className="mt-0.5"
+                                  data-testid={`checkbox-select-task-${task.id}`}
+                                />
                                 <Checkbox
                                   checked={task.completed || false}
                                   onCheckedChange={() => toggleComplete(task)}
@@ -1429,11 +1588,23 @@ export default function TasksPage() {
                 <div
                   key={task.id}
                   className={`p-4 rounded-lg border transition-all hover-elevate ${
-                    task.completed ? "bg-muted/30 opacity-60" : "bg-card"
-                  }`}
+                    task.completed ? "bg-muted/30 opacity-60" : ""
+                  } ${selectedTasks.has(task.id) ? "ring-1 ring-primary/40" : "bg-card"}`}
                   data-testid={`task-item-${task.id}`}
                 >
                   <div className="flex items-start gap-4">
+                    <Checkbox
+                      checked={selectedTasks.has(task.id)}
+                      onCheckedChange={(checked) => {
+                        setSelectedTasks(prev => {
+                          const next = new Set(prev);
+                          if (checked) { next.add(task.id); } else { next.delete(task.id); }
+                          return next;
+                        });
+                      }}
+                      className="mt-1"
+                      data-testid={`checkbox-select-task-${task.id}`}
+                    />
                     <Checkbox
                       checked={task.completed || false}
                       onCheckedChange={() => toggleComplete(task)}
