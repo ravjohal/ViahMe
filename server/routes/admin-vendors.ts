@@ -291,7 +291,16 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       }
       
       const claims = await storage.getAllVendorClaimHistory();
-      res.json(claims);
+      const enrichedClaims = await Promise.all(
+        claims.map(async (claim) => {
+          const vendor = await storage.getVendor(claim.vendorId);
+          return {
+            ...claim,
+            vendorClaimed: vendor?.claimed ?? false,
+          };
+        })
+      );
+      res.json(enrichedClaims);
     } catch (error) {
       console.error("Error fetching claim history:", error);
       res.status(500).json({ error: "Failed to fetch claim history" });

@@ -99,7 +99,9 @@ export default function AdminVendorClaims() {
     enabled: !!user && user.isSiteAdmin,
   });
 
-  const { data: claimHistory = [], isLoading: isLoadingHistory } = useQuery<VendorClaimStaging[]>({
+  type ClaimHistoryItem = VendorClaimStaging & { vendorClaimed: boolean };
+
+  const { data: claimHistory = [], isLoading: isLoadingHistory } = useQuery<ClaimHistoryItem[]>({
     queryKey: ["/api/admin/vendor-claims/history"],
     enabled: !!user && user.isSiteAdmin,
   });
@@ -695,6 +697,7 @@ export default function AdminVendorClaims() {
                             <TableHead>Vendor</TableHead>
                             <TableHead>Claimant</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Profile Claimed</TableHead>
                             <TableHead>Submitted</TableHead>
                             <TableHead>Reviewed</TableHead>
                             <TableHead>Notes</TableHead>
@@ -756,6 +759,23 @@ export default function AdminVendorClaims() {
                                     <Clock className="h-3 w-3 mr-1" />
                                     Pending
                                   </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {claim.status === 'approved' ? (
+                                  claim.vendorClaimed ? (
+                                    <Badge variant="outline" data-testid={`badge-claimed-${claim.id}`}>
+                                      <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
+                                      Yes
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="secondary" data-testid={`badge-claimed-${claim.id}`}>
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Not yet
+                                    </Badge>
+                                  )
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">--</span>
                                 )}
                               </TableCell>
                               <TableCell>
