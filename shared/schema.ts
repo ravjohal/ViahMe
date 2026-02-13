@@ -5720,7 +5720,7 @@ export const userFeedback = pgTable("user_feedback", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("user_feedback_status_idx").on(table.status),
-  index("user_feedback_created_at_idx").on(table.createdAt),
+  index("user_feedback_created_at_idx").on(table.createdAt.desc()),
 ]);
 
 export const insertUserFeedbackSchema = createInsertSchema(userFeedback).omit({
