@@ -65,7 +65,7 @@ const DEFAULT_BODY = `<p>Hello,</p>
   <li>Showcase your services to engaged couples</li>
 </ul>`;
 const DEFAULT_CTA = "Claim Your Profile";
-const DEFAULT_FOOTER = `<p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
+const DEFAULT_FOOTER = `<p style="color: #666; font-size: 14px;">This link expires in 7 days.</p>
 <p style="color: #666; font-size: 12px;">If you don't want to receive these emails, you can ignore this message.</p>`;
 
 function EmailTemplateEditor() {
@@ -450,6 +450,7 @@ export default function AdminBulkInvitations() {
                     <TableHead>Email</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Categories</TableHead>
+                    <TableHead className="text-center">Invites</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -461,14 +462,12 @@ export default function AdminBulkInvitations() {
                     return (
                       <TableRow 
                         key={vendor.id}
-                        className={pendingInvite ? "opacity-60" : ""}
                         data-testid={`row-vendor-${vendor.id}`}
                       >
                         <TableCell>
                           <Checkbox
                             checked={isSelected}
                             onCheckedChange={() => toggleVendor(vendor.id)}
-                            disabled={pendingInvite}
                             data-testid={`checkbox-vendor-${vendor.id}`}
                           />
                         </TableCell>
@@ -502,10 +501,19 @@ export default function AdminBulkInvitations() {
                           </div>
                         </TableCell>
                         <TableCell>
+                          <div className="text-center text-sm font-medium">
+                            {(vendor as any).claimInviteCount || 0}
+                          </div>
+                        </TableCell>
+                        <TableCell>
                           {pendingInvite ? (
                             <Badge variant="outline" className="text-xs">
                               <Clock className="h-3 w-3 mr-1" />
-                              Invite Pending
+                              Invite Sent
+                            </Badge>
+                          ) : vendor.claimTokenExpires ? (
+                            <Badge variant="secondary" className="text-xs">
+                              Expired
                             </Badge>
                           ) : (
                             <Badge variant="secondary" className="text-xs">

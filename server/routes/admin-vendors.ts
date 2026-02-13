@@ -127,22 +127,19 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         return res.status(400).json({ error: "Vendor has no email or phone to send invitation to" });
       }
       
-      if (vendor.claimTokenExpires && new Date(vendor.claimTokenExpires) > new Date()) {
-        const hoursRemaining = Math.ceil((new Date(vendor.claimTokenExpires).getTime() - Date.now()) / (1000 * 60 * 60));
-        return res.status(429).json({ 
-          error: `A claim invitation was already sent recently. Please wait ${hoursRemaining} hours before sending another.` 
-        });
-      }
-      
       const claimToken = randomUUID();
-      const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
+      const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
       
       await storage.updateVendor(req.params.id, {
         claimToken,
         claimTokenExpires,
-      });
+        claimInviteCount: (vendor.claimInviteCount || 0) + 1,
+      } as any);
       
-      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : `${req.protocol}://${req.get('host')}`;
+      const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
       
       if (vendor.email) {
         try {
@@ -367,9 +364,13 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         email: claim.claimantEmail,
         claimToken,
         claimTokenExpires,
+        claimInviteCount: (vendor.claimInviteCount || 0) + 1,
       } as any);
       
-      const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : `${req.protocol}://${req.get('host')}`;
+      const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
       try {
         await storage.sendClaimEmail(vendor.id, claim.claimantEmail, vendor.name, claimLink);
       } catch (err) {
@@ -492,28 +493,25 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       let claimSkipReason: string | undefined;
       
       if (updatedVendor && !updatedVendor.claimed && updatedVendor.email) {
-        // Check cooldown - skip if a recent invitation was already sent
-        const hasRecentInvite = updatedVendor.claimTokenExpires && new Date(updatedVendor.claimTokenExpires) > new Date();
-        
-        if (hasRecentInvite) {
-          claimSkipReason = "A claim invitation was already sent recently";
-        } else {
-          try {
-            const claimToken = randomUUID();
-            const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days for approval flow
-            
-            await storage.updateVendor(req.params.id, {
-              claimToken,
-              claimTokenExpires,
-            });
-            
-            claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
-            
-            await storage.sendClaimEmail(updatedVendor.id, updatedVendor.email, updatedVendor.name, claimLink);
-            claimInvitationSent = true;
-          } catch (err) {
-            console.error("Failed to send claim invitation after approval:", err);
-          }
+        try {
+          const claimToken = randomUUID();
+          const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+          
+          await storage.updateVendor(req.params.id, {
+            claimToken,
+            claimTokenExpires,
+            claimInviteCount: (updatedVendor.claimInviteCount || 0) + 1,
+          } as any);
+          
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+            : `${req.protocol}://${req.get('host')}`;
+          claimLink = `${baseUrl}/claim-profile/${claimToken}`;
+          
+          await storage.sendClaimEmail(updatedVendor.id, updatedVendor.email, updatedVendor.name, claimLink);
+          claimInvitationSent = true;
+        } catch (err) {
+          console.error("Failed to send claim invitation after approval:", err);
         }
       } else if (updatedVendor && !updatedVendor.claimed && !updatedVendor.email) {
         claimSkipReason = "Vendor has no email address for claim invitation";
@@ -606,25 +604,22 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             continue;
           }
           
-          // Check cooldown
-          if (vendor.claimTokenExpires && new Date(vendor.claimTokenExpires) > new Date()) {
-            results.push({ vendorId, success: false, message: "Recent invitation pending" });
-            continue;
-          }
-          
-          // Generate token and send invitation (48h expiration, matching single invite)
           const claimToken = randomUUID();
-          const claimTokenExpires = new Date(Date.now() + 48 * 60 * 60 * 1000);
+          const claimTokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
           
           await storage.updateVendor(vendorId, {
             claimToken,
             claimTokenExpires,
-          });
+            claimInviteCount: (vendor.claimInviteCount || 0) + 1,
+          } as any);
           
-          const claimLink = `${req.protocol}://${req.get('host')}/claim-profile/${claimToken}`;
+          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+            : `${req.protocol}://${req.get('host')}`;
+          const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
           
           await storage.sendClaimEmail(vendor.id, vendor.email, vendor.name, claimLink);
-          results.push({ vendorId, success: true, message: `Sent to ${vendor.email}` });
+          results.push({ vendorId, success: true, message: `Sent to ${vendor.email} (#${(vendor.claimInviteCount || 0) + 1})` });
         } catch (err) {
           console.error(`Failed to send claim invitation to vendor ${vendorId}:`, err);
           results.push({ vendorId, success: false, message: "Failed to send" });

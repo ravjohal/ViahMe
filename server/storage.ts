@@ -5654,7 +5654,7 @@ export class DBStorage implements IStorage {
               <li>Showcase your services to engaged couples</li>
             </ul>`;
     const defaultCta = 'Claim Your Profile';
-    const defaultFooter = `<p style="color: #666; font-size: 14px;">This link expires in 48 hours.</p>
+    const defaultFooter = `<p style="color: #666; font-size: 14px;">This link expires in 7 days.</p>
             <p style="color: #666; font-size: 12px;">
               If you don't want to receive these emails, you can ignore this message.
             </p>`;

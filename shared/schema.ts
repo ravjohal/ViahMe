@@ -1100,6 +1100,7 @@ export const vendors = pgTable("vendors", {
   createdByUserType: text("created_by_user_type"), // 'vendor' | 'couple' - indicates who created the profile
   claimToken: text("claim_token"), // Token sent to vendor to claim their profile
   claimTokenExpires: timestamp("claim_token_expires"), // When the claim token expires
+  claimInviteCount: integer("claim_invite_count").notNull().default(0), // How many claim invitations have been sent
   notifyCooldownUntil: timestamp("notify_cooldown_until"), // Don't send another notification until this time
   lastViewNotifiedAt: timestamp("last_view_notified_at"), // Last time we notified vendor about a profile view
   viewCount: integer("view_count").notNull().default(0), // Number of profile views
@@ -1182,6 +1183,7 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   reviewCount: true,
   claimToken: true,
   claimTokenExpires: true,
+  claimInviteCount: true,
   notifyCooldownUntil: true,
   lastViewNotifiedAt: true,
   viewCount: true,
