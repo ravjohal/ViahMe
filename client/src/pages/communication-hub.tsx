@@ -284,6 +284,21 @@ export default function CommunicationHub() {
           </CardContent>
         </Card>
 
+        <Card className="hover-elevate">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
+                <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Phone Contacts</p>
+                <p className="text-2xl font-bold" data-testid="text-phone-contacts">
+                  {householdsWithContact.phone}/{householdsWithContact.total}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
