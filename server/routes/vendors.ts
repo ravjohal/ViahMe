@@ -587,7 +587,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       const validatedData = coupleSubmitVendorSchema.parse(req.body);
       
       // Fetch the couple's wedding to get their tradition
-      const weddings = await storage.getWeddingsByUserId(authReq.user.id);
+      const weddings = await storage.getWeddingsByUser(authReq.user.id);
       const coupleWedding = weddings[0]; // Get first wedding
       const coupleTradition = coupleWedding?.tradition || null;
       
