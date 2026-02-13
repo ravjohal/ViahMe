@@ -224,11 +224,15 @@ function AlertsWidget({ alerts }: { alerts: BudgetAlert[] }) {
 function SpendingByCategoryWidget({ categories, expenses }: { categories: BudgetCategory[]; expenses: Expense[] }) {
   const categoryData = useMemo(() => {
     const data = categories.map((cat, index) => {
-      const catExpenses = expenses.filter((e) => e.categoryId === cat.id);
+      const catExpenses = expenses.filter((e) => 
+        e.bucketCategoryId === cat.id || 
+        e.parentCategory === cat.slug || 
+        e.categoryId === cat.id
+      );
       const spent = catExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
       const allocated = parseFloat(cat.allocatedAmount?.toString() || "0");
       return {
-        name: CATEGORY_LABELS[cat.category] || cat.category,
+        name: cat.displayName || CATEGORY_LABELS[cat.slug] || cat.slug,
         spent,
         allocated,
         color: PIE_COLORS[index % PIE_COLORS.length],
@@ -861,7 +865,11 @@ export default function FinancialDashboard() {
     }
 
     categories.forEach((cat) => {
-      const catExpenses = expenses.filter((e) => e.categoryId === cat.id);
+      const catExpenses = expenses.filter((e) => 
+        e.bucketCategoryId === cat.id || 
+        e.parentCategory === cat.slug || 
+        e.categoryId === cat.id
+      );
       const spent = catExpenses.reduce((sum, e) => sum + parseFloat(e.amount?.toString() || "0"), 0);
       const allocated = parseFloat(cat.allocatedAmount?.toString() || "0");
       const catPercent = allocated > 0 ? (spent / allocated) * 100 : 0;
@@ -870,7 +878,7 @@ export default function FinancialDashboard() {
         result.push({
           id: `cat-over-${cat.id}`,
           type: "danger",
-          title: `${CATEGORY_LABELS[cat.category] || cat.category} Over Budget`,
+          title: `${cat.displayName || CATEGORY_LABELS[cat.slug] || cat.slug} Over Budget`,
           message: `Spent $${spent.toLocaleString()} of $${allocated.toLocaleString()} allocated`,
           categoryId: cat.id,
         });
@@ -878,7 +886,7 @@ export default function FinancialDashboard() {
         result.push({
           id: `cat-warn-${cat.id}`,
           type: "warning",
-          title: `${CATEGORY_LABELS[cat.category] || cat.category} at ${catPercent.toFixed(0)}%`,
+          title: `${cat.displayName || CATEGORY_LABELS[cat.slug] || cat.slug} at ${catPercent.toFixed(0)}%`,
           message: `$${(allocated - spent).toLocaleString()} remaining in this category`,
           categoryId: cat.id,
         });
