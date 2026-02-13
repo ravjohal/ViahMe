@@ -563,21 +563,7 @@ export default function TasksPage() {
     setSelectedTasks(new Set());
   }, [filterPriority, filterCompleted, filterEvent, filterAssignee, filterCategory, viewMode]);
 
-  const filteredSelectedIds = useMemo(() => {
-    const filteredIds = new Set(filteredTasks.map(t => t.id));
-    return Array.from(selectedTasks).filter(id => filteredIds.has(id));
-  }, [selectedTasks, filteredTasks]);
-
-  const allFilteredSelected = filteredTasks.length > 0 && filteredTasks.every(t => selectedTasks.has(t.id));
-  const someFilteredSelected = filteredTasks.some(t => selectedTasks.has(t.id));
   const selectAllRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const el = selectAllRef.current;
-    if (el) {
-      (el as any).indeterminate = someFilteredSelected && !allFilteredSelected;
-    }
-  }, [someFilteredSelected, allFilteredSelected]);
 
   const toggleComplete = (task: Task) => {
     updateMutation.mutate({
@@ -629,6 +615,21 @@ export default function TasksPage() {
       normalizeCategory(task.category) === filterCategory;
     return matchesPriority && matchesCompleted && matchesEvent && matchesAssignee && matchesCategory;
   });
+
+  const filteredSelectedIds = useMemo(() => {
+    const filteredIds = new Set(filteredTasks.map(t => t.id));
+    return Array.from(selectedTasks).filter(id => filteredIds.has(id));
+  }, [selectedTasks, filteredTasks]);
+
+  const allFilteredSelected = filteredTasks.length > 0 && filteredTasks.every(t => selectedTasks.has(t.id));
+  const someFilteredSelected = filteredTasks.some(t => selectedTasks.has(t.id));
+
+  useEffect(() => {
+    const el = selectAllRef.current;
+    if (el) {
+      (el as any).indeterminate = someFilteredSelected && !allFilteredSelected;
+    }
+  }, [someFilteredSelected, allFilteredSelected]);
 
   // Count tasks by category (for category tabs)
   const categoryCounts = useMemo(() => {
