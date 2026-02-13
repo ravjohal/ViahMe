@@ -307,7 +307,10 @@ export function registerAuthRoutes(app: Express, storage: IStorage) {
       await storage.setResetToken(user.id, token, expires);
 
       // Send password reset email
-      const resetUrl = `${process.env.REPLIT_DEV_DOMAIN || 'http://localhost:5000'}/reset-password?token=${token}`;
+      const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+        ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
+        : `${req.protocol}://${req.get('host')}`;
+      const resetUrl = `${baseUrl}/reset-password?token=${token}`;
       
       try {
         await sendEmail({

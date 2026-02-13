@@ -136,8 +136,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         claimInviteCount: (vendor.claimInviteCount || 0) + 1,
       } as any);
       
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+        ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
         : `${req.protocol}://${req.get('host')}`;
       const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
       
@@ -367,8 +367,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         claimInviteCount: (vendor.claimInviteCount || 0) + 1,
       } as any);
       
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+      const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+        ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
         : `${req.protocol}://${req.get('host')}`;
       const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
       try {
@@ -503,8 +503,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             claimInviteCount: (updatedVendor.claimInviteCount || 0) + 1,
           } as any);
           
-          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+          const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+            ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
             : `${req.protocol}://${req.get('host')}`;
           claimLink = `${baseUrl}/claim-profile/${claimToken}`;
           
@@ -613,8 +613,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             claimInviteCount: (vendor.claimInviteCount || 0) + 1,
           } as any);
           
-          const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-            ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+          const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+            ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
             : `${req.protocol}://${req.get('host')}`;
           const claimLink = `${baseUrl}/claim-profile/${claimToken}`;
           

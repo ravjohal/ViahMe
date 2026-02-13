@@ -103,7 +103,10 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
           token = await storage.generateHouseholdMagicToken(household.id, 365);
         }
 
-        const magicLink = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"}/rsvp/${token}`;
+        const commsBaseUrl = process.env.REPLIT_DEPLOYMENT_URL
+          ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
+          : `${req.protocol}://${req.get('host')}`;
+        const magicLink = `${commsBaseUrl}/rsvp/${token}`;
 
         if (channel === "email" || channel === "both") {
           const guests = await storage.getGuestsByHousehold(household.id);
@@ -375,7 +378,10 @@ export async function registerCommunicationRoutes(router: Router, storage: IStor
           token = await storage.generateHouseholdMagicToken(household.id, 365);
         }
 
-        const magicLink = `${process.env.REPLIT_DEV_DOMAIN ? `https://${process.env.REPLIT_DEV_DOMAIN}` : "http://localhost:5000"}/rsvp/${token}`;
+        const commsBaseUrl2 = process.env.REPLIT_DEPLOYMENT_URL
+          ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
+          : `${req.protocol}://${req.get('host')}`;
+        const magicLink = `${commsBaseUrl2}/rsvp/${token}`;
 
         if (channel === "email" || channel === "both" || !channel) {
           const guests = await storage.getGuestsByHousehold(household.id);

@@ -401,9 +401,9 @@ export function createWeddingCollaboratorsRouter(storage: IStorage): Router {
       const inviter = await storage.getUser(userId);
       
       // Build full invite URL
-      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-        : process.env.REPLIT_DEPLOYMENT_URL || 'https://viah.me';
+      const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
+        ? `https://${process.env.REPLIT_DEPLOYMENT_URL}`
+        : `${req.protocol}://${req.get('host')}`;
       const fullInviteUrl = `${baseUrl}/accept-invite?token=${inviteToken}`;
       
       // Send invitation email
