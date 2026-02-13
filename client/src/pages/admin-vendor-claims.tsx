@@ -42,7 +42,8 @@ import {
   Clock,
   MapPin,
   FileText,
-  Users
+  Users,
+  History
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -66,6 +67,7 @@ export default function AdminVendorClaims() {
   const [denialReason, setDenialReason] = useState("");
   const [sendDenialEmail, setSendDenialEmail] = useState(true);
   const [activeTab, setActiveTab] = useState("approval");
+  const [historySearchQuery, setHistorySearchQuery] = useState("");
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
     queryKey: ["/api/admin/vendors/unclaimed"],
@@ -74,6 +76,11 @@ export default function AdminVendorClaims() {
 
   const { data: pendingClaims = [], isLoading: isLoadingClaims } = useQuery<VendorClaimStaging[]>({
     queryKey: ["/api/admin/vendor-claims"],
+    enabled: !!user && user.isSiteAdmin,
+  });
+
+  const { data: claimHistory = [], isLoading: isLoadingHistory } = useQuery<VendorClaimStaging[]>({
+    queryKey: ["/api/admin/vendor-claims/history"],
     enabled: !!user && user.isSiteAdmin,
   });
 
@@ -90,6 +97,7 @@ export default function AdminVendorClaims() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-claims'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-claims/history'] });
       setReviewDialogOpen(false);
       toast({
         title: "Claim approved!",
@@ -115,6 +123,7 @@ export default function AdminVendorClaims() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-claims'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/vendor-claims/history'] });
       setReviewDialogOpen(false);
       setDenialReason("");
       setSendDenialEmail(true);
@@ -266,6 +275,17 @@ export default function AdminVendorClaims() {
       );
     });
 
+  const filteredHistory = claimHistory.filter((claim) => {
+    if (!historySearchQuery) return true;
+    const query = historySearchQuery.toLowerCase();
+    return (
+      claim.vendorName.toLowerCase().includes(query) ||
+      claim.claimantEmail.toLowerCase().includes(query) ||
+      (claim.claimantName?.toLowerCase().includes(query) ?? false) ||
+      claim.status.toLowerCase().includes(query)
+    );
+  });
+
   const getCategoryLabel = (category: string) => {
     return category
       .split("_")
@@ -403,6 +423,13 @@ export default function AdminVendorClaims() {
               <TabsTrigger value="vendors" className="flex items-center gap-2" data-testid="tab-vendors">
                 <Users className="h-4 w-4" />
                 Unclaimed Vendors
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2" data-testid="tab-history">
+                <History className="h-4 w-4" />
+                Claim History
+                {claimHistory.length > 0 && (
+                  <Badge variant="secondary" className="ml-1" data-testid="badge-history-count">{claimHistory.length}</Badge>
+                )}
               </TabsTrigger>
             </TabsList>
 
@@ -610,6 +637,171 @@ export default function AdminVendorClaims() {
                         </Card>
                       ))}
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="history">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Claim History</CardTitle>
+                  <CardDescription>
+                    Complete history of all vendor claim requests and their outcomes
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by vendor name, claimant email, or status..."
+                      value={historySearchQuery}
+                      onChange={(e) => setHistorySearchQuery(e.target.value)}
+                      className="pl-10"
+                      data-testid="input-search-history"
+                    />
+                  </div>
+
+                  {isLoadingHistory ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : filteredHistory.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <History className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium">No claim history</h3>
+                      <p className="text-muted-foreground">
+                        {historySearchQuery
+                          ? `No claims found matching "${historySearchQuery}"`
+                          : "No vendor claims have been submitted yet."
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Vendor</TableHead>
+                            <TableHead>Claimant</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Submitted</TableHead>
+                            <TableHead>Reviewed</TableHead>
+                            <TableHead>Notes</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredHistory.map((claim) => (
+                            <TableRow key={claim.id} data-testid={`row-history-${claim.id}`}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{claim.vendorName}</p>
+                                  {claim.vendorCategories && claim.vendorCategories.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {claim.vendorCategories.slice(0, 2).map((cat) => (
+                                        <Badge key={cat} variant="outline" className="text-xs">
+                                          {getCategoryLabel(cat)}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {claim.vendorLocation && (
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                                      <MapPin className="h-3 w-3" />
+                                      {claim.vendorLocation}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <p className="text-sm flex items-center gap-1">
+                                    <Mail className="h-3 w-3 text-muted-foreground" />
+                                    <span className="truncate max-w-[180px]">{claim.claimantEmail}</span>
+                                  </p>
+                                  {claim.claimantName && (
+                                    <p className="text-xs text-muted-foreground">{claim.claimantName}</p>
+                                  )}
+                                  {claim.claimantPhone && (
+                                    <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                      <Phone className="h-3 w-3" />
+                                      {claim.claimantPhone}
+                                    </p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {claim.status === 'approved' ? (
+                                  <Badge variant="outline" data-testid={`badge-status-${claim.id}`}>
+                                    <CheckCircle2 className="h-3 w-3 mr-1 text-green-600" />
+                                    Approved
+                                  </Badge>
+                                ) : claim.status === 'denied' ? (
+                                  <Badge variant="destructive" data-testid={`badge-status-${claim.id}`}>
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Denied
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" data-testid={`badge-status-${claim.id}`}>
+                                    <Clock className="h-3 w-3 mr-1" />
+                                    Pending
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <p className="text-sm text-muted-foreground">
+                                  {new Date(claim.createdAt).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(claim.createdAt).toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </TableCell>
+                              <TableCell>
+                                {claim.reviewedAt ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    {new Date(claim.reviewedAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    })}
+                                  </p>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">--</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {claim.adminNotes ? (
+                                  <p className="text-sm text-muted-foreground max-w-[200px] truncate" title={claim.adminNotes}>
+                                    {claim.adminNotes}
+                                  </p>
+                                ) : claim.notes ? (
+                                  <p className="text-sm text-muted-foreground max-w-[200px] truncate italic" title={claim.notes}>
+                                    {claim.notes}
+                                  </p>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">--</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {filteredHistory.length > 0 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      Showing {filteredHistory.length} of {claimHistory.length} claims
+                    </p>
                   )}
                 </CardContent>
               </Card>

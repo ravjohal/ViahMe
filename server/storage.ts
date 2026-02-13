@@ -1103,6 +1103,7 @@ export interface IStorage {
   getVendorClaimStaging(id: string): Promise<VendorClaimStaging | undefined>;
   getVendorClaimStagingByVendor(vendorId: string): Promise<VendorClaimStaging[]>;
   getAllPendingVendorClaims(): Promise<VendorClaimStaging[]>;
+  getAllVendorClaimHistory(): Promise<VendorClaimStaging[]>;
   createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging>;
   updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined>;
   deleteVendorClaimStaging(id: string): Promise<boolean>;
@@ -4880,6 +4881,7 @@ export class MemStorage implements IStorage {
   async getVendorClaimStaging(id: string): Promise<VendorClaimStaging | undefined> { return undefined; }
   async getVendorClaimStagingByVendor(vendorId: string): Promise<VendorClaimStaging[]> { return []; }
   async getAllPendingVendorClaims(): Promise<VendorClaimStaging[]> { return []; }
+  async getAllVendorClaimHistory(): Promise<VendorClaimStaging[]> { return []; }
   async createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
   async updateVendorClaimStaging(id: string, claim: Partial<VendorClaimStaging>): Promise<VendorClaimStaging | undefined> { throw new Error("MemStorage does not support Vendor Claim Staging. Use DBStorage."); }
   async deleteVendorClaimStaging(id: string): Promise<boolean> { return false; }
@@ -10417,6 +10419,11 @@ export class DBStorage implements IStorage {
     return await this.db.select().from(schema.vendorClaimStaging)
       .where(eq(schema.vendorClaimStaging.status, 'pending'))
       .orderBy(sql`${schema.vendorClaimStaging.createdAt} ASC`);
+  }
+
+  async getAllVendorClaimHistory(): Promise<VendorClaimStaging[]> {
+    return await this.db.select().from(schema.vendorClaimStaging)
+      .orderBy(sql`${schema.vendorClaimStaging.createdAt} DESC`);
   }
 
   async createVendorClaimStaging(claim: InsertVendorClaimStaging): Promise<VendorClaimStaging> {

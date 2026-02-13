@@ -279,6 +279,24 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.get("/vendor-claims/history", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth) {
+        return res.status(401).json({ error: "Authentication required" });
+      }
+      if (!auth.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      
+      const claims = await storage.getAllVendorClaimHistory();
+      res.json(claims);
+    } catch (error) {
+      console.error("Error fetching claim history:", error);
+      res.status(500).json({ error: "Failed to fetch claim history" });
+    }
+  });
+
   router.get("/vendor-claims", async (req: Request, res: Response) => {
     try {
       const auth = await requireAdminAuth(req, storage);
