@@ -284,21 +284,6 @@ export default function CommunicationHub() {
           </CardContent>
         </Card>
 
-        <Card className="hover-elevate">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-blue-100 dark:bg-blue-900">
-                <Phone className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Phone Contacts</p>
-                <p className="text-2xl font-bold" data-testid="text-phone-contacts">
-                  {householdsWithContact.phone}/{householdsWithContact.total}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -438,30 +423,7 @@ export default function CommunicationHub() {
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <Label className="text-base">Delivery Method</Label>
-                  <RadioGroup
-                    value={channel}
-                    onValueChange={(v) => setChannel(v as any)}
-                    className="flex flex-wrap gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="email" id="email" />
-                      <Label htmlFor="email" className="text-base cursor-pointer">
-                        Email only
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sms" id="sms" />
-                      <Label htmlFor="sms" className="text-base cursor-pointer">
-                        SMS only
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="both" id="both" />
-                      <Label htmlFor="both" className="text-base cursor-pointer">
-                        Both
-                      </Label>
-                    </div>
-                  </RadioGroup>
+                  <p className="text-base text-muted-foreground">Email</p>
                 </div>
 
                 <Separator />
@@ -761,30 +723,7 @@ export default function CommunicationHub() {
 
               <div className="space-y-3">
                 <Label className="text-base">Delivery Method</Label>
-                <RadioGroup
-                  value={channel}
-                  onValueChange={(v) => setChannel(v as any)}
-                  className="flex flex-wrap gap-4"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="email" id="update-email" />
-                    <Label htmlFor="update-email" className="text-base cursor-pointer">
-                      Email only
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sms" id="update-sms" />
-                    <Label htmlFor="update-sms" className="text-base cursor-pointer">
-                      SMS only
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="both" id="update-both" />
-                    <Label htmlFor="update-both" className="text-base cursor-pointer">
-                      Both
-                    </Label>
-                  </div>
-                </RadioGroup>
+                <p className="text-base text-muted-foreground">Email</p>
               </div>
 
               <div className="flex items-start gap-3 p-4 bg-yellow-50 dark:bg-yellow-950 rounded-lg border border-yellow-200 dark:border-yellow-800">
