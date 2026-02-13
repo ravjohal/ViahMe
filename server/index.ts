@@ -7,7 +7,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import { TaskReminderScheduler } from "./services/task-reminder-scheduler";
 import { VendorDiscoveryScheduler } from "./services/vendor-discovery-scheduler";
 import { BlogScheduler } from "./services/blog-scheduler";
-import { setBlogScheduler } from "./routes/blog";
+import { setBlogScheduler, seedBlogPosts } from "./routes/blog";
 import { storage } from "./storage";
 
 const app = express();
@@ -159,6 +159,8 @@ app.use(express.static(path.join(process.cwd(), "public")));
     log('Vendor discovery scheduler skipped (development mode)');
   }
   (app as any).vendorDiscoveryScheduler = vendorDiscoveryScheduler;
+
+  await seedBlogPosts();
 
   const blogScheduler = new BlogScheduler(storage);
   setBlogScheduler(blogScheduler);

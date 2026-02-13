@@ -441,7 +441,10 @@ function PostsList() {
                   AI
                 </Badge>
               ) : (
-                <Badge variant="outline" className="text-xs">Manual</Badge>
+                <Badge variant="outline" className="text-xs">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Manual
+                </Badge>
               )}
             </TableCell>
             <TableCell>

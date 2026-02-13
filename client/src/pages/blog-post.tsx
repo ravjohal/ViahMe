@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, Clock, ChevronLeft, ArrowRight, AlertCircle } from "lucide-react";
 import { useEffect } from "react";
-import { staticBlogPosts, type BlogPostDisplay } from "./blog";
+import { type BlogPostDisplay } from "./blog";
 import ReactMarkdown from "react-markdown";
 import type { BlogPost as DbBlogPost } from "@shared/schema";
 
@@ -25,7 +25,9 @@ export default function BlogPost() {
     enabled: !!slug,
   });
 
-  const staticPost = staticBlogPosts.find((p) => p.slug === slug);
+  const { data: allDbPosts = [] } = useQuery<DbBlogPost[]>({
+    queryKey: ["/api/blog-posts"],
+  });
 
   const post: BlogPostDisplay | null = dbPost
     ? {
@@ -39,11 +41,11 @@ export default function BlogPost() {
         category: dbPost.category,
         isFromDb: true,
       }
-    : staticPost || null;
+    : null;
 
-  const allSlugs = [
-    ...(staticBlogPosts.map(p => ({ slug: p.slug, title: p.title, category: p.category, excerpt: p.excerpt }))),
-  ];
+  const relatedPosts = allDbPosts
+    .filter(p => p.slug !== slug)
+    .map(p => ({ slug: p.slug, title: p.title, category: p.category, excerpt: p.excerpt }));
 
   useEffect(() => {
     if (post) {
@@ -164,8 +166,7 @@ export default function BlogPost() {
           <div className="mt-12">
             <h3 className="text-xl font-display font-bold mb-4">More Articles</h3>
             <div className="grid gap-4">
-              {allSlugs
-                .filter((p) => p.slug !== post.slug)
+              {relatedPosts
                 .slice(0, 3)
                 .map((relatedPost) => (
                   <Link key={relatedPost.slug} href={`/blog/${relatedPost.slug}`}>
