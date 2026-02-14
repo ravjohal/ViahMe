@@ -1101,6 +1101,8 @@ export const vendors = pgTable("vendors", {
   claimToken: text("claim_token"), // Token sent to vendor to claim their profile
   claimTokenExpires: timestamp("claim_token_expires"), // When the claim token expires
   claimInviteCount: integer("claim_invite_count").notNull().default(0), // How many claim invitations have been sent
+  claimInviteSentAt: timestamp("claim_invite_sent_at"), // When the last claim invitation was sent
+  claimLinkClickedAt: timestamp("claim_link_clicked_at"), // When the vendor first clicked the claim link
   notifyCooldownUntil: timestamp("notify_cooldown_until"), // Don't send another notification until this time
   lastViewNotifiedAt: timestamp("last_view_notified_at"), // Last time we notified vendor about a profile view
   viewCount: integer("view_count").notNull().default(0), // Number of profile views
@@ -1184,6 +1186,8 @@ export const insertVendorSchema = createInsertSchema(vendors).omit({
   claimToken: true,
   claimTokenExpires: true,
   claimInviteCount: true,
+  claimInviteSentAt: true,
+  claimLinkClickedAt: true,
   notifyCooldownUntil: true,
   lastViewNotifiedAt: true,
   viewCount: true,
