@@ -104,6 +104,93 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.get("/vendors/sent-invitations", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+
+      const searchQuery = (req.query.search as string || "").trim().toLowerCase();
+      const page = parseInt(req.query.page as string || "1", 10);
+      const limit = parseInt(req.query.limit as string || "50", 10);
+      const statusFilter = req.query.status as string || "all";
+
+      const allVendors = await storage.getAllVendors();
+      let invitedVendors = allVendors.filter(v => v.claimInviteCount > 0 && v.claimed === false);
+
+      const totalInvited = invitedVendors.length;
+      const clickedCount = invitedVendors.filter(v => v.claimLinkClickedAt).length;
+      const expiredCount = invitedVendors.filter(v => v.claimTokenExpires && new Date(v.claimTokenExpires) < new Date()).length;
+      const activeCount = invitedVendors.filter(v => v.claimToken && v.claimTokenExpires && new Date(v.claimTokenExpires) > new Date()).length;
+
+      if (statusFilter === "clicked") {
+        invitedVendors = invitedVendors.filter(v => v.claimLinkClickedAt);
+      } else if (statusFilter === "not_clicked") {
+        invitedVendors = invitedVendors.filter(v => !v.claimLinkClickedAt);
+      } else if (statusFilter === "expired") {
+        invitedVendors = invitedVendors.filter(v => v.claimTokenExpires && new Date(v.claimTokenExpires) < new Date());
+      } else if (statusFilter === "active") {
+        invitedVendors = invitedVendors.filter(v => v.claimToken && v.claimTokenExpires && new Date(v.claimTokenExpires) > new Date());
+      }
+
+      if (searchQuery) {
+        invitedVendors = invitedVendors.filter(v =>
+          v.name.toLowerCase().includes(searchQuery) ||
+          (v.email && v.email.toLowerCase().includes(searchQuery)) ||
+          (v.location && v.location.toLowerCase().includes(searchQuery)) ||
+          (v.city && v.city.toLowerCase().includes(searchQuery)) ||
+          (v.categories && v.categories.some(c => c.toLowerCase().includes(searchQuery)))
+        );
+      }
+
+      invitedVendors.sort((a, b) => {
+        const aClicked = a.claimLinkClickedAt ? 1 : 0;
+        const bClicked = b.claimLinkClickedAt ? 1 : 0;
+        if (bClicked !== aClicked) return bClicked - aClicked;
+        const aSent = a.claimInviteSentAt ? new Date(a.claimInviteSentAt).getTime() : 0;
+        const bSent = b.claimInviteSentAt ? new Date(b.claimInviteSentAt).getTime() : 0;
+        return bSent - aSent;
+      });
+
+      const totalFiltered = invitedVendors.length;
+      const offset = (page - 1) * limit;
+      const paginatedVendors = invitedVendors.slice(offset, offset + limit);
+
+      res.json({
+        vendors: paginatedVendors.map(v => ({
+          id: v.id,
+          name: v.name,
+          email: v.email,
+          phone: v.phone,
+          location: v.location,
+          city: v.city,
+          categories: v.categories,
+          claimInviteCount: v.claimInviteCount,
+          claimInviteSentAt: v.claimInviteSentAt,
+          claimLinkClickedAt: v.claimLinkClickedAt,
+          claimTokenExpires: v.claimTokenExpires,
+          claimToken: v.claimToken ? true : false,
+          website: v.website,
+        })),
+        pagination: {
+          page,
+          limit,
+          totalFiltered,
+          totalPages: Math.ceil(totalFiltered / limit),
+        },
+        stats: {
+          totalInvited,
+          clickedCount,
+          expiredCount,
+          activeCount,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching sent invitations:", error);
+      res.status(500).json({ error: "Failed to fetch sent invitations" });
+    }
+  });
+
   router.post("/vendors/:id/send-claim-invitation", async (req: Request, res: Response) => {
     try {
       const authReq = req as AuthRequest;
@@ -136,6 +223,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         claimToken,
         claimTokenExpires,
         claimInviteCount: (vendor.claimInviteCount || 0) + 1,
+        claimInviteSentAt: new Date(),
+        claimLinkClickedAt: null,
       } as any);
       
       const baseUrl = process.env.REPLIT_DEPLOYMENT_URL
@@ -640,6 +729,8 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
             claimToken,
             claimTokenExpires,
             claimInviteCount: (vendor.claimInviteCount || 0) + 1,
+            claimInviteSentAt: new Date(),
+            claimLinkClickedAt: null,
           } as any);
           
           const baseUrl = process.env.REPLIT_DEPLOYMENT_URL

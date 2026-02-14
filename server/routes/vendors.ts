@@ -761,6 +761,12 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
         return res.status(400).json({ error: "Claim token has expired", valid: false, expired: true });
       }
       
+      if (!vendor.claimLinkClickedAt) {
+        await storage.updateVendor(vendor.id, {
+          claimLinkClickedAt: new Date(),
+        } as any);
+      }
+      
       // Get the approved claim staging record to retrieve the claimant email
       const claimStagingRecords = await storage.getVendorClaimStagingByVendor(vendor.id);
       const approvedClaim = claimStagingRecords.find(c => c.status === 'approved');

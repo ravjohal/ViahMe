@@ -27,6 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Search, 
   Mail, 
@@ -43,7 +50,9 @@ import {
   MapPin,
   FileText,
   Users,
-  History
+  History,
+  MousePointerClick,
+  ExternalLink,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -69,6 +78,9 @@ export default function AdminVendorClaims() {
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [unclaimedSearch, setUnclaimedSearch] = useState("");
   const [unclaimedPage, setUnclaimedPage] = useState(1);
+  const [invitationsSearch, setInvitationsSearch] = useState("");
+  const [invitationsPage, setInvitationsPage] = useState(1);
+  const [invitationsStatus, setInvitationsStatus] = useState("all");
 
   interface UnclaimedResponse {
     vendors: Vendor[];
@@ -93,6 +105,47 @@ export default function AdminVendorClaims() {
   const vendors = unclaimedData?.vendors ?? [];
   const unclaimedStats = unclaimedData?.stats;
   const unclaimedPagination = unclaimedData?.pagination;
+
+  interface SentInvitationVendor {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    location: string | null;
+    city: string | null;
+    categories: string[] | null;
+    claimInviteCount: number;
+    claimInviteSentAt: string | null;
+    claimLinkClickedAt: string | null;
+    claimTokenExpires: string | null;
+    claimToken: boolean;
+    website: string | null;
+  }
+
+  interface SentInvitationsResponse {
+    vendors: SentInvitationVendor[];
+    pagination: { page: number; limit: number; totalFiltered: number; totalPages: number };
+    stats: { totalInvited: number; clickedCount: number; expiredCount: number; activeCount: number };
+  }
+
+  const { data: invitationsData, isLoading: isLoadingInvitations } = useQuery<SentInvitationsResponse>({
+    queryKey: ["/api/admin/vendors/sent-invitations", invitationsSearch, invitationsPage, invitationsStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.set("page", String(invitationsPage));
+      params.set("limit", "50");
+      if (invitationsSearch) params.set("search", invitationsSearch);
+      if (invitationsStatus !== "all") params.set("status", invitationsStatus);
+      const res = await fetch(`/api/admin/vendors/sent-invitations?${params}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+    enabled: !!user && user.isSiteAdmin,
+  });
+
+  const invitedVendors = invitationsData?.vendors ?? [];
+  const invitationsStats = invitationsData?.stats;
+  const invitationsPagination = invitationsData?.pagination;
 
   const { data: pendingClaims = [], isLoading: isLoadingClaims } = useQuery<VendorClaimStaging[]>({
     queryKey: ["/api/admin/vendor-claims"],
@@ -216,6 +269,7 @@ export default function AdminVendorClaims() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/unclaimed"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/sent-invitations"] });
       toast({
         title: "Invitation sent!",
         description: data.message,
@@ -399,15 +453,15 @@ export default function AdminVendorClaims() {
                 </div>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="hover-elevate cursor-pointer" onClick={() => setActiveTab("invitations")} data-testid="card-pending-invites">
               <CardContent className="pt-6">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
                     <Clock className="h-5 w-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{vendorsWithPendingToken}</p>
-                    <p className="text-sm text-muted-foreground">Pending Invites</p>
+                    <p className="text-2xl font-bold">{invitationsStats?.totalInvited ?? vendorsWithPendingToken}</p>
+                    <p className="text-sm text-muted-foreground">Sent Invitations</p>
                   </div>
                 </div>
               </CardContent>
@@ -433,6 +487,13 @@ export default function AdminVendorClaims() {
               <TabsTrigger value="vendors" className="flex items-center gap-2" data-testid="tab-vendors">
                 <Users className="h-4 w-4" />
                 Unclaimed Vendors
+              </TabsTrigger>
+              <TabsTrigger value="invitations" className="flex items-center gap-2" data-testid="tab-invitations">
+                <Send className="h-4 w-4" />
+                Sent Invitations
+                {invitationsStats && invitationsStats.totalInvited > 0 && (
+                  <Badge variant="secondary" className="ml-1" data-testid="badge-invitations-count">{invitationsStats.totalInvited}</Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="history" className="flex items-center gap-2" data-testid="tab-history">
                 <History className="h-4 w-4" />
@@ -830,6 +891,257 @@ export default function AdminVendorClaims() {
                     <p className="text-sm text-muted-foreground text-center">
                       Showing {filteredHistory.length} of {claimHistory.length} claims
                     </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="invitations">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sent Claim Invitations</CardTitle>
+                  <CardDescription>
+                    Track all vendors who have been sent claim invitations and see who clicked the link
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {invitationsStats && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <Card>
+                        <CardContent className="pt-4 pb-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Send className="h-4 w-4 text-blue-600" />
+                            <div>
+                              <p className="text-xl font-bold">{invitationsStats.totalInvited}</p>
+                              <p className="text-xs text-muted-foreground">Total Invited</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <MousePointerClick className="h-4 w-4 text-green-600" />
+                            <div>
+                              <p className="text-xl font-bold">{invitationsStats.clickedCount}</p>
+                              <p className="text-xs text-muted-foreground">Link Clicked</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-orange-600" />
+                            <div>
+                              <p className="text-xl font-bold">{invitationsStats.activeCount}</p>
+                              <p className="text-xs text-muted-foreground">Active Links</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <Card>
+                        <CardContent className="pt-4 pb-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div>
+                              <p className="text-xl font-bold">{invitationsStats.expiredCount}</p>
+                              <p className="text-xs text-muted-foreground">Expired</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by name, email, location..."
+                        value={invitationsSearch}
+                        onChange={(e) => { setInvitationsSearch(e.target.value); setInvitationsPage(1); }}
+                        className="pl-10"
+                        data-testid="input-search-invitations"
+                      />
+                    </div>
+                    <Select value={invitationsStatus} onValueChange={(v) => { setInvitationsStatus(v); setInvitationsPage(1); }}>
+                      <SelectTrigger className="w-[180px]" data-testid="select-invitation-status">
+                        <SelectValue placeholder="Filter by status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Invitations</SelectItem>
+                        <SelectItem value="clicked">Clicked Link</SelectItem>
+                        <SelectItem value="not_clicked">Not Clicked</SelectItem>
+                        <SelectItem value="active">Active (Not Expired)</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {isLoadingInvitations ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Skeleton key={i} className="h-16 w-full" />
+                      ))}
+                    </div>
+                  ) : invitedVendors.length === 0 ? (
+                    <div className="py-12 text-center">
+                      <Send className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+                      <h3 className="text-lg font-medium">No invitations found</h3>
+                      <p className="text-muted-foreground">
+                        {invitationsSearch || invitationsStatus !== "all"
+                          ? "Try adjusting your search or filter."
+                          : "No claim invitations have been sent yet."
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Business</TableHead>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Location</TableHead>
+                            <TableHead>Sent</TableHead>
+                            <TableHead>Link Status</TableHead>
+                            <TableHead>Times Sent</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {invitedVendors.map((vendor) => {
+                            const isExpired = vendor.claimTokenExpires && new Date(vendor.claimTokenExpires) < new Date();
+                            const isActive = vendor.claimToken && !isExpired;
+                            const hasClicked = !!vendor.claimLinkClickedAt;
+
+                            return (
+                              <TableRow key={vendor.id} data-testid={`row-invitation-${vendor.id}`}>
+                                <TableCell>
+                                  <p className="font-medium">{vendor.name}</p>
+                                  {vendor.categories && vendor.categories.length > 0 && (
+                                    <Badge variant="outline" className="text-xs mt-1">
+                                      {getCategoryLabel(vendor.categories[0])}
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  {vendor.email ? (
+                                    <span className="flex items-center gap-1 text-sm">
+                                      <Mail className="h-3 w-3 text-muted-foreground" />
+                                      <span className="truncate max-w-[180px]">{vendor.email}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">No email</span>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                                    <MapPin className="h-3 w-3" />
+                                    {vendor.city || vendor.location || "Unknown"}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-sm text-muted-foreground">
+                                    {vendor.claimInviteSentAt
+                                      ? new Date(vendor.claimInviteSentAt).toLocaleDateString()
+                                      : "Unknown"}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  {hasClicked ? (
+                                    <Badge variant="default" className="bg-green-600">
+                                      <MousePointerClick className="h-3 w-3 mr-1" />
+                                      Clicked
+                                    </Badge>
+                                  ) : isExpired ? (
+                                    <Badge variant="outline" className="text-red-500 border-red-300">
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      Expired
+                                    </Badge>
+                                  ) : isActive ? (
+                                    <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      Pending
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                      Unknown
+                                    </Badge>
+                                  )}
+                                  {hasClicked && vendor.claimLinkClickedAt && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {new Date(vendor.claimLinkClickedAt).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="secondary">{vendor.claimInviteCount}x</Badge>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-1">
+                                    {vendor.website && (
+                                      <Button
+                                        size="icon"
+                                        variant="ghost"
+                                        onClick={() => window.open(vendor.website!, "_blank")}
+                                        data-testid={`button-website-${vendor.id}`}
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleSendInvite(vendor as any)}
+                                      disabled={!vendor.email || sendInviteMutation.isPending}
+                                      data-testid={`button-resend-${vendor.id}`}
+                                    >
+                                      <Send className="h-4 w-4 mr-1" />
+                                      Resend
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+
+                  {invitationsPagination && invitationsPagination.totalFiltered > 0 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {((invitationsPagination.page - 1) * invitationsPagination.limit) + 1}–{Math.min(invitationsPagination.page * invitationsPagination.limit, invitationsPagination.totalFiltered)} of {invitationsPagination.totalFiltered} vendors
+                      </p>
+                      {invitationsPagination.totalPages > 1 && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={invitationsPage <= 1}
+                            onClick={() => setInvitationsPage(p => Math.max(1, p - 1))}
+                            data-testid="button-invitations-prev"
+                          >
+                            Previous
+                          </Button>
+                          <span className="text-sm text-muted-foreground">
+                            Page {invitationsPagination.page} of {invitationsPagination.totalPages}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={invitationsPage >= invitationsPagination.totalPages}
+                            onClick={() => setInvitationsPage(p => p + 1)}
+                            data-testid="button-invitations-next"
+                          >
+                            Next
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </Card>
