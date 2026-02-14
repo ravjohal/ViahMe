@@ -442,6 +442,10 @@ export interface IStorage {
   getVendorNameLocationIdMap(): Promise<Map<string, string>>;
   getVendorsByCategory(category: string): Promise<Vendor[]>;
   getVendorsByLocation(location: string): Promise<Vendor[]>;
+  getDuplicateVendorGroups(): Promise<{ name: string; city: string | null; vendorIds: string[] }[]>;
+  getVendorUsageStats(vendorIds: string[]): Promise<Map<string, { reviews: number; bookings: number; contracts: number; expenses: number; messages: number; favorites: number; leads: number; claims: number }>>;
+  deleteVendorAndRelations(vendorId: string): Promise<boolean>;
+  reassignVendorRelations(fromVendorId: string, toVendorId: string): Promise<void>;
   createVendor(vendor: InsertVendor): Promise<Vendor>;
   updateVendor(id: string, vendor: Partial<InsertVendor>): Promise<Vendor | undefined>;
   // Ghost Profile / Claim methods
@@ -2023,6 +2027,21 @@ export class MemStorage implements IStorage {
     return Array.from(this.vendors.values()).filter((v) =>
       v.location.toLowerCase().includes(location.toLowerCase())
     );
+  }
+
+  async getDuplicateVendorGroups(): Promise<{ name: string; city: string | null; vendorIds: string[] }[]> {
+    return [];
+  }
+
+  async getVendorUsageStats(vendorIds: string[]): Promise<Map<string, { reviews: number; bookings: number; contracts: number; expenses: number; messages: number; favorites: number; leads: number; claims: number }>> {
+    return new Map();
+  }
+
+  async deleteVendorAndRelations(vendorId: string): Promise<boolean> {
+    return this.vendors.delete(vendorId);
+  }
+
+  async reassignVendorRelations(fromVendorId: string, toVendorId: string): Promise<void> {
   }
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
@@ -5577,6 +5596,101 @@ export class DBStorage implements IStorage {
   async getVendorsByLocation(location: string): Promise<Vendor[]> {
     const vendors = await this.db.select().from(schema.vendors);
     return vendors.filter(v => v.location.toLowerCase().includes(location.toLowerCase()));
+  }
+
+  async getDuplicateVendorGroups(): Promise<{ name: string; city: string | null; vendorIds: string[] }[]> {
+    const rows = await this.db.execute(sql`
+      SELECT v.name, v.city, array_agg(v.id ORDER BY v.created_at ASC) as vendor_ids
+      FROM vendors v
+      WHERE v.approval_status = 'approved'
+      GROUP BY v.name, v.city
+      HAVING COUNT(*) > 1
+      ORDER BY COUNT(*) DESC
+    `);
+    return (rows.rows as any[]).map(r => ({
+      name: r.name,
+      city: r.city || null,
+      vendorIds: r.vendor_ids,
+    }));
+  }
+
+  async getVendorUsageStats(vendorIds: string[]): Promise<Map<string, { reviews: number; bookings: number; contracts: number; expenses: number; messages: number; favorites: number; leads: number; claims: number }>> {
+    const result = new Map<string, { reviews: number; bookings: number; contracts: number; expenses: number; messages: number; favorites: number; leads: number; claims: number }>();
+    if (vendorIds.length === 0) return result;
+
+    for (const vid of vendorIds) {
+      result.set(vid, { reviews: 0, bookings: 0, contracts: 0, expenses: 0, messages: 0, favorites: 0, leads: 0, claims: 0 });
+    }
+
+    const tables: { table: string; key: keyof ReturnType<Map<string, any>['get']> }[] = [
+      { table: 'reviews', key: 'reviews' },
+      { table: 'bookings', key: 'bookings' },
+      { table: 'contracts', key: 'contracts' },
+      { table: 'expenses', key: 'expenses' },
+      { table: 'messages', key: 'messages' },
+      { table: 'vendor_favorites', key: 'favorites' },
+      { table: 'vendor_leads', key: 'leads' },
+      { table: 'vendor_claim_staging', key: 'claims' },
+    ];
+
+    for (const { table, key } of tables) {
+      try {
+        const rows = await this.db.execute(
+          sql`SELECT vendor_id, COUNT(*)::int as cnt FROM ${sql.identifier(table)} WHERE vendor_id = ANY(${vendorIds}) GROUP BY vendor_id`
+        );
+        for (const row of rows.rows as any[]) {
+          const stats = result.get(row.vendor_id);
+          if (stats) (stats as any)[key] = row.cnt;
+        }
+      } catch {
+      }
+    }
+    return result;
+  }
+
+  async deleteVendorAndRelations(vendorId: string): Promise<boolean> {
+    const relatedTables = [
+      'reviews', 'bookings', 'contracts', 'expenses', 'messages',
+      'vendor_favorites', 'vendor_leads', 'vendor_claim_staging',
+      'conversation_status', 'follow_up_reminders', 'lead_nurture_sequences',
+      'photo_galleries', 'quick_reply_templates', 'quote_requests',
+      'service_packages', 'vendor_access_passes', 'vendor_acknowledgments',
+      'vendor_analytics', 'vendor_availability', 'vendor_calendar_accounts',
+      'vendor_calendars', 'vendor_event_tags', 'vendor_interaction_events',
+      'vendor_teammate_invitations', 'vendor_teammates', 'wedding_shopping_items',
+    ];
+
+    for (const table of relatedTables) {
+      try {
+        await this.db.execute(sql`DELETE FROM ${sql.identifier(table)} WHERE vendor_id = ${vendorId}`);
+      } catch {
+      }
+    }
+
+    const result = await this.db.delete(schema.vendors).where(eq(schema.vendors.id, vendorId));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async reassignVendorRelations(fromVendorId: string, toVendorId: string): Promise<void> {
+    const relatedTables = [
+      'reviews', 'bookings', 'contracts', 'expenses', 'messages',
+      'vendor_favorites', 'vendor_leads', 'vendor_claim_staging',
+      'conversation_status', 'follow_up_reminders', 'lead_nurture_sequences',
+      'photo_galleries', 'quick_reply_templates', 'quote_requests',
+      'service_packages', 'vendor_access_passes', 'vendor_acknowledgments',
+      'vendor_analytics', 'vendor_availability', 'vendor_calendar_accounts',
+      'vendor_calendars', 'vendor_event_tags', 'vendor_interaction_events',
+      'vendor_teammate_invitations', 'vendor_teammates', 'wedding_shopping_items',
+    ];
+
+    for (const table of relatedTables) {
+      try {
+        await this.db.execute(
+          sql`UPDATE ${sql.identifier(table)} SET vendor_id = ${toVendorId} WHERE vendor_id = ${fromVendorId}`
+        );
+      } catch {
+      }
+    }
   }
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {

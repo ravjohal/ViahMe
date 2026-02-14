@@ -16,6 +16,7 @@ import {
   Search,
   PenLine,
   Eye,
+  Copy,
 } from "lucide-react";
 
 interface AdminAction {
@@ -81,6 +82,13 @@ const adminActions: AdminAction[] = [
     description: "Bulk publish or unpublish vendors by metro area, category, or data quality criteria",
     href: "/admin/vendor-publishing",
     icon: Eye,
+    category: "vendors",
+  },
+  {
+    title: "Duplicate Vendor Remover",
+    description: "Find and remove duplicate vendor entries, with usage data visibility and safe merge operations",
+    href: "/admin/duplicate-vendors",
+    icon: Copy,
     category: "vendors",
   },
   {

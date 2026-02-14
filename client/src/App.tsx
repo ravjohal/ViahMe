@@ -62,6 +62,7 @@ import AdminFeedback from "@/pages/admin-feedback";
 import AdminUsers from "@/pages/admin-users";
 import AdminVendorDiscovery from "@/pages/admin-vendor-discovery";
 import AdminVendorPublishing from "@/pages/admin-vendor-publishing";
+import AdminDuplicateVendors from "@/pages/admin-duplicate-vendors";
 import AdminBlog from "@/pages/admin-blog";
 import AiPlanner from "@/pages/ai-planner";
 import { FeedbackButton } from "@/components/feedback-button";
@@ -362,6 +363,11 @@ function Router() {
       <Route path="/admin/vendor-discovery">
         <AdminRoute>
           <AdminVendorDiscovery />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/duplicate-vendors">
+        <AdminRoute>
+          <AdminDuplicateVendors />
         </AdminRoute>
       </Route>
       <Route path="/settings" component={Settings} />

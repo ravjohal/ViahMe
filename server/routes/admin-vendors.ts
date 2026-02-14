@@ -1757,4 +1757,142 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       res.status(500).json({ error: "Failed to fetch stats" });
     }
   });
+
+  router.get("/duplicate-vendors", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+
+      const groups = await storage.getDuplicateVendorGroups();
+
+      const allVendorIds = groups.flatMap(g => g.vendorIds);
+      const [vendors, usageStats] = await Promise.all([
+        storage.getVendorsByIds(allVendorIds),
+        storage.getVendorUsageStats(allVendorIds),
+      ]);
+
+      const vendorMap = new Map(vendors.map(v => [v.id, v]));
+
+      const result = groups.map(group => ({
+        name: group.name,
+        city: group.city,
+        count: group.vendorIds.length,
+        vendors: group.vendorIds.map(id => {
+          const v = vendorMap.get(id);
+          const stats = usageStats.get(id) || { reviews: 0, bookings: 0, contracts: 0, expenses: 0, messages: 0, favorites: 0, leads: 0, claims: 0 };
+          const totalUsage = stats.reviews + stats.bookings + stats.contracts + stats.expenses + stats.messages + stats.favorites + stats.leads + stats.claims;
+          return {
+            id,
+            name: v?.name || '',
+            slug: v?.slug || '',
+            location: v?.location || '',
+            city: v?.city || '',
+            email: v?.email || '',
+            phone: v?.phone || '',
+            website: v?.website || '',
+            categories: v?.categories || [],
+            claimed: v?.claimed || false,
+            isGhostProfile: v?.isGhostProfile || false,
+            verified: v?.verified || false,
+            createdAt: v?.createdAt,
+            description: v?.description || '',
+            usage: stats,
+            totalUsage,
+          };
+        }),
+      }));
+
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching duplicate vendors:", error);
+      res.status(500).json({ error: "Failed to fetch duplicate vendors" });
+    }
+  });
+
+  router.post("/duplicate-vendors/remove", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+
+      const { keepVendorId, removeVendorIds } = z.object({
+        keepVendorId: z.string(),
+        removeVendorIds: z.array(z.string()).min(1),
+      }).parse(req.body);
+
+      const keepVendor = await storage.getVendor(keepVendorId);
+      if (!keepVendor) return res.status(404).json({ error: "Vendor to keep not found" });
+
+      let reassigned = 0;
+      let deleted = 0;
+
+      for (const removeId of removeVendorIds) {
+        const removeVendor = await storage.getVendor(removeId);
+        if (!removeVendor) continue;
+
+        await storage.reassignVendorRelations(removeId, keepVendorId);
+        reassigned++;
+
+        await storage.deleteVendorAndRelations(removeId);
+        deleted++;
+      }
+
+      res.json({ success: true, kept: keepVendorId, deleted, reassigned });
+    } catch (error) {
+      console.error("Error removing duplicate vendors:", error);
+      res.status(500).json({ error: "Failed to remove duplicates" });
+    }
+  });
+
+  router.post("/duplicate-vendors/auto-clean", async (req: Request, res: Response) => {
+    try {
+      if (!(await checkAdminAccess(req, storage))) {
+        return res.status(401).json({ error: "Admin access required" });
+      }
+
+      const groups = await storage.getDuplicateVendorGroups();
+      const allVendorIds = groups.flatMap(g => g.vendorIds);
+      const [vendors, usageStats] = await Promise.all([
+        storage.getVendorsByIds(allVendorIds),
+        storage.getVendorUsageStats(allVendorIds),
+      ]);
+      const vendorMap = new Map(vendors.map(v => [v.id, v]));
+
+      let totalDeleted = 0;
+      let groupsCleaned = 0;
+
+      for (const group of groups) {
+        const groupVendors = group.vendorIds
+          .map(id => {
+            const v = vendorMap.get(id);
+            const stats = usageStats.get(id) || { reviews: 0, bookings: 0, contracts: 0, expenses: 0, messages: 0, favorites: 0, leads: 0, claims: 0 };
+            const totalUsage = stats.reviews + stats.bookings + stats.contracts + stats.expenses + stats.messages + stats.favorites + stats.leads + stats.claims;
+            return { id, vendor: v, totalUsage, claimed: v?.claimed || false, hasEmail: !!(v?.email), hasWebsite: !!(v?.website) };
+          })
+          .sort((a, b) => {
+            if (a.claimed !== b.claimed) return a.claimed ? -1 : 1;
+            if (a.totalUsage !== b.totalUsage) return b.totalUsage - a.totalUsage;
+            if (a.hasEmail !== b.hasEmail) return a.hasEmail ? -1 : 1;
+            if (a.hasWebsite !== b.hasWebsite) return a.hasWebsite ? -1 : 1;
+            return 0;
+          });
+
+        const keepId = groupVendors[0].id;
+        const removeIds = groupVendors.slice(1).map(v => v.id);
+
+        for (const removeId of removeIds) {
+          await storage.reassignVendorRelations(removeId, keepId);
+          await storage.deleteVendorAndRelations(removeId);
+          totalDeleted++;
+        }
+        groupsCleaned++;
+      }
+
+      res.json({ success: true, groupsCleaned, totalDeleted });
+    } catch (error) {
+      console.error("Error auto-cleaning duplicates:", error);
+      res.status(500).json({ error: "Failed to auto-clean duplicates" });
+    }
+  });
 }
