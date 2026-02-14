@@ -173,7 +173,7 @@ app.use(express.static(path.join(process.cwd(), "public")));
 
   (async function fixVendorData() {
     try {
-      const { detectMetroFromLocation, METRO_CITY_MAP } = await import("./utils/metro-detection");
+      const { resolveMetroFromLocation } = await import("./utils/metro-resolver");
       const allVendors = await storage.getAllVendors();
       let published = 0, cityFixed = 0;
       for (const v of allVendors) {
@@ -183,7 +183,7 @@ app.use(express.static(path.join(process.cwd(), "public")));
           published++;
         }
         if (v.approvalStatus === 'approved' && !v.city) {
-          const metro = detectMetroFromLocation(v.location || '');
+          const metro = await resolveMetroFromLocation(storage, v.location || '');
           if (metro) {
             updates.city = metro;
             cityFixed++;

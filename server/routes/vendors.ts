@@ -8,7 +8,8 @@ import { ensureVendorAccess } from "./middleware";
 import { sendBookingConfirmationEmail, sendVendorNotificationEmail } from "../email";
 import { detectVendorDuplicates } from "../services/duplicate-detector";
 
-import { METRO_CITY_MAP, detectMetroFromLocation, extractCityFromLocation } from "../utils/metro-detection";
+import { METRO_CITY_MAP, extractCityFromLocation } from "../utils/metro-detection";
+import { resolveMetroFromLocationSync } from "../utils/metro-resolver";
 
 export async function registerVendorRoutes(router: Router, storage: IStorage) {
   router.get("/metro-city-stats", async (req, res) => {
@@ -19,7 +20,7 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
       const stats: Record<string, { total: number; cities: Record<string, number> }> = {};
 
       for (const vendor of published) {
-        const metro = vendor.city || detectMetroFromLocation(vendor.location || '') || 'Other';
+        const metro = vendor.city || resolveMetroFromLocationSync(vendor.location || '') || 'Other';
         if (!stats[metro]) stats[metro] = { total: 0, cities: {} };
         stats[metro].total++;
 
@@ -69,8 +70,8 @@ export async function registerVendorRoutes(router: Router, storage: IStorage) {
 
       vendors = vendors.map(v => {
         if (!v.city || !METRO_CITY_MAP[v.city]) {
-          const detected = detectMetroFromLocation(v.location || '');
-          if (detected) return { ...v, city: detected };
+          const resolved = resolveMetroFromLocationSync(v.location || '');
+          if (resolved) return { ...v, city: resolved };
         }
         return v;
       });

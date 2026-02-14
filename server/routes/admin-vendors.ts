@@ -6,7 +6,8 @@ import { z } from "zod";
 import { coupleSubmitVendorSchema, insertDiscoveryJobSchema, type InsertVendor } from "@shared/schema";
 import { discoverVendors, type DiscoveredVendor } from "../ai/gemini";
 import { VendorDiscoveryScheduler } from "../services/vendor-discovery-scheduler";
-import { METRO_CITY_MAP, detectMetroFromLocation, extractCityFromLocation } from "../utils/metro-detection";
+import { METRO_CITY_MAP, extractCityFromLocation } from "../utils/metro-detection";
+import { resolveMetroFromLocation, resolveMetroFromLocationSync } from "../utils/metro-resolver";
 
 async function requireAdminAuth(req: Request, storage: IStorage): Promise<{ userId: string; isAdmin: boolean } | null> {
   const authReq = req as AuthRequest;
@@ -1255,16 +1256,13 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       if (!resolvedCity && staged.discoveryJobId) {
         const job = await storage.getDiscoveryJob(staged.discoveryJobId);
         if (job?.area) {
-          const allMetros = await storage.getAllMetroAreas();
-          const match = allMetros.find(m => 
-            m.value === job.area || 
-            job.area.toLowerCase().startsWith(m.value.toLowerCase())
-          );
-          resolvedCity = match?.value || detectMetroFromLocation(job.area) || "";
+          const metro = await resolveMetroFromLocation(storage, job.area);
+          resolvedCity = metro || "";
         }
       }
-      if (!resolvedCity) {
-        resolvedCity = detectMetroFromLocation(staged.location || "") || "";
+      if (!resolvedCity && staged.location) {
+        const metro = await resolveMetroFromLocation(storage, staged.location);
+        resolvedCity = metro || "";
       }
 
       const newVendor: InsertVendor = {
@@ -1494,9 +1492,9 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       }
 
       for (const vendor of [...missingCity, ...wrongCity]) {
-        const detectedMetro = detectMetroFromLocation(vendor.location || '');
-        if (detectedMetro) {
-          await storage.updateVendor(vendor.id, { city: detectedMetro } as any);
+        const resolvedMetro = await resolveMetroFromLocation(storage, vendor.location || '');
+        if (resolvedMetro) {
+          await storage.updateVendor(vendor.id, { city: resolvedMetro } as any);
           cityFixedCount++;
         } else if (vendor.location) {
           unmapped.push(`${vendor.name}: ${vendor.location}`);
@@ -1726,7 +1724,7 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       const stats: Record<string, { total: number; cities: Record<string, number> }> = {};
 
       for (const vendor of published) {
-        const metro = vendor.city || detectMetroFromLocation(vendor.location || '') || 'Other';
+        const metro = vendor.city || resolveMetroFromLocationSync(vendor.location || '') || 'Other';
         if (!stats[metro]) {
           stats[metro] = { total: 0, cities: {} };
         }

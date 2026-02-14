@@ -1,5 +1,5 @@
 import type { IStorage } from "../storage";
-import { loadMetroCityMapping } from "./metro-detection";
+import { loadMetroCityMapping, METRO_CITY_MAP } from "./metro-detection";
 
 export interface ResolvedMetro {
   metroValue: string;
@@ -91,6 +91,71 @@ export async function resolveAreasServed(
   }
 
   return resolved;
+}
+
+function extractCandidateCities(location: string): string[] {
+  if (!location) return [];
+  const candidates: string[] = [];
+  const parts = location.split(",").map(p => p.trim()).filter(Boolean);
+
+  for (const part of parts) {
+    const cleaned = part
+      .replace(/\b[A-Z]{2}\b/g, "")
+      .replace(/\b\d{5}(-\d{4})?\b/g, "")
+      .replace(/\bCanada\b/gi, "")
+      .replace(/\bUSA?\b/gi, "")
+      .replace(/\bUnited States\b/gi, "")
+      .trim();
+    if (cleaned && cleaned.length > 1 && !/^\d+/.test(cleaned)) {
+      candidates.push(cleaned);
+    }
+  }
+
+  return candidates;
+}
+
+export function resolveMetroFromLocationSync(location: string): string | null {
+  if (!location) return null;
+
+  const candidates = extractCandidateCities(location);
+
+  const cityToMetro = new Map<string, string>();
+  for (const [metroName, cities] of Object.entries(METRO_CITY_MAP)) {
+    for (const city of cities) {
+      cityToMetro.set(city.toLowerCase(), metroName);
+    }
+  }
+
+  for (const candidate of candidates) {
+    const match = cityToMetro.get(candidate.toLowerCase());
+    if (match) return match;
+  }
+
+  const metroValues = new Set(Object.keys(METRO_CITY_MAP));
+  for (const candidate of candidates) {
+    if (metroValues.has(candidate)) return candidate;
+  }
+
+  return null;
+}
+
+export async function resolveMetroFromLocation(
+  storage: IStorage,
+  location: string
+): Promise<string | null> {
+  if (!location) return null;
+
+  const candidates = extractCandidateCities(location);
+
+  for (const candidate of candidates) {
+    const cityMatch = await storage.getMetroCityByName(candidate);
+    if (cityMatch) return cityMatch.metroValue;
+  }
+
+  const syncResult = resolveMetroFromLocationSync(location);
+  if (syncResult) return syncResult;
+
+  return null;
 }
 
 async function refreshMetroCache(storage: IStorage): Promise<void> {
