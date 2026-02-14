@@ -14,14 +14,24 @@ export function getMetroCityMap(): Record<string, string[]> {
 export function detectMetroFromLocation(location: string): string | null {
   if (!location) return null;
   const loc = location.toLowerCase();
+
+  if (loc.includes(", bc") || loc.includes("british columbia")) return "Vancouver";
+  if (loc.includes(", on") || (loc.includes("ontario") && !loc.includes("ontario, ca"))) return "Toronto";
+
+  let bestMatch: { metro: string; length: number } | null = null;
+
   for (const [metroName, cities] of Object.entries(METRO_CITY_MAP)) {
     for (const city of cities) {
-      if (loc.includes(city.toLowerCase())) return metroName;
+      const cityLower = city.toLowerCase();
+      if (loc.includes(cityLower)) {
+        if (!bestMatch || cityLower.length > bestMatch.length) {
+          bestMatch = { metro: metroName, length: cityLower.length };
+        }
+      }
     }
   }
-  if (loc.includes(", bc") || loc.includes("british columbia")) return "Vancouver";
-  if (loc.includes(", on") || loc.includes("ontario")) return "Toronto";
-  return null;
+
+  return bestMatch?.metro ?? null;
 }
 
 export function extractCityFromLocation(location: string): string | null {
