@@ -1251,11 +1251,27 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         .replace(/(^-|-$)/g, "")
         + "-" + randomUUID().slice(0, 6);
 
+      let resolvedCity = overrides.city || "";
+      if (!resolvedCity && staged.discoveryJobId) {
+        const job = await storage.getDiscoveryJob(staged.discoveryJobId);
+        if (job?.area) {
+          const allMetros = await storage.getAllMetroAreas();
+          const match = allMetros.find(m => 
+            m.value === job.area || 
+            job.area.toLowerCase().startsWith(m.value.toLowerCase())
+          );
+          resolvedCity = match?.value || detectMetroFromLocation(job.area) || "";
+        }
+      }
+      if (!resolvedCity) {
+        resolvedCity = detectMetroFromLocation(staged.location || "") || "";
+      }
+
       const newVendor: InsertVendor = {
         name: overrides.name || staged.name,
         slug,
         location: overrides.location || staged.location || "",
-        city: overrides.city || "",
+        city: resolvedCity,
         phone: overrides.phone || staged.phone || "",
         email: overrides.email || staged.email || "",
         website: overrides.website || staged.website || "",
