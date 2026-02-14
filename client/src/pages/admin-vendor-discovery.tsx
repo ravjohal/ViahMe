@@ -59,6 +59,7 @@ import {
   Timer,
   RotateCcw,
   Archive,
+  AlertTriangle,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -848,6 +849,15 @@ export default function AdminVendorDiscovery() {
                                 {vendor.location}
                               </span>
                             )}
+                            {vendor.resolvedMetro ? (
+                              <Badge variant="outline" className="text-xs gap-1" data-testid={`badge-metro-${vendor.id}`}>
+                                {vendor.resolvedMetro}
+                              </Badge>
+                            ) : vendor.location ? (
+                              <Badge variant="outline" className="text-xs text-amber-600 border-amber-200 gap-1" data-testid={`badge-metro-unknown-${vendor.id}`}>
+                                <AlertTriangle className="h-3 w-3" /> No metro
+                              </Badge>
+                            ) : null}
                             {vendor.priceRange && (
                               <span>{vendor.priceRange}</span>
                             )}

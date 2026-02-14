@@ -1,6 +1,7 @@
 import type { IStorage } from '../storage';
 import type { DiscoveryJob, DiscoveryRun, StagedVendor } from '@shared/schema';
 import { discoverVendors, type ChatHistoryEntry } from '../ai/gemini';
+import { resolveMetroFromLocation } from '../utils/metro-resolver';
 import { z } from 'zod';
 
 async function verifyWebsiteUrl(url: string, timeoutMs: number = 8000): Promise<'valid' | 'invalid' | 'error'> {
@@ -344,7 +345,16 @@ export class VendorDiscoveryService {
 
       checkAborted();
 
-      log('info', `Step 6/8: O(1) duplicate safety check on ${discovered.length} vendors...`);
+      log('info', `Step 6/8: Duplicate check + metro resolution on ${discovered.length} vendors...`);
+
+      const jobMetro = await resolveMetroFromLocation(this.storage, job.area);
+      if (jobMetro) {
+        log('info', `  Job area "${job.area}" resolved to metro: "${jobMetro}"`);
+      } else {
+        log('warn', `  Job area "${job.area}" could NOT be resolved to a metro area`);
+      }
+
+      let metroUnresolved = 0;
 
       for (let i = 0; i < discovered.length; i++) {
         const vendor = discovered[i];
@@ -366,6 +376,15 @@ export class VendorDiscoveryService {
           log('debug', `  [${i + 1}/${discovered.length}] "${vendor.name}" (${vendor.location}) — NEW, staging with status=staged`);
         }
 
+        let resolvedMetro = jobMetro;
+        if (!resolvedMetro && vendor.location) {
+          resolvedMetro = await resolveMetroFromLocation(this.storage, vendor.location);
+        }
+        if (!resolvedMetro) {
+          metroUnresolved++;
+          log('warn', `  [${i + 1}/${discovered.length}] "${vendor.name}" — metro could not be resolved from job area or location "${vendor.location}"`);
+        }
+
         await this.storage.createStagedVendor({
           discoveryJobId: job.id,
           name: vendor.name,
@@ -381,6 +400,7 @@ export class VendorDiscoveryService {
           notes: vendor.notes,
           status,
           duplicateOfVendorId: existingDuplicateId || null,
+          resolvedMetro: resolvedMetro || null,
         });
 
         newCount++;
@@ -391,6 +411,7 @@ export class VendorDiscoveryService {
         stagedNew: newCount,
         skippedAlreadyStaged: duplicateStagedCount,
         markedAsDuplicateOfExisting: duplicateExistingCount,
+        metroUnresolved,
       });
 
       log('info', 'Step 7/8: Triggering background website verification...');

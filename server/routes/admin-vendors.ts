@@ -1253,6 +1253,9 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
         + "-" + randomUUID().slice(0, 6);
 
       let resolvedCity = overrides.city || "";
+      if (!resolvedCity && staged.resolvedMetro) {
+        resolvedCity = staged.resolvedMetro;
+      }
       if (!resolvedCity && staged.discoveryJobId) {
         const job = await storage.getDiscoveryJob(staged.discoveryJobId);
         if (job?.area) {
