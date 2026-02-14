@@ -19,6 +19,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Search, 
   Mail, 
@@ -34,6 +41,8 @@ import {
   FileEdit,
   Eye,
   Save,
+  Filter,
+  X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -249,9 +258,30 @@ export default function AdminBulkInvitations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVendorIds, setSelectedVendorIds] = useState<Set<string>>(new Set());
   const [lastResults, setLastResults] = useState<BulkInviteResult[] | null>(null);
+  const [locationFilter, setLocationFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+
+  interface FilterOptions {
+    locations: string[];
+    categories: string[];
+    totalCount: number;
+  }
+
+  const { data: filterOptions } = useQuery<FilterOptions>({
+    queryKey: ["/api/admin/vendors/unclaimed-with-email/filters"],
+    enabled: !!user && user.isSiteAdmin,
+  });
+
+  const vendorQueryUrl = (() => {
+    const params = new URLSearchParams();
+    if (locationFilter) params.set("location", locationFilter);
+    if (categoryFilter) params.set("category", categoryFilter);
+    const qs = params.toString();
+    return `/api/admin/vendors/unclaimed-with-email${qs ? `?${qs}` : ""}`;
+  })();
 
   const { data: vendors = [], isLoading } = useQuery<Vendor[]>({
-    queryKey: ["/api/admin/vendors/unclaimed-with-email"],
+    queryKey: [vendorQueryUrl],
     enabled: !!user && user.isSiteAdmin,
   });
 
@@ -261,7 +291,8 @@ export default function AdminBulkInvitations() {
       return response.json() as Promise<BulkInviteResponse>;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/unclaimed-with-email"] });
+      queryClient.invalidateQueries({ queryKey: [vendorQueryUrl] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/vendors/unclaimed-with-email/filters"] });
       setLastResults(data.results);
       setSelectedVendorIds(new Set());
       toast({
@@ -393,33 +424,72 @@ export default function AdminBulkInvitations() {
                   <Mail className="h-5 w-5" />
                   Unclaimed Vendors
                 </CardTitle>
-                <CardDescription>
-                  {vendors.length} approved vendors without an owner account
+                <CardDescription data-testid="text-vendor-count">
+                  {vendors.length} vendors shown
+                  {filterOptions ? ` of ${filterOptions.totalCount} with email` : ""}
+                  {(locationFilter || categoryFilter) ? " (filtered)" : ""}
+                  {" \u2014 only vendors with an email address are listed"}
                 </CardDescription>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search vendors..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 w-64"
-                    data-testid="input-search-vendors"
-                  />
-                </div>
+              <Button
+                onClick={handleSendInvitations}
+                disabled={selectedVendorIds.size === 0 || bulkInviteMutation.isPending}
+                data-testid="button-send-bulk-invitations"
+              >
+                {bulkInviteMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4 mr-2" />
+                )}
+                Send to {selectedVendorIds.size} Selected
+              </Button>
+            </div>
+            <div className="flex items-center gap-3 flex-wrap pt-2">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={locationFilter} onValueChange={(v) => { setLocationFilter(v === "__all__" ? "" : v); setSelectedVendorIds(new Set()); }}>
+                  <SelectTrigger className="w-52" data-testid="select-location-filter">
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__all__">All Locations</SelectItem>
+                    {filterOptions?.locations.map(loc => (
+                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v === "__all__" ? "" : v); setSelectedVendorIds(new Set()); }}>
+                <SelectTrigger className="w-52" data-testid="select-category-filter">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All Categories</SelectItem>
+                  {filterOptions?.categories.map(cat => (
+                    <SelectItem key={cat} value={cat}>{formatCategory(cat)}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {(locationFilter || categoryFilter) && (
                 <Button
-                  onClick={handleSendInvitations}
-                  disabled={selectedVendorIds.size === 0 || bulkInviteMutation.isPending}
-                  data-testid="button-send-bulk-invitations"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => { setLocationFilter(""); setCategoryFilter(""); setSelectedVendorIds(new Set()); }}
+                  data-testid="button-clear-filters"
                 >
-                  {bulkInviteMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4 mr-2" />
-                  )}
-                  Send to {selectedVendorIds.size} Selected
+                  <X className="h-4 w-4 mr-1" />
+                  Clear Filters
                 </Button>
+              )}
+              <div className="relative ml-auto">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search vendors..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 w-64"
+                  data-testid="input-search-vendors"
+                />
               </div>
             </div>
           </CardHeader>

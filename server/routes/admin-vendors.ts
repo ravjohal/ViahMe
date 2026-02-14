@@ -669,6 +669,33 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
     }
   });
 
+  router.get("/vendors/unclaimed-with-email/filters", async (req: Request, res: Response) => {
+    try {
+      const auth = await requireAdminAuth(req, storage);
+      if (!auth) return res.status(401).json({ error: "Authentication required" });
+      if (!auth.isAdmin) return res.status(403).json({ error: "Admin access required" });
+
+      const allVendors = await storage.getAllVendors();
+      const unclaimed = allVendors.filter(v => !v.claimed && v.email && v.approvalStatus === 'approved');
+
+      const locations = new Set<string>();
+      const categories = new Set<string>();
+      for (const v of unclaimed) {
+        if (v.city) locations.add(v.city);
+        if (v.categories) v.categories.forEach(c => categories.add(c));
+      }
+
+      res.json({
+        locations: Array.from(locations).sort(),
+        categories: Array.from(categories).sort(),
+        totalCount: unclaimed.length,
+      });
+    } catch (error) {
+      console.error("Error fetching filter options:", error);
+      res.status(500).json({ error: "Failed to fetch filter options" });
+    }
+  });
+
   router.get("/vendors/unclaimed-with-email", async (req: Request, res: Response) => {
     try {
       const auth = await requireAdminAuth(req, storage);
@@ -678,13 +705,25 @@ export async function registerAdminVendorRoutes(router: Router, storage: IStorag
       if (!auth.isAdmin) {
         return res.status(403).json({ error: "Admin access required" });
       }
+
+      const locationFilter = (req.query.location as string || "").trim();
+      const categoryFilter = (req.query.category as string || "").trim();
       
       const allVendors = await storage.getAllVendors();
-      const unclaimedWithEmail = allVendors.filter(v => 
+      let unclaimedWithEmail = allVendors.filter(v => 
         !v.claimed && 
         v.email && 
         v.approvalStatus === 'approved'
       );
+
+      if (locationFilter) {
+        unclaimedWithEmail = unclaimedWithEmail.filter(v => v.city === locationFilter);
+      }
+      if (categoryFilter) {
+        unclaimedWithEmail = unclaimedWithEmail.filter(v => 
+          v.categories?.includes(categoryFilter)
+        );
+      }
       
       res.json(unclaimedWithEmail);
     } catch (error) {
